@@ -1,0 +1,12 @@
+# Minimal valid agent-workflow.yaml — used as a positive test fixture.
+# Mirrors the shape bootstrap will produce for a local-backend repo.
+
+version: 1
+
+project:
+  name: example-service
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"

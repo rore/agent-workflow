@@ -1,0 +1,10 @@
+# Invalid fixture: backend is "local" but the required local.taskPath
+# is missing. Schema's allOf/if/then rule MUST reject this.
+
+version: 1
+
+project:
+  name: example-service
+
+workRecord:
+  backend: local

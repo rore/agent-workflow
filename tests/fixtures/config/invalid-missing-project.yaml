@@ -1,0 +1,8 @@
+# Invalid fixture: missing the required project block.
+
+version: 1
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"

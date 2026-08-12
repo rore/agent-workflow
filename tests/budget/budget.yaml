@@ -1,0 +1,110 @@
+# tests/budget/budget.yaml
+#
+# Token-budget ceilings for every file loaded into an agent's context.
+#
+# Ceiling discipline: set the ceiling FIRST, derived from what's reasonable
+# for an agent to pay at this load point — then trim prose to fit. Do not
+# raise a ceiling because prose has grown into it without a corresponding
+# load-point justification. Rationale: an agent that loads a skill carries
+# that text every turn ("Once a skill loads, its content stays in context
+# across turns — every line is a recurring token cost." — Claude Code skills
+# docs). The 2026-06 context-budget audit cut floor cost ~3500 -> ~1400 tok
+# and Elevated-task cost ~13600 -> ~5500 tok by re-deriving these ceilings
+# from load points rather than from existing prose size.
+#
+# Operational targets (the rationale for the per-file numbers below):
+#   floor (AGENTS.md + SKILL.md + operating-mode.md)              <= 3,500 tok  (was ~5,200 pre-trim)
+#   routine task adds (Establish + Assess + Verify on compact)    <= 1,800 tok
+#   elevated task adds (all 7 checkpoint files + redline SKILL+op)<= 6,500 tok
+#   bootstrap one-shot (mode file + extension profile + scaffold) <= 9,000 tok
+# These totals are the demand side. Per-file ceilings are the supply side.
+# Second-pass audit (2026-06): trimmed AGENTS.md (1670 -> 930) and added
+# canonical clean-context-delegation in operating-mode.md (1430 -> 1670)
+# to remove invocation-mechanism ambiguity flagged by clean-context review.
+#
+# Estimator: approx_tokens = words * 1.33 (whitespace-separated words). Fast,
+# deliberately rough; overestimates slightly on prose (good — gives margin) and
+# underestimates on code-heavy files (acceptable — code is rare in skill files).
+# A real tokenizer can be substituted later without changing the contract.
+# Pin LC_ALL=en_US.UTF-8 so wc -w counts the same way locally and in CI.
+#
+# Pattern matching: a glob may apply to multiple files; the ceiling applies to
+# each file individually. Test runner uses bash glob expansion + per-file check.
+
+version: 1
+
+ceilings:
+  # Project-root AGENTS.md — auto-loaded by harnesses on session start when
+  # an agent is working on this project. Keep orientation cheap; the
+  # 2026-06 second-pass audit cut filler narrative and table-ified the
+  # "Load when relevant" list. Marker-wrapped dogfood section retained
+  # (carries this-repo-vs-typical-consumer differences a contributor
+  # editing the skill needs).
+  - path: AGENTS.md
+    max_tokens: 1100
+    why: auto-loaded by harnesses on session start. Trimmed in 2026-06 audit (~1670 -> ~930 tok). Headroom for the marker-wrapped dogfood section + the table; non-derivable facts live here.
+
+  # Skill source — loaded into every agent session in an agent-workflow-aware
+  # repo. SKILL.md is the routing file (Pick a mode + Principles + Resources);
+  # Vocabulary moved into operating-mode.md after the 2026-06 trim because the
+  # agent only needs vocab once it has entered operating-mode.
+  - path: core/skill/agent-workflow.md
+    max_tokens: 500
+    why: routing-only entry (Pick a mode + Principles bullets + Decision priority + Resources). Vocabulary moved to operating-mode.md.
+  - path: core/skill/operating-mode.md
+    max_tokens: 1900
+    why: loaded on every operating-mode turn. Carries Vocabulary + the loop + slug derivation + classify-and-init + the 7-checkpoint table + State semantics + Implementation-prose-at-every-transition rule + resolve-review-threads-before-merge rule + handoff + canonical clean-context-delegation mechanism (referenced from assess-risk.md and plan-and-review.md instead of restated). Template inlining cut (pointers to templates/work-record-{routine,expanded}.md instead).
+  - path: core/skill/bootstrap-mode.md
+    max_tokens: 4500
+    why: loaded only during bootstrap (rare, one-shot; not carried in operating mode — the whole bootstrap surface stays well under the 9,000-tok one-shot demand target). Carries the six phases including the Phase 5 confirmation prompt (sacred — preserved verbatim) and the consolidated Hard rules. Phase 4 subsections compressed to a table. Phase 6 self-summary template externalized to templates/bootstrap-summary.md.template. Ceiling raised 3500 -> 3850 (2026-07, step 4.0 + Phase 6 install-verification), 3850 -> 4050 (2026-08, repo-layout detection of hooks.guardedPaths), and 4050 -> 4500 (2026-08, re-bootstrap reconciliation — Phase 4.1 Spotless-canonical agent-workflow.yaml emission, Phase 4.4 marker-block reconcile via merge-agents-section.py, and the Phase 6 manifest completeness check — all real load-point additions that close silent re-bootstrap failures, not prose creep). Detailed logic externalized to the helper + install-probe; the doc carries one-line pointers.
+
+  # Per-checkpoint reference docs — loaded only when the matching checkpoint
+  # is entered. Trimmed in 2026-06 to rules + tables + anti-patterns; rationale
+  # externalized to docs/skill-rationale.md.
+  - path: core/templates/checkpoints/establish-context.md
+    max_tokens: 700
+    why: loaded when starting a task. Five-field reference with examples.
+  - path: core/templates/checkpoints/discover.md
+    max_tokens: 800
+    why: loaded during Discover. Carries the authoritative-source table + three resolution paths + the gate. SPEC-restated rationale moved to docs.
+  - path: core/templates/checkpoints/assess-risk.md
+    max_tokens: 750
+    why: loaded when classifying Risk and Complexity. Carries the redline-verdict-to-Risk translation table + reassessment triggers + CI predicates. Engineering-judgment escape kept.
+  - path: core/templates/checkpoints/plan-and-review.md
+    max_tokens: 900
+    why: loaded when planning. Per-Risk-level review obligations + Approvals format + Exceptions schema (per SPEC §11). Cheating-window essay moved to docs.
+  - path: core/templates/checkpoints/implement.md
+    max_tokens: 1500
+    why: loaded during Implement (longest stretch). Rules-as-bullets + material-scope-expansion table + harness predicates + anti-patterns (load-bearing, kept verbatim). Multi-paragraph rationale moved to docs.
+  - path: core/templates/checkpoints/verify.md
+    max_tokens: 800
+    why: loaded during Verify. Grammar table + State-transition rule + failed-verification handling. SPEC restatements moved to docs.
+  - path: core/templates/checkpoints/review-result.md
+    max_tokens: 800
+    why: loaded during Review-the-Result. Checkpoint-satisfied predicate + satisfy-by paths + plan-time/PR-time distinction + Skill-feedback check (trigger table). Bumped 700 -> 800 in skill-feedback-loop slice to absorb the trigger table; prevents skill defects in consumer repos going unreported and closes the cross-reference gap from the top-level skill's new Principles bullet. Elevated-task operational total still well under 6500 ceiling.
+
+  # Templates copied to consuming repos at bootstrap. Read by agents in
+  # consuming repos as part of operating-mode (work-record-*) or once at
+  # bootstrap (bootstrap-summary).
+  - path: core/templates/agent-workflow.yaml.template
+    max_tokens: 600
+    why: read on session start in a consuming repo
+  - path: core/templates/agents-section.md.template
+    max_tokens: 400
+    why: appended to consumer AGENTS.md by bootstrap — every session in the consumer repo pays for it on every turn. Pointer + non-derivable facts only after the 2026-06 trim (marketing-style intro and skill re-explanations removed).
+  - path: core/templates/work-record-routine.md
+    max_tokens: 400
+    why: read when filling in a routine-shape Work Record
+  - path: core/templates/work-record-expanded.md
+    max_tokens: 550
+    why: read when filling in an expanded-shape Work Record. Exceptions schema commentary moved to plan-and-review.md after the 2026-06 second-pass audit.
+  - path: core/templates/bootstrap-summary.md.template
+    max_tokens: 700
+    why: read during bootstrap Phase 6. Externalized from bootstrap-mode.md in 2026-06 — the agent loads it only when filling in the summary, not for the whole bootstrap conversation.
+
+  # The CI workflow template — touched by bootstrap (writes to .github/) but
+  # not loaded into an agent's reasoning surface day-to-day. Budget captures
+  # the surface bootstrap-mode pulls in when proposing the workflow.
+  - path: core/templates/.github/workflows/agent-workflow.yml.template
+    max_tokens: 2400
+    why: read during bootstrap Phase 5 when proposing CI; carries two-job shape (redline + agent-workflow) with sticky-comment formatting + label/codeowner review-input collection + F2 defensive parsing; not loaded in operating mode

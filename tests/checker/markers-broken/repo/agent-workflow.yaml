@@ -1,0 +1,14 @@
+version: 1
+
+project:
+  name: demo-service
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+
+# Scenario doesn't exercise the redline predicates — kept optional so a
+# missing verdict surfaces as advisory rather than blocking on top of
+# the scenario's primary failure mode.
+redline: optional

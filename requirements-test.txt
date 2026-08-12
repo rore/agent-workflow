@@ -1,0 +1,24 @@
+# Test-suite dependencies for agent-workflow.
+#
+# Used by `bash tests/run-all.sh` and the underlying layer runners.
+# Install with:
+#
+#   python -m pip install -r requirements-test.txt
+#
+# (Use `python` on Windows / Git Bash where it points at the user's
+# Windows Python; `python3` on Linux / WSL. The test runners shim
+# `python3` → `python` automatically when only `python` is on PATH.)
+#
+# The vendored single-file checker (scripts/agent-workflow-check.py)
+# and reporter (scripts/agent-redline-report.py) need only `pyyaml`
+# and `jsonschema`; CI workflows install those directly via
+# `pip install pyyaml jsonschema`. The full test suite additionally
+# needs `pytest` to run the Python-test layers (checker, work-record).
+#
+# Keep this file pinned only by major version to avoid lock-step
+# updates with consumer repos. Test reliability matters more than
+# version freshness here.
+
+pyyaml>=6.0
+jsonschema>=4.0
+pytest>=7.0

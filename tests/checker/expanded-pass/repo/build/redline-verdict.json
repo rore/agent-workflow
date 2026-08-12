@@ -1,0 +1,19 @@
+{
+  "boundaryViolations": [],
+  "zones": {
+    "blue": [
+      "src/test/java/com/example/orders/OrderServiceTest.java"
+    ],
+    "gray": [],
+    "red": [],
+    "watch": []
+  },
+  "checkpoints": [],
+  "apiChanges": {"detected": false},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "BLUE",
+  "summary": "All changes in blue zones.",
+  "exitCode": 0
+}

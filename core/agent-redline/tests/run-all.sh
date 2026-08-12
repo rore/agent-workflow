@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+# tests/run-all.sh
+#
+# Top-level local test runner for agent-redline.
+#
+# Runs every test layer in order. Designed to be runnable on a developer
+# laptop with sub-10-second total time (excluding optional Java steps).
+# CI runs the same script in a clean environment.
+#
+# Usage:
+#   ./tests/run-all.sh                    # run everything
+#   ./tests/run-all.sh --skip extension   # skip a layer
+#   ./tests/run-all.sh --only reporter    # run just one layer
+#   ./tests/run-all.sh --verbose          # show per-test detail
+#
+# Exit codes:
+#   0  — all enabled layers pass
+#   N  — first failing layer's index (1..N)
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+PYTHON_SHIM_DIR=""
+
+setup_python_command() {
+  if command -v python >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_SHIM_DIR="$(mktemp -d)"
+    ln -s "$(command -v python3)" "$PYTHON_SHIM_DIR/python"
+    export PATH="$PYTHON_SHIM_DIR:$PATH"
+    return 0
+  fi
+  return 1
+}
+
+cleanup_python_shim() {
+  if [[ -n "$PYTHON_SHIM_DIR" && -d "$PYTHON_SHIM_DIR" ]]; then
+    rm -rf "$PYTHON_SHIM_DIR"
+  fi
+}
+trap cleanup_python_shim EXIT
+
+SKIP=()
+ONLY=""
+VERBOSE=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skip) SKIP+=("$2"); shift 2 ;;
+    --only) ONLY="$2"; shift 2 ;;
+    --verbose|-v) VERBOSE=1; shift ;;
+    -h|--help)
+      sed -n '2,/^$/p' "$0" | sed 's/^# \?//'
+      exit 0
+      ;;
+    *) echo "unknown arg: $1" >&2; exit 1 ;;
+  esac
+done
+
+# ----------------------------------------------------------------------
+# Each layer: (name, command, optional-marker).
+# Optional layers (marked OPTIONAL) print a clear note when their
+# prerequisites are missing rather than failing.
+# ----------------------------------------------------------------------
+
+layers=(
+  "budget|bash tests/budget/check-budget.sh|"
+  "schema|python tests/schema/check-schema.py|REQUIRES_SCHEMA_DEPS"
+  "suppressions-files|bash tests/extensions/check-suppressions-files.sh|REQUIRES_SCHEMA_DEPS"
+  "skill-yaml|python tests/skill-yaml/check-skill-yaml.py|REQUIRES_SCHEMA_DEPS"
+  "skill-refs|python tests/skill-refs/check-skill-refs.py|REQUIRES_PYTHON"
+  "skill-scripts-runnable|bash tests/skill-scripts-runnable/check-skill-scripts-runnable.sh|REQUIRES_PYTHON"
+  "skill-toml|python tests/skill-toml/check-skill-toml.py|OPTIONAL_IMPORTLINTER"
+  "scaffold-ci|python tests/scaffold-ci/check-scaffold-ci.py|REQUIRES_PYTHON"
+  "scaffold-ci-e2e|bash tests/scaffold-ci-e2e/check-scaffold-ci-e2e.sh|REQUIRES_PYTHON"
+  "scaffold-spring-e2e|bash tests/scaffold-ci-e2e/check-spring-ci-e2e.sh|REQUIRES_PYTHON"
+  "bootstrap-detect|python tests/bootstrap-detect/check-bootstrap-detect.py|REQUIRES_PYTHON"
+  "tuner|bash tests/tuner/check-tuner.sh|REQUIRES_PYTHON"
+  "pre-push|bash tests/pre-push/check-pre-push.sh|"
+  "reporter-goldens|python tests/reporter/check-reporter.py|REQUIRES_PYTHON"
+  "reporter-unit|python -m pytest tests/reporter/ -q|REQUIRES_PYTEST"
+  "workflow-scripts|bash tests/workflow-scripts/test-diff-inputs.sh|"
+  "links|python tests/links/check-links.py|REQUIRES_PYTHON"
+  "gitignore|bash tests/gitignore/check-gitignore.sh|"
+  "package|bash tests/package/check-package.sh|REQUIRES_PYTHON"
+  "sync-demo|bash tests/sync/test-sync-demo.sh|"
+  "extension-jvm|bash tests/extensions/jvm-archunit/check-extension.sh|OPTIONAL_GRADLE"
+  "extension-python|bash tests/extensions/python/check-extension.sh|OPTIONAL_IMPORTLINTER"
+)
+
+# ----------------------------------------------------------------------
+# Prereq detection
+# ----------------------------------------------------------------------
+
+has_python() { setup_python_command; }
+has_pytest() { setup_python_command && python -m pytest --version >/dev/null 2>&1; }
+has_schema_deps() { setup_python_command && python -c "import yaml, jsonschema" >/dev/null 2>&1; }
+has_gradle() { command -v gradle >/dev/null 2>&1; }
+has_importlinter() { setup_python_command && python -c "import importlinter" >/dev/null 2>&1; }
+
+python_prereq_message() {
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "python not on PATH inside WSL; install WSL Python (for example: sudo apt install python3 python3-pytest) or run from an environment where python/python3 is available"
+  else
+    echo "python not on PATH"
+  fi
+}
+
+prereq_ok() {
+  case "$1" in
+    "") return 0 ;;
+    REQUIRES_PYTHON) has_python ;;
+    REQUIRES_SCHEMA_DEPS) has_schema_deps ;;
+    REQUIRES_PYTEST) has_pytest ;;
+    OPTIONAL_GRADLE) has_gradle ;;
+    OPTIONAL_IMPORTLINTER) has_importlinter ;;
+    *) return 0 ;;
+  esac
+}
+
+prereq_msg() {
+  case "$1" in
+    REQUIRES_PYTHON) python_prereq_message ;;
+    REQUIRES_SCHEMA_DEPS) echo "python packages missing: install PyYAML and jsonschema" ;;
+    REQUIRES_PYTEST) echo "pytest not installed (pip install pytest)" ;;
+    OPTIONAL_GRADLE) echo "gradle not on PATH (Java toolchain required); skipping" ;;
+    OPTIONAL_IMPORTLINTER) echo "import-linter not installed (pip install 'import-linter>=2.0,<3'); skipping" ;;
+    *) echo "missing prerequisite: $1" ;;
+  esac
+}
+
+is_optional() {
+  case "$1" in
+    OPTIONAL_*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# ----------------------------------------------------------------------
+# Run
+# ----------------------------------------------------------------------
+
+failed_layer=""
+failed_index=0
+index=0
+ran=0
+skipped=0
+
+for entry in "${layers[@]}"; do
+  index=$(( index + 1 ))
+  IFS='|' read -r name cmd marker <<< "$entry"
+
+  if [[ -n "$ONLY" && "$ONLY" != "$name" ]]; then
+    continue
+  fi
+
+  for s in "${SKIP[@]:-}"; do
+    if [[ "$s" == "$name" ]]; then
+      printf "==> skip   %-22s (--skip)\n" "$name"
+      skipped=$(( skipped + 1 ))
+      continue 2
+    fi
+  done
+
+  if ! prereq_ok "$marker"; then
+    if is_optional "$marker"; then
+      printf "==> skip   %-22s ($(prereq_msg "$marker"))\n" "$name"
+      skipped=$(( skipped + 1 ))
+      continue
+    else
+      printf "==> FAIL   %-22s ($(prereq_msg "$marker"))\n" "$name"
+      failed_layer="$name"
+      failed_index=$index
+      break
+    fi
+  fi
+
+  start=$(date +%s)
+  if (( VERBOSE )); then
+    printf "==> run    %-22s :: %s\n" "$name" "$cmd"
+    if ! eval "$cmd"; then
+      end=$(date +%s)
+      printf "==> FAIL   %-22s (%ds)\n" "$name" $(( end - start ))
+      failed_layer="$name"
+      failed_index=$index
+      break
+    fi
+    end=$(date +%s)
+    printf "==> ok     %-22s (%ds)\n" "$name" $(( end - start ))
+  else
+    if ! out=$(eval "$cmd" 2>&1); then
+      end=$(date +%s)
+      echo "$out"
+      printf "==> FAIL   %-22s (%ds)\n" "$name" $(( end - start ))
+      failed_layer="$name"
+      failed_index=$index
+      break
+    fi
+    end=$(date +%s)
+    printf "==> ok     %-22s (%ds)\n" "$name" $(( end - start ))
+  fi
+  ran=$(( ran + 1 ))
+done
+
+echo
+if [[ -n "$failed_layer" ]]; then
+  echo "FAILED at layer $failed_index ($failed_layer). Ran $ran, skipped $skipped."
+  exit "$failed_index"
+fi
+echo "all $ran layer(s) passed; $skipped skipped."

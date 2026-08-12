@@ -1,0 +1,19 @@
+{
+  "boundaryViolations": [],
+  "zones": {
+    "blue": [],
+    "gray": [
+      "src/main/java/com/example/orders/util/DateNormalizer.java"
+    ],
+    "red": [],
+    "watch": []
+  },
+  "checkpoints": [],
+  "apiChanges": {"detected": false},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "GRAY",
+  "summary": "Gray-zone files changed; cautious review.",
+  "exitCode": 1
+}

@@ -1,0 +1,113 @@
+{
+  "slug": "demo-task",
+  "status": "blocking",
+  "exit_code": 2,
+  "records": [
+    {
+      "slug": "demo-task",
+      "status": "blocking",
+      "predicates": [
+        {
+          "name": "workrecord.exists",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "workrecord.markers_present",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "risk.declared",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "complexity.declared",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "workrecord.shape_matches_classification",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "workrecord.routine_fields_present",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "workrecord.state_valid",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "risk.redline_findings_available",
+          "passed": false,
+          "blocking": false
+        },
+        {
+          "name": "risk.boundary_violation_absent",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "risk.declared_not_below_detected",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "review.checkpoints_satisfied",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "exceptions.well_formed",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "exceptions.not_against_boundary",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "exceptions.not_expired",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "approval.elevated_clean_context_review_present",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "approval.high_risk_approval_recorded",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "approval.clean_context_does_not_satisfy_human",
+          "passed": false,
+          "blocking": true
+        },
+        {
+          "name": "evidence.criteria_have_methods",
+          "passed": false,
+          "blocking": false
+        },
+        {
+          "name": "evidence.failure_not_claimed_as_success",
+          "passed": true,
+          "blocking": false
+        },
+        {
+          "name": "workrecord.commit_order",
+          "passed": true,
+          "blocking": false
+        }
+      ]
+    }
+  ]
+}

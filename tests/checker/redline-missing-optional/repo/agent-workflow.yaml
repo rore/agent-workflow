@@ -1,0 +1,12 @@
+version: 1
+
+project:
+  name: demo-service
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+
+# Explicit opt-out — a missing verdict is advisory rather than blocking.
+redline: optional

@@ -1,0 +1,14 @@
+# Fixture policy: exercises the calibration layer's recursive-glob matching.
+# Both rules use `**`; under the pre-fix PurePosixPath.match() they reported
+# 0% firing. They must now fire on the PRs that touch matching paths.
+version: 1
+project:
+  name: glob-fixture
+zones:
+  red:
+    - path: "src/main/java/**/*Controller.java"
+      reason: inbound controllers
+      checkpoint: architecture-review
+    - path: "src/main/java/**/infrastructure/external/**"
+      reason: external gateway
+      checkpoint: architecture-review

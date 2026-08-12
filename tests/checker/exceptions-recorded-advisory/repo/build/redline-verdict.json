@@ -1,0 +1,26 @@
+{
+  "boundaryViolations": [],
+  "zones": {
+    "blue": [],
+    "gray": [],
+    "red": [
+      "src/main/java/com/example/orders/contract/PublicApiV1.java"
+    ],
+    "watch": []
+  },
+  "checkpoints": [
+    {
+      "name": "contract-review",
+      "matched": true,
+      "rule": "contract-touched",
+      "category": "contract"
+    }
+  ],
+  "apiChanges": {"detected": true},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "RED",
+  "summary": "Contract surface touched; minimum risk High.",
+  "exitCode": 0
+}

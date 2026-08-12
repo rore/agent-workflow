@@ -1,0 +1,35 @@
+# CODEOWNERS for rore/agent-workflow
+#
+# Default owner: @rore. Any file in the repo that doesn't have a
+# more-specific rule below gets routed to the maintainer for review.
+#
+# Self-protecting paths are listed explicitly so an agent can't drop
+# the default rule and silently slip a governance-config change past
+# review:
+#   - agent-redline-policy.yaml      (the redline policy itself)
+#   - agent-workflow.yaml            (per-repo workflow config)
+#   - .github/workflows/             (the CI gates)
+#   - core/schema/                   (cross-install JSON contracts)
+#   - core/agent-redline/core/schema/
+#   - docs/SPEC.md                   (normative spec)
+#   - .agent-redline/suppressions.yaml
+#
+# When the redline reporter's `review.checkpoints_satisfied` predicate
+# evaluates `codeownerApproval` it consumes the intersection of:
+#   (a) approvals on the PR (state = APPROVED), and
+#   (b) the codeowner set GitHub computes from this file.
+# Branch protection's "Require Code Owner review" rule, when on, also
+# enforces this intersection.
+
+* @rore
+
+# Self-protecting paths — explicit override to make the review intent
+# visible even when scanning the file.
+agent-redline-policy.yaml              @rore
+agent-workflow.yaml                    @rore
+.github/workflows/                     @rore
+.github/CODEOWNERS                     @rore
+core/schema/                           @rore
+core/agent-redline/core/schema/        @rore
+docs/SPEC.md                           @rore
+.agent-redline/suppressions.yaml       @rore

@@ -1,0 +1,28 @@
+dist/*
+# The committed skill dist tree is the install source for this repo.
+# scripts/package-skill.sh produces it; tests/package/check-package.sh
+# blocks merges when sources drift from this tree.
+!dist/agent-workflow/
+build/
+.gradle/
+# Fixture build/ directories carry redline-verdict.json artifacts that
+# are part of the checker test scenarios — they must be tracked.
+!tests/**/build/
+.claude/skills/
+# Codex installs the skill into .agents/skills/ alongside Claude Code's
+# .claude/skills/. Same deal — every developer regenerates locally via
+# scripts/package-skill.sh, which mirrors into this path when present.
+.agents/skills/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.DS_Store
+*.log
+.local/
+
+.claude/settings.local.json
+
+# Git worktrees (created by scripts/install-skill-locally.sh or manual git worktree add)
+.worktrees/
+.claude/worktrees/

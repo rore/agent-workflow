@@ -1,0 +1,13 @@
+version: 1
+
+project:
+  name: demo-service
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+
+# Default — kept explicit for readability. Missing verdict at the
+# configured path blocks via risk.redline_findings_available.
+redline: required

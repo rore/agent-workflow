@@ -1,0 +1,1 @@
+{"boundaryViolations":[],"zones":{"blue":["src/a.java"],"gray":[],"red":[],"watch":[]},"checkpoints":[],"apiChanges":{"detected":false},"schemaChanges":{"detected":false},"securityChanges":{"detected":false},"runtimeConfigChanges":{"detected":false},"verdict":"BLUE","summary":"clean","exitCode":0}

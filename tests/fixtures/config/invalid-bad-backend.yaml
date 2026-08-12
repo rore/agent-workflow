@@ -1,0 +1,11 @@
+# Invalid fixture: backend enum value not allowed.
+
+version: 1
+
+project:
+  name: example-service
+
+workRecord:
+  backend: subversion
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"

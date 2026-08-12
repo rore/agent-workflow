@@ -1,0 +1,23 @@
+# Invalid: non-empty boundaries require explicit boundaryAdapter
+version: 1
+
+project:
+  name: missing-boundary-adapter
+
+zones:
+  red:
+    - path: src/main/java/**/domain/**
+      reason: domain
+      checkpoint: architecture-review
+
+boundaries:
+  - id: domain-must-not-import-adapters
+    description: Domain layer must not depend on adapters
+    from: src/main/java/**/domain/**
+    forbidImports:
+      - src/main/java/**/adapter/**
+
+checkpoints:
+  architecture-review:
+    satisfiedBy:
+      - codeownerApproval

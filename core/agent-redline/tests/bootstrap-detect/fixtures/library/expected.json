@@ -1,0 +1,8 @@
+{
+  "language": "python",
+  "shape": "library",
+  "layout": "flat",
+  "web_deps": [],
+  "has_django": false,
+  "library_signals": ["mypkg"]
+}

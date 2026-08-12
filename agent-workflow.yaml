@@ -1,0 +1,37 @@
+# agent-workflow per-repo config
+#
+# Defaults agent-workflow on this repository. The schema lives at
+# core/schema/agent-workflow.schema.json.
+
+version: 1
+
+project:
+  name: agent-workflow
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+
+# agent-redline integration. Required after slice B7 wired redline
+# against this repo's own source (bootstrap-redline-on-self, 2026-06-24).
+# The redline job in .github/workflows/agent-workflow.yml emits the
+# verdict at the workspace root; the agent-workflow job downloads it
+# as an artifact and passes it via --redline-verdict.
+#
+# Note for local dev: `python -m core.checker --slug <slug>` without a
+# `--redline-verdict` argument will block (missing verdict + required =
+# fail blocking). The test suite injects a stub verdict per invocation;
+# the CI pipeline produces the real verdict from the redline job. For
+# ad-hoc local checks, either run the reporter first or pass
+# `--redline-verdict` pointing at a stub.
+redline: required
+redlineVerdictPath: redline-verdict.json
+
+# Claude Code plan-mode gate: this repo's code roots (it has no src/).
+# The gate requires a plan touching these prefixes to include the Work
+# Record step. Prefixes match on a path boundary, case-insensitively.
+hooks:
+  guardedPaths:
+    - "core/"
+    - "scripts/"

@@ -1,0 +1,11 @@
+version: 1
+
+project:
+  name: demo-service
+
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+
+redline: optional

@@ -1,0 +1,6 @@
+{
+  "guardedPaths": [
+    "core/",
+    "scripts/"
+  ]
+}

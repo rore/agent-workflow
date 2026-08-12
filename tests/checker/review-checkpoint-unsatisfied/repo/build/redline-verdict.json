@@ -1,0 +1,19 @@
+{
+  "boundaryViolations": [],
+  "zones": {"blue": [], "gray": [], "red": ["src/main/resources/db/migration/V42__add_segment.sql"], "watch": []},
+  "checkpoints": [
+    {
+      "id": "persistence-review",
+      "reason": "persistence schema change touched",
+      "satisfied": false,
+      "satisfy_by": ["CODEOWNER approval"]
+    }
+  ],
+  "apiChanges": {"detected": false},
+  "schemaChanges": {"detected": true},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "SCHEMA_CHANGE",
+  "summary": "Persistence schema changed.",
+  "exitCode": 0
+}

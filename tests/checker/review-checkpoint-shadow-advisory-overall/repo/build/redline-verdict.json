@@ -1,0 +1,21 @@
+{
+  "boundaryViolations": [],
+  "zones": {"blue": [], "gray": ["src/main/java/com/example/wallet/application/service/WalletService.java"], "red": [], "watch": []},
+  "checkpoints": [
+    {
+      "id": "architecture-review",
+      "reason": "gray zone touched: application orchestration",
+      "satisfied": false,
+      "satisfy_by": ["CODEOWNER approval", "label: architecture-reviewed"]
+    }
+  ],
+  "apiChanges": {"detected": false},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "GRAY",
+  "summary": "Gray-zone application change.",
+  "modes": {"default": "shadow", "perCheck": {"boundary_violation": "binding"}},
+  "exitCode": 1,
+  "recommendedAction": "review-shadow-warnings"
+}

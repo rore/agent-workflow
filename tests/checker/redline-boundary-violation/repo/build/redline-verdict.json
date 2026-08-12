@@ -1,0 +1,26 @@
+{
+  "boundaryViolations": [
+    {
+      "rule": "application_must_not_depend_on_persistence_adapters",
+      "detail": "Architecture Violation: Class <com.example.orders.application.OrderService> depends on <com.example.orders.adapter.persistence.PostgresOrderRepository>",
+      "severity": "error",
+      "source": "archunit"
+    }
+  ],
+  "zones": {
+    "blue": [],
+    "gray": [
+      "src/main/java/com/example/orders/application/OrderService.java"
+    ],
+    "red": [],
+    "watch": []
+  },
+  "checkpoints": [],
+  "apiChanges": {"detected": false},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "BOUNDARY_VIOLATION",
+  "summary": "1 boundary violation(s) detected.",
+  "exitCode": 2
+}

@@ -1,0 +1,19 @@
+{
+  "boundaryViolations": [],
+  "zones": {"blue": [], "gray": [], "red": ["src/main/api/v1/wallet.json"], "watch": []},
+  "checkpoints": [
+    {
+      "id": "api-review",
+      "reason": "public API surface touched",
+      "satisfied": true,
+      "satisfy_by": ["label `api-reviewed`"]
+    }
+  ],
+  "apiChanges": {"detected": true},
+  "schemaChanges": {"detected": false},
+  "securityChanges": {"detected": false},
+  "runtimeConfigChanges": {"detected": false},
+  "verdict": "API_CHANGE",
+  "summary": "Public API contract changed.",
+  "exitCode": 0
+}
