@@ -1595,6 +1595,53 @@ class TestCodeownersGlobMatching:
         assert _codeowners_match("core/schema/**", "core/schema/agent.json")
         assert _codeowners_match("core/schema/**", "core/schema/nested/agent.json")
 
+    def test_double_star_mid_pattern_zero_one_multi_segments(self):
+        # Regression: the old fnmatch.translate hack made a middle `**`
+        # require at least one segment, so `foo/**/bar` failed to match
+        # `foo/bar` (the zero-segment case). `**` must match ZERO OR MORE
+        # full path segments.
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("foo/**/bar", "foo/bar")        # zero segments
+        assert _codeowners_match("foo/**/bar", "foo/x/bar")      # one segment
+        assert _codeowners_match("foo/**/bar", "foo/x/y/bar")    # multi segment
+        # Negative: the tail must still match.
+        assert not _codeowners_match("foo/**/bar", "foo/x/baz")
+        assert not _codeowners_match("foo/**/bar", "other/bar")
+
+    def test_double_star_anchored_zero_segment(self):
+        # Same zero-segment case, anchored (leading '/'): re.match path.
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("/foo/**/bar", "foo/bar")
+        assert _codeowners_match("/foo/**/bar", "foo/a/b/bar")
+        assert not _codeowners_match("/foo/**/bar", "x/foo/bar")
+
+    def test_single_star_stays_within_segment(self):
+        # In the `**` branch (the path fix A rewrote), a single `*` stays
+        # within a segment ([^/]*) while `**` crosses segments. (Patterns
+        # WITHOUT `**` use fnmatch, which over-matches `*` across '/' by
+        # design — that's the docstring's conservative note, not fix A.)
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("core/**/test_*.py", "core/test_x.py")
+        assert _codeowners_match("core/**/test_*.py", "core/a/b/test_x.py")
+        # `test_*` must not swallow a slash:
+        assert not _codeowners_match("core/**/test_*.py", "core/a/test_x/y.py")
+
+    def test_double_star_glued_to_literal_stays_within_segment(self):
+        # `foo/**bar` is not a whole-segment `**`; the asterisks act as a
+        # within-segment `*`, so it must NOT cross '/' (gitignore semantics).
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("foo/**bar", "foo/xbar")
+        assert not _codeowners_match("foo/**bar", "foo/x/bar")
+
+    def test_double_star_needs_left_segment_boundary(self):
+        # `foo**/bar` is glued to `foo` on the LEFT, so it is NOT a
+        # whole-segment globstar — the stars stay within one segment and
+        # must not cross '/'. Missing this let an unrelated path (and thus
+        # an unrelated approver) satisfy a CODEOWNER checkpoint.
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("foo**/bar", "fooX/bar")
+        assert not _codeowners_match("foo**/bar", "foo/x/bar")
+
     def test_bare_glob(self):
         from core.reporter.reporter import _codeowners_match
         # Bare pattern (no /) matches anywhere
