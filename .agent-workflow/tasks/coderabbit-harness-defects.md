@@ -69,9 +69,18 @@ Red-zone schema files (`core/agent-redline/core/schema/**`, architecture-review 
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
 Port of a merged upstream fix (CodeRabbit review of a downstream install). Baseline verified identical to upstream pre-fix for all code files; only the schema `$id` and the seed-hook CTX wording differ, both handled by targeted edits rather than file copies so nothing host-specific is introduced.
+
+## Evidence
+
+- Port validated as identical to the reviewed upstream fix for every code file; the only differences are the three schema `$id` lines, which correctly keep this repo's own host. No host-specific or environment-specific terms introduced (grepped the ported files clean).
+- Full suite green: `bash tests/run-all.sh` → **EXIT=0**, all layers ok (budget, schema, work-record, checker, redline, tuner, hooks, links, package). The `package` layer confirms `dist/` matches source; the `hooks` layer confirms the tracked `.claude/hooks/` dogfood copies match `dist/`.
+- Reporter unit + new import-linter unit: **136 passed** (`test_reporter_unit.py` + new `test_run_import_linter.py`). A cases cover zero/one/multi-segment `**` and `**` glued to a literal staying within-segment; C cases cover exit 2 + empty report on config error, exit 1 broken contract, exit 0 clean.
+- Schemas re-parse as valid JSON; em dash / section-sign render; each `$id` unchanged.
+
+Vendored artifacts regenerated via `scripts/package-skill.sh` (`dist/agent-workflow/**` + tracked `.claude/hooks/`).

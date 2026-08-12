@@ -584,6 +584,20 @@ def resolve_suppressions_config(
     block = policy.get("suppressions")
     if block is None:
         return None  # detection OFF — non-negotiable per §1.4
+    if not isinstance(block, dict):
+        # A legacy list (`suppressions: []`) or any non-mapping would raise
+        # AttributeError on the first `block.get(...)` below — and schema
+        # validation doesn't always run (load_policy warns and continues
+        # when jsonschema is absent or the schema can't be located). Treat
+        # a non-mapping as a hard config error with a clean message rather
+        # than a bare traceback. Removing the block is the way to disable
+        # detection; a malformed block is not silently ignored.
+        raise SystemExit(
+            "error: policy 'suppressions' must be a mapping (block), got "
+            f"{type(block).__name__}. Use a mapping with keys such as "
+            "useExtensionDefaults / add / remove / exemptPaths, or remove "
+            "the suppressions block entirely to disable detection."
+        )
 
     use_defaults = block.get("useExtensionDefaults", True)
     add = block.get("add", {}) or {}
@@ -911,13 +925,65 @@ def owners_for_paths(
     return matched
 
 
+def _codeowners_glob_to_regex(pattern: str) -> str:
+    """Translate a CODEOWNERS-style glob into an un-anchored regex body.
+
+    `**` matches ZERO OR MORE full path segments (crossing `/`) ONLY when
+    it forms a whole segment — i.e. `**/` or a trailing `**`. A `**` glued
+    to literals (e.g. `foo/**bar`) is not a whole segment; per gitignore the
+    asterisks act as a within-segment `*` and must not cross `/`. `*`
+    matches within a single segment (no `/`); every other character is
+    escaped literally. Unlike the previous ``fnmatch.translate`` hack, the
+    zero-segment case of a middle `**` is handled — ``foo/**/bar`` matches
+    ``foo/bar`` as well as ``foo/x/bar`` and ``foo/x/y/bar``.
+
+    Returns the body only (no `^`/`\\Z`); the caller anchors it to
+    preserve the anchored-vs-unanchored (re.match vs re.search)
+    semantics of :func:`_codeowners_match`.
+    """
+    i = 0
+    n = len(pattern)
+    out: list[str] = []
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if i + 1 < n and pattern[i + 1] == "*":
+                if i + 2 < n and pattern[i + 2] == "/":
+                    # `**/` → an optional run of whole segments (incl. zero),
+                    # which is what makes `foo/**/bar` match `foo/bar`.
+                    out.append("(?:.*/)?")
+                    i += 3
+                    continue
+                if i + 2 >= n:
+                    # Trailing `**` → match anything to the end, crossing
+                    # segment boundaries (e.g. `core/schema/**`).
+                    out.append(".*")
+                    i += 2
+                    continue
+                # `**` glued to a literal suffix (e.g. `foo/**bar`) is NOT a
+                # whole path segment; gitignore treats the asterisks as a
+                # within-segment `*`, so it must not cross `/`. (The old
+                # fnmatch hack turned this into `.*bar`, over-matching across
+                # slashes.)
+                out.append("[^/]*")
+                i += 2
+                continue
+            # Single `*` — anything except a slash (stays within a segment).
+            out.append("[^/]*")
+            i += 1
+            continue
+        out.append(re.escape(c))
+        i += 1
+    return "".join(out)
+
+
 def _codeowners_match(pattern: str, path: str) -> bool:
     """gitignore-style glob match for one CODEOWNERS pattern against one path.
 
     Supported:
     - Leading '/': anchor to repo root.
     - Trailing '/': directory match (anything beneath).
-    - '**' matches any number of path segments.
+    - '**' matches any number of path segments (including zero).
     - '*' matches any single segment substring (no slash).
     - Bare patterns match anywhere in the tree.
 
@@ -938,13 +1004,13 @@ def _codeowners_match(pattern: str, path: str) -> bool:
         anchored = False
 
     if "**" in pat:
-        # fnmatch handles '*' but not '**'; translate via regex
-        # so '**' can cross slash boundaries.
-        regex_pat = (
-            fnmatch.translate(pat)
-            .replace(".*\\\\.*", ".*")
-            .replace(".*.*", ".*")
-        )
+        # fnmatch handles '*' but not '**'; translate via an explicit
+        # converter so '**' can cross slash boundaries AND collapse to
+        # zero segments (`foo/**/bar` ⊇ `foo/bar`). Terminate with \Z so
+        # a match runs to the end of the path; re.match anchors the
+        # start for anchored patterns, re.search leaves it free for bare
+        # ones — same split the fnmatch path below preserves.
+        regex_pat = _codeowners_glob_to_regex(pat) + r"\Z"
         if anchored:
             return re.match(regex_pat, path) is not None
         return re.search(regex_pat, path) is not None
@@ -1818,10 +1884,18 @@ def main(argv: list[str] | None = None) -> int:
             "with --boundary-format=junit-xml instead\n"
         )
 
-    boundary_text, boundary_format = resolve_boundary_input(
-        args.boundary_report, args.boundary_format,
-        args.archunit_xml, policy,
-    )
+    try:
+        boundary_text, boundary_format = resolve_boundary_input(
+            args.boundary_report, args.boundary_format,
+            args.archunit_xml, policy,
+        )
+    except FileNotFoundError as e:
+        # Mirror the resolve_suppressions_config handler below: a
+        # configured-but-missing boundary report is a config error, not a
+        # crash. Bare traceback + exit 1 gets silently downgraded to a
+        # shadow warning by CI, hiding the misconfiguration.
+        sys.stderr.write(f"error: {e}\n")
+        return 1
     api_spec_diff = _load_api_spec_diff(args.api_spec_base, args.api_spec_head)
 
     # Phase 4b.4: resolve the suppression marker list once per CLI invocation.
