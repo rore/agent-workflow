@@ -5,7 +5,7 @@ This document has two parts:
 1. **Agent Engineering Workflow Specification** — the portable engineering policy.
 2. **Minimum Harness Contract** — the minimum guarantees required to implement the workflow consistently.
 
-The default profile mapping (Jira, GitHub, CI, Agent Redline) lives in [`DEFAULT_PROFILE.md`](DEFAULT_PROFILE.md).
+The default profile mapping (GitHub, CI, Agent Redline) lives in [`DEFAULT_PROFILE.md`](DEFAULT_PROFILE.md).
 
 ---
 

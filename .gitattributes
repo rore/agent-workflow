@@ -19,5 +19,5 @@
 *.md   text eol=lf
 
 # Treat the vendored checker as text too — it's a Python script and
-# the demo repo's CI invokes it with `python`.
+# consuming repos invoke it with `python`.
 scripts/agent-workflow-check.py text eol=lf

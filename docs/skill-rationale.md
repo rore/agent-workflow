@@ -40,7 +40,7 @@ The Vocabulary table teaches terms like `Work Record`, `Slug`, `Compact/Expanded
 
 ## Plan-and-Review by Risk level: the "cheating window" rationale
 
-Earlier versions of `plan-and-review.md` contained a ~250-token essay explaining that High-risk Approvals are self-attested: the harness cannot verify that the human was actually in the loop, and an agent can fabricate `Approved by user <timestamp>: "ok"`. The decision (DECISIONS.md 2026-06-23) accepted this as the cost of traceability-not-identity.
+Earlier versions of `plan-and-review.md` contained a ~250-token essay explaining that High-risk Approvals are self-attested: the harness cannot verify that the human was actually in the loop, and an agent can fabricate `Approved by user <timestamp>: "ok"`. This is accepted as the cost of traceability-not-identity.
 
 The rule the agent needs is one line: "Record the human's verbatim response in the Approvals field." The rationale — why we accept self-attestation, what the reviewer can do with the recorded text — is for the human reading the design doc, not the agent following the rule.
 
