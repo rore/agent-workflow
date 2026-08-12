@@ -5,7 +5,7 @@
 > round-trip.
 
 This fixture continues the wallet idempotency theme established in the
-routine-pass fixture and the demo repo's first PR scenario. The work is
+routine-pass fixture. The work is
 elevated/moderate because it requires a tenant-scoped persisted
 idempotency table — a sensitive surface per `docs/DEFAULT_PROFILE.md` §3
 (persistence + multi-tenancy) — and stretches across more than one

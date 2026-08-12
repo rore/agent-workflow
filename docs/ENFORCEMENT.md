@@ -115,7 +115,7 @@ By design. Each is a reviewer judgment:
 - Whether the implementation is correct.
 - Whether the verification method actually proves the criterion. Today the checker validates **structural mapping** (each Verification plan line names a method via one of the accepted grammars) and scans for **explicit contradictions** (a failure marker and a success marker against the same test identifier). Both are advisory. SPEC §13.3 names a fuller contract — presence, status, revision, freshness of the Verification Record — as the target shape; status/revision/freshness enforcement is not yet implemented and lives on the PR-status side of the harness. The checker does **not** validate adequacy — whether the named check meaningfully proves the criterion — in any slice; that stays a reviewer judgment.
 - Whether tests pass. GitHub already knows that — the workflow does not re-verify CI results.
-- Whether a human actually wrote a given approval. Per the 2026-06-23 decision the checker enforces that something approval-shaped is recorded; the cheating window is acknowledged.
+- Whether a human actually wrote a given approval. The checker enforces that something approval-shaped is recorded, not that a human authored it; the cheating window is acknowledged.
 
 If you find the checker passing on something a reviewer should have caught, that is by design — the gates the checker enforces are structural. Human review remains the authority for everything else.
 

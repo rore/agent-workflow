@@ -1,172 +1,122 @@
 # agent-workflow
 
-A skill for AI coding agents, plus a CI checker that validates its output.
+**An enforceable engineering workflow around AI coding agents.**
 
-The skill makes the agent work through a defined sequence of checkpoints and write a per-task **Work Record** — a structured markdown file at `.agent-workflow/tasks/<slug>.md` capturing the state of the work as it goes. The CI checker reads the Work Record at PR time and blocks the merge if it is missing, malformed, or contradicted by the actual diff.
+An AI agent works a task through a fixed sequence of checkpoints — establish context, discover, assess risk, plan, implement, verify, review — and records scope, assumptions, risk classification, and verification in a per-task **Work Record** committed alongside the code. At PR time, a CI checker reads that record, compares it against what the diff actually changed, and fails on the objective violations it can detect.
 
-The goal: make AI-driven engineering work durable, reviewable, and risk-aware. A reviewer can pick up a PR and see what was decided and why; classification matches reality; the harness refuses to advance past gaps it can detect.
+The result is agent-driven work that's easier to resume, review, and trust. The workflow makes the agent's scope, assumptions, risk assessment, approvals, and verification visible alongside the code; CI independently enforces the parts it can verify objectively. What can't be proved mechanically is recorded and surfaced to the human reviewer instead of disappearing inside the agent's conversation.
 
-Just as important as enforcement is **visibility**. Most of what the harness produces — the Work Record, the risk classification, the recorded approvals, the per-PR stickies — is there to surface what the agent did to a human reviewer. A determined agent can satisfy some gates structurally without genuine human intent (a "cheating window" the harness openly acknowledges); the harness's answer is to put those acts in front of a reviewer's eyes — in the PR conversation, in their notification email — where a human can see them and push back. Enforcement catches what it can; visibility catches the rest.
+It covers the change itself — from discovery through review. Product discovery, deployment, and production operation stay with the systems that already own them; agent-workflow composes with GitHub, CI, and branch protection rather than replacing them.
 
-Scope is the engineering-change slice — discovery → risk → plan → implement → verify → review. Product discovery, deployment, and production operation stay with the systems that already own them. This is one component in a workflow harness, not a complete harness — it composes with Jira, GitHub, and branch protection rather than replacing them.
-
----
-
-## Capability map
-
-What agent-workflow does:
-
-- **Skill (operating mode)** — guides the agent through the checkpoint sequence and writes/updates the Work Record as it goes.
-- **Skill (bootstrap mode)** — installs the harness on a new repo: config, risk-classification policy, vendored scripts, AGENTS.md reference section, per-checkpoint docs, optional CI workflow.
-- **CI checker** — single-file Python script vendored per repo. At PR time, validates structural and policy predicates against every touched Work Record; posts a sticky comment; blocks merge on blocking failures.
-- **Risk classifier (agent-redline)** — bundled subsystem. Maps changed paths to zones, detects boundary violations, surfaces watch-path signals. Pre-edit during the skill; PR-time as a separate CI job and sticky.
-- **Surfaces what the agent did to a human** — every PR carries two stickies (classifier verdict + Work-Record verdict) plus the Work Record itself. Risk declarations, recorded approvals, satisfied checkpoints, and verification claims all land where the reviewer sees them. Visibility is a first-class output, not a side-effect of enforcement.
-
-What agent-workflow does NOT do:
-
-- It does not judge **plan adequacy, discovery sufficiency, test adequacy, or code correctness.** Those stay reviewer judgments.
-- It does not re-run **CI tests** — GitHub already does that. The checker only reads Work Records and the classifier verdict.
-- It does not prove **human identity** behind a recorded approval. It checks that approval-shaped text exists; the cheating window is acknowledged openly.
-- It does not replace **branch protection, CODEOWNERS, or your reviewers.** Those remain authoritative.
-- It does not currently support the **Jira Work-Record backend** — the schema reserves the shape; implementation lands with slice W18. Local Markdown backend only today.
+**What it runs on.** The workflow model and the CI checker are agent-independent — the checker is a single-file Python script that reads files. The packaged skill currently targets Claude Code / Agent Skills–compatible environments (installed under `.claude/skills/`), and Claude Code hooks add plan-mode enforcement.
 
 ---
 
-## What a developer needs to know
+## The problem
 
-### 1. The checkpoints
+Agents produce code quickly, but the reasoning behind it — what was decided, what was assumed, what was actually verified — lives in a chat log that disappears. A reviewer inherits a diff with no durable record of scope or risk. A stalled task is hard for the next agent (or human) to resume. And "the tests pass" quietly becomes "this is correct."
 
-Every task walks the same sequence in order. Each checkpoint has a readiness gate; the harness refuses to advance until the gate is satisfied.
+agent-workflow makes that state durable, uses risk to focus reviewer attention, and puts objective guardrails at the pull request.
+
+## What you get
+
+- **Durable task state** — scope, assumptions, decisions, and verification live in the committed Work Record, so work can be reviewed and resumed rather than lost in a chat log.
+- **Risk-aware visibility** — the risk classification decides where a reviewer's attention goes, and what the agent decided and verified is on the record.
+- **Objective CI gates** — mechanically detectable violations fail CI, so they don't depend on the agent reporting itself correctly.
+
+## How it works
+
+```
+developer request
+  → agent works the checkpoints, writing the Work Record as it goes
+    → PR (Work Record committed with the code)
+      → CI: classify the diff, check it against the Work Record, post two comments
+        → human review
+```
+
+- **During development** — the skill walks the agent through the checkpoint sequence and writes/updates the Work Record. Planning fields go in *before* any code.
+- **At PR time** — a bundled risk classifier (agent-redline) classifies the actual diff; the checker compares that against the Work Record and enforces objective workflow rules.
+- **For reviewers** — risk assessment drives attention. The Work Record and the two PR sticky comments (classifier verdict + checker verdict) surface the agent's scope, assumptions, detected risk, required reviews, approvals, and verification claims, so a higher-risk change arrives with the context to review it.
+
+The checkpoints, in order:
 
 > Establish Context → Discover → Assess Risk → Plan and Review → Implement → Verify → Review the Result
 
-The agent writes the planning fields *before* touching code. State updates at every transition. A planned stop leaves recovery state explicit (current revision, what's unfinished, what the next agent should do first). Full spec: [`docs/SPEC.md`](docs/SPEC.md) §9.
+Each checkpoint has a readiness gate; the skill requires the agent to satisfy it before advancing, and CI independently enforces the subset it can verify. Full spec: [`docs/SPEC.md`](docs/SPEC.md).
 
-### 2. The Work Record
+## The Work Record
 
-One file per task at `.agent-workflow/tasks/<slug>.md`. Marker-bounded markdown block; prose around the markers is human notes (Implementation, Evidence, Result-review references), structured fields go inside.
+The central artifact: one file per task at `.agent-workflow/tasks/<slug>.md`, committed with the code and updated as work proceeds. A simplified example:
 
-- **Slug** is derived from the branch name (strip `feat/`, `fix/`, `slice/`, `chore/`, etc.; replace remaining `/` with `-`).
-- **Shape** is fixed by `(Risk, Complexity)`:
-  - `(Routine, Simple)` → compact shape: Outcome, Target, Scope, Constraints, Completion criteria, Risk, Complexity, Reason, Approach, Verification, State.
-  - Anything else → expanded shape with Discovery, Material assumptions, Plan, Verification plan, Plan review, Approvals.
-- **State** values: `Ready to implement`, `Blocked`, `Ready for review`. Update at every transition.
-- Templates: [`core/templates/work-record-routine.md`](core/templates/work-record-routine.md), [`core/templates/work-record-expanded.md`](core/templates/work-record-expanded.md).
-
-### 3. Risk and complexity
-
-Two independent axes — they answer different questions:
-
-- **Risk:** `Routine` | `Elevated` | `High`. What's the structural / architectural consequence of getting this wrong? Determines required approvals and reviews.
-- **Complexity:** `Simple` | `Moderate` | `Large`. How much planning and recovery state does the work itself need? Determines Work-Record shape and plan depth.
-
-A trivial change to a contract can be `(High, Simple)`. A large refactor of test scaffolding can be `(Routine, Large)`. The two are assessed independently.
-
-Plan-review obligation grows with risk:
-
-- Routine → agent self-review.
-- Elevated → clean-context subagent review (recorded in the Work Record).
-- High → clean-context review **plus** the agent stops and waits for a verbatim human approval.
-
-Engineering judgment may raise the declared risk above the structural minimum the classifier detected; it may not lower it.
-
-### 4. Risk classification — zones
-
-A bundled classification subsystem maps changed paths to zones from `agent-redline-policy.yaml`.
-
-| Zone | Meaning | Effect |
-|---|---|---|
-| **Red** | Architectural decisions: contracts, modeling, security, persistence. | Raises risk; may trigger a review checkpoint. |
-| **Blue** | Autonomous-safe: tests, docs, isolated/replaceable code. | No uplift. |
-| **Gray** | Unclassified. | Cautious by default; surfaced in sticky. |
-| **Watch** | Additive tag, not a zone — any file can carry a watch tag regardless of its zone. | Visibility only — no risk uplift, no checkpoint. |
-
-Plus one terminal state: **Boundary violation** — forbidden cross-layer dependency. Stops the workflow before planning; never waivable through a task exception.
-
-**Cardinal rule:** red zones trigger mandatory review checkpoints. If that checkpoint fires on every routine feature PR, reviewers stop taking it seriously and the gate dies. So red means *different review behavior*, not *important code* — if a path is in red and changes on routine work, demote it. For "important + routine" use the `watch` tag instead. Full feature set (vertical signals — API/schema/security/runtime-config, suppression detection, boundary backends, language extensions) and the policy schema: [`docs/REDLINE.md`](docs/REDLINE.md). Adoption-time tuning workflow: [`docs/INTEGRATION.md`](docs/INTEGRATION.md#risk-classification-and-how-to-keep-it-useful).
-
-### 5. Shadow vs binding
-
-The classifier ships with `modes.default: shadow` and `perCheck.boundary_violation: binding`. Meaning:
-
-- Zone classification is **advisory** during the calibration window — sticky shows the verdict, CI does not block.
-- Boundary violations **block from day one** — they are structural errors.
-
-Calibration window: ~4 weeks or 30 PRs. Read the stickies during that window; demote zones that fire on routine work; tighten checkpoints that get rubber-stamped. Then flip `modes.default` to `binding` via a normal PR.
-
-### 6. The CI checker
-
-Single-file Python, vendored at `scripts/agent-workflow-check.py`. Runs against every Work Record the PR touched.
-
-| Exit | Meaning | CI |
-|---|---|---|
-| `0` | Every predicate passed. | Green. |
-| `1` | Advisory failures only. | Green; sticky surfaces the warning. |
-| `2` | At least one blocking predicate failed. | Red; merge blocks if check is required. |
-
-**What it enforces:** Work Record present and well-formed; shape matches `(Risk, Complexity)`; State value valid; declared Risk ≥ detected Risk; no boundary violations; required approvals recorded for Elevated/High; review checkpoints satisfied; exceptions well-formed.
-
-**What it does NOT enforce:** plan quality, discovery sufficiency, test adequacy, code correctness, whether tests actually pass (GitHub already knows). Those stay reviewer judgments. Per-predicate reference: [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md).
-
-### 7. Local check before pushing
-
-```bash
-python scripts/agent-workflow-check.py --repo-root . --slug <slug>
+```md
+Outcome: Fix retry handling in WalletService — a transient failure retries once, not in a loop
+Target: wallet-service
+Scope: the retry path and its tests; no public API or schema change
+Constraints: public API and tenant isolation unchanged
+Completion criteria: a transient failure produces a single retry
+Risk: Routine
+Complexity: Simple
+Approach: reuse the existing retry utility; add a regression test
+Verification: WalletRetryTest + existing wallet-service CI
+State: Ready to implement
 ```
 
-Pipe the JSON through `scripts/format-verdict-comment.py` to see the rendered sticky.
+Its shape is fixed by `(Risk, Complexity)`: this compact form for `(Routine, Simple)` work, an expanded form (adding discovery, material assumptions, plan review, approvals) for everything else. Templates: [`core/templates/work-record-routine.md`](core/templates/work-record-routine.md), [`core/templates/work-record-expanded.md`](core/templates/work-record-expanded.md). The backend is a local Markdown file today; a Jira backend is reserved in the schema but not implemented.
 
-### 8. Adopting on a new repo
+## Quick start
 
-The skill ships from this repo's [`dist/agent-workflow/`](dist/agent-workflow/) tree — clone the repo and copy that directory into your target repo's `.claude/skills/` (or wherever your Claude Code install loads skills from). Then open the target repo in Claude Code and ask the agent to install agent-workflow. The bootstrap is a six-phase conversation: **inspect → propose → adapt → write → confirm CI → self-summary**. You stay in the loop throughout.
+Adopt agent-workflow on a repo:
 
-- **CI integration is your explicit yes.** Bootstrap will not write `.github/workflows/agent-workflow.yml` without confirmation.
-- **Branch protection and CODEOWNERS additions** are always proposal-only — bootstrap has no admin access; you apply them.
-- **Phase 3 calibration** is the most valuable step. Don't skip it; the tuner against your last 30 PRs is the single best way to avoid alert fatigue.
-
-Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
-
-### 9. Two stickies on every PR
-
-Both refresh on every push:
-
-- `agent-redline` — the classifier's zone verdict, boundary findings, watch-path surfacing.
-- `agent-workflow` — the per-Work-Record predicate verdict.
-
-They stay independently legible — either can be red while the other is green.
-
-### 10. Config knobs
-
-`agent-workflow.yaml` at the repo root:
-
-```yaml
-workRecord:
-  backend: local                              # only backend today (Jira backend planned)
-  local: { taskPath: ".agent-workflow/tasks/{slug}.md" }
-redline: required                             # treats missing verdict as CI config error
-redlineVerdictPath: build/redline-verdict.json
+```text
+1. Clone agent-workflow.
+2. Copy dist/agent-workflow/ into your repo's .claude/skills/.
+3. Open your repo in Claude Code.
+4. Ask: "Install agent-workflow on this repo."
+5. Review the integration PR it proposes.
 ```
 
-`agent-redline-policy.yaml` carries the zones, boundaries, checkpoints, PR-size thresholds, modes. This file is itself red-zone — changes go through architecture-review.
+Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
----
+## What CI enforces
 
-## See it on a real PR
+The checker reads the Work Record and the classifier's verdict — it does not re-run your tests. It fails CI on blocking violations (and blocks merge where configured as a required check):
 
-A companion demo repo carries one PR per scenario, kept open as living examples. Each sticky shows how the verdict comment reads in that situation.
+- The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
+- Declared risk is not below what the classifier detected on the diff.
+- No architectural-boundary violation.
+- Required reviews/approvals are recorded for Elevated/High work. (Once the classifier is in binding mode, any triggered review checkpoint must also be satisfied.)
+- State is valid and recorded exceptions are well-formed.
 
-[**rore/agent-workflow-demo — open PRs**](https://github.com/rore/agent-workflow-demo/pulls)
+Per-predicate reference: [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md).
 
----
+## What it deliberately can't prove
 
-## Where to read more
+By design — these stay reviewer judgments the checker never touches:
+
+- Whether the plan is sound, discovery thorough, or the code correct.
+- Whether the chosen verification method actually proves the criterion.
+- Whether the tests pass — GitHub already knows that.
+- Whether a human genuinely approved. The checker confirms approval-shaped text exists, not who wrote it; this "cheating window" is acknowledged openly. Its answer is visibility — the recorded approvals, classifications, and claims land in the PR conversation and the reviewer's notification, where a human can see them and object.
+
+## Risk-aware workflow
+
+Two independent axes:
+
+- **Risk** — `Routine` / `Elevated` / `High`: how bad is it if this change is wrong? Drives required approvals and reviews.
+- **Complexity** — `Simple` / `Moderate` / `Large`: how much planning and recovery state does the work need? Drives the Work-Record shape.
+
+They're assessed separately — a one-line change to a contract can be `(High, Simple)`.
+
+The bundled classifier (agent-redline) sorts changed paths into zones (red = architectural decisions; blue = autonomous-safe; gray = unclassified) and detects forbidden cross-layer dependencies. During planning, the skill uses the policy to assess the intended scope; at PR time, the classifier deterministically classifies the actual diff and CI reconciles that verdict with the Work Record — declared intent first, independent validation later. It ships in **shadow** mode — advisory, surfaced in the sticky but not blocking — so you calibrate against your own PRs before flipping it to binding. Boundary violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
+
+## Documentation
 
 | Topic | Doc |
 |---|---|
-| Adopt agent-workflow on a repo, tune the risk policy, troubleshoot | [`docs/INTEGRATION.md`](docs/INTEGRATION.md) |
-| Risk-classification subsystem: full feature set, policy schema, calibration | [`docs/REDLINE.md`](docs/REDLINE.md) |
-| Predicate-by-predicate reference of what the CI checker blocks on | [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md) |
-| The normative spec — workflow + harness contract | [`docs/SPEC.md`](docs/SPEC.md) |
-| Publishing the skill to the skill registry | [`docs/PACKAGING.md`](docs/PACKAGING.md) |
+| Adopt on a repo, tune the risk policy, troubleshoot | [`docs/INTEGRATION.md`](docs/INTEGRATION.md) |
+| Risk classification: feature set, policy schema, calibration | [`docs/REDLINE.md`](docs/REDLINE.md) |
+| Predicate-by-predicate reference of what CI blocks on | [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md) |
+| The normative workflow + harness contract | [`docs/SPEC.md`](docs/SPEC.md) |
 | Default profile mapping (risk triggers, GitHub, CI) | [`docs/DEFAULT_PROFILE.md`](docs/DEFAULT_PROFILE.md) |
+| Publishing the skill | [`docs/PACKAGING.md`](docs/PACKAGING.md) |
 | Working on agent-workflow itself | [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md) |

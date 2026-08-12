@@ -6,9 +6,9 @@
 # depends on.
 #
 # The vendored output is what consuming repos install at
-# scripts/agent-workflow-check.py — see the demo repo's main branch.
-# We rebuild it from source on every slice bump so the demo repo and
-# the dev repo do not drift.
+# scripts/agent-workflow-check.py. We rebuild it from source on every
+# slice bump so a consumer's vendored copy does not drift from the
+# checker source in this repo.
 #
 # Usage:
 #   scripts/build-vendored-checker.sh                  # write to stdout
