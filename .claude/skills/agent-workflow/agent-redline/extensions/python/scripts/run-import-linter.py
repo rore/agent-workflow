@@ -244,16 +244,19 @@ def handle_report(report: Any, out_path: Path) -> int:
     contract broken, 2 = script error (which includes a config error).
     """
     if getattr(report, "could_not_run", False):
-        # Invalid contract options are a CONFIG error, not a broken
-        # contract — so this is a script error (2), not "a contract is
-        # broken" (1). Write an EMPTY violations report: the downstream
-        # reporter treats every entry in `violations` as a boundary
-        # violation regardless of severity (the schema's severity enum has
-        # no "ignore me" value), so emitting these here produced a false
-        # BOUNDARY_VIOLATION. Surface them on stderr instead — the boundary
-        # job runs with continue-on-error, so the log is where they belong.
+        # Invalid contract options are a CONFIG error, not a broken contract —
+        # so this is a script error (2), not "a contract is broken" (1). But
+        # earlier contracts may have run and genuinely broken, so PRESERVE
+        # their violations (build_violations skips the invalid-option
+        # contracts, which live in report.invalid_contract_options, not in
+        # the kept/broken checks). The config errors themselves are surfaced
+        # on stderr — never written as boundary violations, since the
+        # downstream reporter treats every `violations` entry as a boundary
+        # violation (the schema's severity enum has no "ignore me" value) and
+        # would otherwise headline a false BOUNDARY_VIOLATION.
         messages = _config_error_messages(report)
-        write_report(out_path, [])
+        violations = build_violations(report)
+        write_report(out_path, violations)
         sys.stderr.write(
             f"error: {len(messages)} contract(s) had invalid options "
             f"(config error, not a boundary violation):\n"

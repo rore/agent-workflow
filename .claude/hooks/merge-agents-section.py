@@ -62,7 +62,9 @@ def reconcile(text, template_body):
     before = text[:s]
     after = text[e + len(END):]
     eol = _detect_newline(text)
-    body = template_body.strip("\n")
+    # strip("\r\n") (not just "\n") so a CRLF template doesn't leave a stray
+    # `\r` at the boundaries that would survive normalization below.
+    body = template_body.strip("\r\n")
     # Normalise the template body to the file's EOL so the whole refreshed
     # span matches the surrounding prose byte-for-byte.
     body = body.replace("\r\n", "\n").replace("\n", eol)

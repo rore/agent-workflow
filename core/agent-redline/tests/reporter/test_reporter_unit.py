@@ -1633,6 +1633,15 @@ class TestCodeownersGlobMatching:
         assert _codeowners_match("foo/**bar", "foo/xbar")
         assert not _codeowners_match("foo/**bar", "foo/x/bar")
 
+    def test_double_star_needs_left_segment_boundary(self):
+        # `foo**/bar` is glued to `foo` on the LEFT, so it is NOT a
+        # whole-segment globstar — the stars stay within one segment and
+        # must not cross '/'. Missing this let an unrelated path (and thus
+        # an unrelated approver) satisfy a CODEOWNER checkpoint.
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("foo**/bar", "fooX/bar")
+        assert not _codeowners_match("foo**/bar", "foo/x/bar")
+
     def test_bare_glob(self):
         from core.reporter.reporter import _codeowners_match
         # Bare pattern (no /) matches anywhere

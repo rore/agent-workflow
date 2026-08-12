@@ -600,8 +600,16 @@ def resolve_suppressions_config(
         )
 
     use_defaults = block.get("useExtensionDefaults", True)
-    add = block.get("add", {}) or {}
-    remove = block.get("remove", {}) or {}
+    # Coerce non-mapping add/remove to {} — a non-empty list/scalar here would
+    # raise AttributeError in merge_list/merge_sub below, and schema validation
+    # doesn't always run (load_policy warns and continues when jsonschema is
+    # absent). An empty list is already falsy → {}; this covers the rest.
+    add = block.get("add") or {}
+    if not isinstance(add, dict):
+        add = {}
+    remove = block.get("remove") or {}
+    if not isinstance(remove, dict):
+        remove = {}
     exempt_paths = block.get("exemptPaths", []) or []
 
     defaults: dict[str, Any] = {}
@@ -928,14 +936,18 @@ def owners_for_paths(
 def _codeowners_glob_to_regex(pattern: str) -> str:
     """Translate a CODEOWNERS-style glob into an un-anchored regex body.
 
-    `**` matches ZERO OR MORE full path segments (crossing `/`) ONLY when
-    it forms a whole segment — i.e. `**/` or a trailing `**`. A `**` glued
-    to literals (e.g. `foo/**bar`) is not a whole segment; per gitignore the
-    asterisks act as a within-segment `*` and must not cross `/`. `*`
-    matches within a single segment (no `/`); every other character is
-    escaped literally. Unlike the previous ``fnmatch.translate`` hack, the
-    zero-segment case of a middle `**` is handled — ``foo/**/bar`` matches
-    ``foo/bar`` as well as ``foo/x/bar`` and ``foo/x/y/bar``.
+    `**` matches ZERO OR MORE full path segments (crossing `/`) ONLY when it
+    forms a WHOLE segment — bounded by a segment separator on both sides:
+    it starts the pattern or follows `/` (left boundary) AND is followed by
+    `/` or ends the pattern (right boundary). A `**` glued to a literal on
+    either side (`foo**/bar`, `foo/**bar`) is not a whole segment; per
+    gitignore the asterisks act as a within-segment `*` and must not cross
+    `/` — otherwise an unrelated path could match and let an unrelated
+    approver satisfy a CODEOWNER checkpoint. `*` matches within a single
+    segment (no `/`); every other character is escaped literally. Unlike the
+    previous ``fnmatch.translate`` hack, the zero-segment case of a middle
+    `**` is handled — ``foo/**/bar`` matches ``foo/bar`` as well as
+    ``foo/x/bar`` and ``foo/x/y/bar``.
 
     Returns the body only (no `^`/`\\Z`); the caller anchors it to
     preserve the anchored-vs-unanchored (re.match vs re.search)
@@ -948,23 +960,27 @@ def _codeowners_glob_to_regex(pattern: str) -> str:
         c = pattern[i]
         if c == "*":
             if i + 1 < n and pattern[i + 1] == "*":
-                if i + 2 < n and pattern[i + 2] == "/":
+                # Whole-segment globstar requires a LEFT boundary (start of
+                # pattern or preceding `/`). Without it (`foo**`), the stars
+                # are glued to a literal and stay within one segment.
+                left_boundary = (i == 0) or (pattern[i - 1] == "/")
+                if left_boundary and i + 2 < n and pattern[i + 2] == "/":
                     # `**/` → an optional run of whole segments (incl. zero),
                     # which is what makes `foo/**/bar` match `foo/bar`.
                     out.append("(?:.*/)?")
                     i += 3
                     continue
-                if i + 2 >= n:
-                    # Trailing `**` → match anything to the end, crossing
-                    # segment boundaries (e.g. `core/schema/**`).
+                if left_boundary and i + 2 >= n:
+                    # Trailing whole-segment `**` → match anything to the end,
+                    # crossing segment boundaries (e.g. `core/schema/**`).
                     out.append(".*")
                     i += 2
                     continue
-                # `**` glued to a literal suffix (e.g. `foo/**bar`) is NOT a
-                # whole path segment; gitignore treats the asterisks as a
-                # within-segment `*`, so it must not cross `/`. (The old
-                # fnmatch hack turned this into `.*bar`, over-matching across
-                # slashes.)
+                # Glued to a literal on the left (`foo**/`) or right
+                # (`foo/**bar`): NOT a whole segment; gitignore treats the
+                # asterisks as a within-segment `*`, so it must not cross `/`.
+                # (The old fnmatch hack turned these into `.*`, over-matching
+                # across slashes.)
                 out.append("[^/]*")
                 i += 2
                 continue

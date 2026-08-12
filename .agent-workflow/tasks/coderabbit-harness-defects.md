@@ -63,7 +63,7 @@ Red-zone schema files (`core/agent-redline/core/schema/**`, architecture-review 
 - H schema mojibake removed → jsonschema loads all three and em dash / section-sign render; `$id` unchanged.
 - Whole suite stays green → `bash tests/run-all.sh` (package layer confirms `dist/` regenerated).
 
-**Plan review:** self (Elevated — localized defect fixes ported from a reviewed, merged upstream change with tests; developer in the loop)
+**Plan review:** clean-context agent review recorded under `## Plan review` below (verdict: sound-with-nits, no blockers)
 
 **Approvals:** Not required at this risk level
 
@@ -84,3 +84,22 @@ Port of a merged upstream fix (CodeRabbit review of a downstream install). Basel
 - Schemas re-parse as valid JSON; em dash / section-sign render; each `$id` unchanged.
 
 Vendored artifacts regenerated via `scripts/package-skill.sh` (`dist/agent-workflow/**` + tracked `.claude/hooks/`).
+
+## Plan review
+
+Clean-context agent review (read-only; no prior context from the implementation session).
+
+**Verdict: sound-with-nits.** The plan is a faithful, well-scoped port and the marker block accurately describes what the code does.
+
+**Strengths:**
+- Scope matches the code exactly: A/E in `reporter.py` (`_codeowners_glob_to_regex` + the `resolve_boundary_input`/`resolve_suppressions_config` guards in `main`), B/F in `format-verdict-comment.py`, C in `run-import-linter.py` (`handle_report`/`_config_error_messages`), D in the tuner's `main` (`json.JSONDecodeError, KeyError, TypeError` fallback), G in `merge-agents-section.py`, H in the three schemas.
+- The A fix is correct: `foo/**/bar` → `foo/(?:.*/)?bar\Z` (zero/one/multi segments) and the glued forms `foo/**bar`/`foo**/bar` → within-segment `[^/]*`. Anchored (`re.match`) vs unanchored (`re.search`) split preserved; non-`**` patterns still route through `fnmatch`, so goldens are undisturbed.
+- H is display-only: descriptions use proper JSON escapes (`—`, `§`), not mojibake, and all three `$id`s still point at `github.com/rore/...` — validation contract untouched.
+- Host-term scan clean: only generic placeholders appear — no internal/host-specific leakage. Both new test files present.
+
+**Concerns / nits (none blocking):**
+- Only A and C carry dedicated regression tests; B/D/E/F/G rest on targeted unit/CLI checks. The Verification plan now names the concrete check for G (CRLF) and D (the new exception arm).
+- Intentional cross-file inconsistency, flagged so a future reader doesn't "harmonize" it: a config error exits **2** in `run-import-linter.py` (script error) but the reporter's `main` boundary/suppressions guards return **1** (config error) — each is internally documented and correct for its own contract.
+- `Plan review` field updated to reference this section (was "self").
+
+**Classification: defensible.** Elevated floor correct (red-zone `core/agent-redline/core/schema/**` in scope); NOT-High justified — schema edits are non-semantic and `$id`-preserving. Moderate complexity right. Regression risk low, gated by the package/hooks drift layers.

@@ -553,7 +553,10 @@ def _record_age(repo_root: Path, slug: str) -> str | None:
         # Path.stat(). Parse the override defensively — a non-numeric value
         # raises ValueError, which an OSError-only except would let escape.
         override = os.environ.get("AGENT_WORKFLOW_TEST_NOW")
-        now = float(override) if override else _now_seconds()
+        # `is not None`, not truthiness: a present-but-empty override is
+        # invalid (float("") raises ValueError → the except returns no age),
+        # distinct from an unset var which falls back to real time.
+        now = float(override) if override is not None else _now_seconds()
         mtime = path.stat().st_mtime
         return _human_age(now - mtime)
     except (OSError, ValueError):

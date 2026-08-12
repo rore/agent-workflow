@@ -81,9 +81,38 @@ def test_config_error_returns_exit_2_and_empty_report(tmp_path):
     # Documented exit code 2 = script error (config errors belong here),
     # NOT 1 (a broken contract).
     assert rc == 2
-    # Empty violations → the reporter cannot headline a false
-    # BOUNDARY_VIOLATION from a config error.
+    # No config error is written as a violation → the reporter cannot
+    # headline a false BOUNDARY_VIOLATION. (This report has no completed
+    # checks, so violations is empty.)
     assert _load(out)["violations"] == []
+
+
+def test_config_error_preserves_completed_check_violations(tmp_path):
+    # A later contract had invalid options (could_not_run), but an EARLIER
+    # contract ran and genuinely broke. That real violation must survive —
+    # only the config errors are dropped (to stderr). Exit stays 2.
+    report = _FakeReport(
+        could_not_run=True,
+        invalid_contract_options={
+            "later-bad-options": _FakeExc({"containers": "must be a list"}),
+        },
+        contracts_and_checks=[
+            (
+                _FakeContract("earlier-broken"),
+                _FakeCheck(False, {"invalid_dependencies": [
+                    {"importer": "domain", "imported": "infra", "routes": []},
+                ]}),
+            ),
+        ],
+    )
+    out = tmp_path / "report.json"
+    rc = adapter.handle_report(report, out)
+    assert rc == 2
+    violations = _load(out)["violations"]
+    assert len(violations) == 1
+    assert violations[0]["rule"] == "earlier-broken"
+    # The config-error contract is NOT among the written violations.
+    assert all(v["rule"] != "later-bad-options" for v in violations)
 
 
 def test_config_error_messages_format():
