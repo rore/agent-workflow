@@ -70,4 +70,11 @@ Nits (non-blocking, both addressed/expected): (1) clarified the "consumer bootst
 
 ## Evidence
 
-_Populated at Verify._
+Verified on branch `fix/seed-guarded-paths-and-commit-skill` (diff vs `main`):
+
+- **Full suite** `bash tests/run-all.sh` → all layers green (budget, schema, work-record, checker, redline, tuner, hooks, links, package), including the new `check-committed-skill.sh` confirming committed `.claude/skills/agent-workflow/` == `dist/agent-workflow/`.
+- **Seed message** — `grep "guarded path"` matches in `core/skill/hooks/`, `.claude/hooks/`, and `dist/agent-workflow/hooks/` copies of `seed-workflow.sh`; no `src/` remains.
+- **Skill committed** — `git ls-files .claude/skills/agent-workflow/SKILL.md` returns the path (criterion satisfied post-commit).
+- **Redline reporter** on the final diff → `GRAY`, exit 1 (non-blocking shadow); 0 red, PR-size `ok`. Gray corroborates the Elevated declaration, so `risk.declared_not_below_detected` holds.
+- **Checker** `python -m core.checker --slug seed-guarded-paths-and-commit-skill --redline-verdict <verdict>` → `status: clean`, exit 0; the record's predicates pass.
+- **Diff hygiene** — only intended dist changes: `dist/agent-workflow/hooks/seed-workflow.sh` + regenerated `manifest.txt`; `agent-workflow-tune.py` content unchanged.
