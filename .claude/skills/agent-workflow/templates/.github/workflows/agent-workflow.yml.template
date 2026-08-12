@@ -176,10 +176,10 @@ jobs:
         # Workflow-compliance's risk.redline_findings_available
         # predicate handles the "broken verdict" case.
         #
-        # Pinned to @v3 because @v4 is not yet supported on GitHub
-        # Enterprise Server (GHES) installations as of mid-2026.
+        # v4 is required on github.com (v3 artifact actions were
+        # retired) and is supported on GitHub Enterprise Server 3.11+.
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: redline-verdict
           path: redline-verdict.json
@@ -266,10 +266,10 @@ jobs:
         # upload step ran. The checker's predicates handle the
         # absence — we don't fail-fast here.
         #
-        # Pinned to @v3 because @v4 is not yet supported on GitHub
-        # Enterprise Server (GHES) installations as of mid-2026.
+        # v4 is required on github.com (v3 artifact actions were
+        # retired) and is supported on GitHub Enterprise Server 3.11+.
         continue-on-error: true
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: redline-verdict
           path: .

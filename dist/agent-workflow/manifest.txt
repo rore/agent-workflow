@@ -44,7 +44,7 @@ operating-mode.md	9976
 scripts/agent-workflow-check.py	168139
 scripts/agent-workflow-tune.py	24693
 scripts/format-verdict-comment.py	37680
-templates/.github/workflows/agent-workflow.yml.template	16390
+templates/.github/workflows/agent-workflow.yml.template	16398
 templates/agent-workflow.yaml.template	2281
 templates/agents-section.md.template	2148
 templates/bootstrap-summary.md.template	3072
