@@ -8,10 +8,16 @@ build/
 # Fixture build/ directories carry redline-verdict.json artifacts that
 # are part of the checker test scenarios — they must be tracked.
 !tests/**/build/
-.claude/skills/
-# Codex installs the skill into .agents/skills/ alongside Claude Code's
-# .claude/skills/. Same deal — every developer regenerates locally via
-# scripts/package-skill.sh, which mirrors into this path when present.
+# Local skill installs are regenerated via scripts/package-skill.sh, so
+# they're gitignored — EXCEPT the agent-workflow skill itself. This repo
+# dogfoods agent-workflow, and its committed .claude/hooks/ point at
+# /agent-workflow, so the skill is committed too: a fresh clone is
+# governed with no manual install step, and the committed hooks don't
+# reference a missing skill. Kept in lockstep with dist/agent-workflow/
+# by tests/package/check-committed-skill.sh.
+.claude/skills/*
+!.claude/skills/agent-workflow/
+# Codex mirror install (.agents/skills/) is regenerated locally.
 .agents/skills/
 __pycache__/
 *.pyc
