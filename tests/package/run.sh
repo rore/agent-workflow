@@ -7,6 +7,8 @@
 #
 #   check-package.sh         — committed dist/ matches what the
 #                              packager produces (drift detection)
+#   check-committed-skill.sh — committed .claude/skills/agent-workflow/
+#                              matches dist/ (this repo commits the skill)
 #   check-references.sh      — every internal markdown reference in
 #                              the dist resolves inside the dist
 #                              (completeness)
@@ -22,6 +24,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 bash "$HERE/check-package.sh"
+bash "$HERE/check-committed-skill.sh"
 bash "$HERE/check-references.sh"
 bash "$HERE/check-install-probe.sh"
 bash "$HERE/check-e2e-bootstrap.sh"
