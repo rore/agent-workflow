@@ -9,8 +9,9 @@ This repository. Source-of-truth under `core/…`, top-level `scripts/…`, root
 
 **Scope:**
 - Line endings: renormalize all tracked CRLF text blobs → LF (git renormalize with `core.autocrlf=false` under the existing `.gitattributes eol=lf` rules). Regenerate `dist/` so `cp`'d files + `manifest.txt` are LF-correct.
-- Runner default: `core/templates/.github/workflows/agent-workflow.yml.template` — both `runs-on: [self-hosted]` (redline job + agent-workflow job) → `runs-on: ubuntu-latest`, with the adjacent comment reframed.
-- Docs: `docs/INTEGRATION.md` (the "self-hosted … default in the shipped template" line) reframed so ubuntu-latest is the default and self-hosted the enterprise alternative; any runner note in `core/skill/bootstrap-mode.md`.
+- Runner default: `core/templates/.github/workflows/agent-workflow.yml.template` — both `runs-on: [self-hosted]` (redline job line 44 + agent-workflow job line 250) → `runs-on: ubuntu-latest`. (Plan review confirmed there is no adjacent self-hosted comment to reframe — the change is the two scalar values only.)
+- Docs: `docs/INTEGRATION.md:9` (the "self-hosted … default in the shipped template" line) reframed so ubuntu-latest is the default and self-hosted the enterprise alternative.
+- OUT OF SCOPE (explicit, per plan review): `.github/workflows/test.yml:19` self-hosted mention — it is a comment explaining why `setup-python` is used, not a runner default, and remains accurate on hosted runners; only its line endings normalize. `core/skill/bootstrap-mode.md:222` mentions "runner labels" generically (an allowed repo-specific edit), not a default — nothing to change.
 - Regenerated: `dist/agent-workflow/**` + tracked `.claude/` copies via `scripts/package-skill.sh`.
 
 **Constraints:**
@@ -58,7 +59,7 @@ CI workflow template (gray-zone governance) + guarded paths `core/` & `scripts/`
 - Whole suite → `bash tests/run-all.sh` (python3 shim) EXIT 0.
 
 **Plan review:**
-Pending — clean-context agent review required at Elevated. Recorded under `## Plan review` below.
+Clean-context read-only agent review (no context from this session) recorded under `## Plan review` below. Verdict: **sound-with-nits**, no blockers.
 
 **Approvals:** Not required at this risk level
 
@@ -74,3 +75,17 @@ _(populated per phase during Implement)_
 ## Evidence
 
 _(populated at Verify)_
+
+## Plan review
+
+Clean-context read-only agent review (Explore agent, no prior context from the planning session; read the Work Record + packager + drift gate + `.gitattributes` + template + docs fresh).
+
+**Verdict: sound-with-nits.** No correctness blocker.
+
+- **Renormalization sound.** CRLF-in-blobs confirmed via `git cat-file -p` (packager 404 CRs, template 365, README 122, `.gitattributes` 23). `git -c core.autocrlf=false add --renormalize .` under the existing `eol=lf` attributes is the correct mechanism; the on-disk-rewrite fallback is sound.
+- **No fixture should keep CRLF.** The one CRLF-aware component, `core/skill/hooks/merge-agents-section.py`, preserves a *consumer file's* EOL at runtime; its test (`tests/hooks/run.sh:150-175`) builds fixtures inline with LF `printf` and never asserts committed CRLF bytes. `tests/fixtures/**` are all LF text. Normalizing repo sources doesn't touch the hook's runtime behavior.
+- **dist regeneration required + ordering correct.** `check-package.sh:30` uses `diff -r --strip-trailing-cr` (EOL-agnostic on contents); only `manifest.txt` byte counts are ending-sensitive. Packager reads the working tree, so renormalize-index → refresh-working-tree-to-LF → repackage yields an all-LF dist + matching manifest.
+- **No binary risk.** Zero tracked binary files; `* text=auto` excludes binaries from normalization anyway.
+- **Runner flip complete + invariant-preserving.** Only two source `self-hosted` occurrences (template `:44`, `:250`); flip to scalar `ubuntu-latest` is valid YAML, matches the repo's own live workflow, and touches no structural invariant (`needs`, `if: always()`, artifacts @v4, `--changed-files`, `--redline-verdict`, exit codes, sticky headers).
+
+**Nits folded into the plan:** template has no adjacent self-hosted comment to reframe (Scope corrected — values only); `.github/workflows/test.yml:19` self-hosted mention is a comment, not a default → explicitly declared out of scope; `bootstrap-mode.md:222` "runner labels" is generic → nothing actionable; commit 1's `manifest.txt` numeric diff is expected and will still show under `--ignore-cr-at-eol` (those aren't CR-at-eol changes).
