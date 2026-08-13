@@ -6,7 +6,7 @@ This is the guide for adopting agent-workflow on a repository the first time. It
 
 - The repo is a git repository with a `main` (or equivalent default) branch.
 - You can open PRs and merge them — bootstrap commits artifacts via a normal PR, nothing privileged.
-- The repo has a host that can run the CI workflow (GitHub Actions on github.com or GHES; self-hosted runners are fine and are the default in the shipped workflow template).
+- The repo has a host that can run the CI workflow (GitHub Actions on github.com or GHES). The shipped workflow template defaults to `ubuntu-latest` (GitHub-hosted runners); if your organization runs its own runners, change `runs-on` to `[self-hosted]` (or your runner labels) during bootstrap.
 - Python 3.11+ is available on CI runners (the checker is single-file Python; no extra packaging).
 
 You do **not** need: a database, a service to deploy, an account anywhere, or admin rights on the repo. Branch protection changes are proposed for a human to apply; bootstrap never reaches into repo settings.

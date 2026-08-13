@@ -41,7 +41,7 @@ permissions:
 
 jobs:
   redline:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -247,7 +247,7 @@ jobs:
     # useful (it names the missing-verdict case explicitly via the
     # risk.redline_findings_available predicate).
     if: always()
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
