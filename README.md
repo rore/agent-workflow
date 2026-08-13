@@ -109,6 +109,10 @@ They're assessed separately — a one-line change to a contract can be `(High, S
 
 The bundled classifier (agent-redline) sorts changed paths into zones (red = architectural decisions; blue = autonomous-safe; gray = unclassified) and detects forbidden cross-layer dependencies. During planning, the skill uses the policy to assess the intended scope; at PR time, the classifier deterministically classifies the actual diff and CI reconciles that verdict with the Work Record — declared intent first, independent validation later. It ships in **shadow** mode — advisory, surfaced in the sticky but not blocking — so you calibrate against your own PRs before flipping it to binding. Boundary violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
 
+## Evidence from use
+
+On an internal repository, agent-workflow has governed its own development across dozens of pull requests, and it has since been used on real application code in another project. In that use it has surfaced correctness, scope, verification, and risk issues before merge — in some cases changing the engineering decision, not just documenting it. The signal isn't any single review step but the combination: risk decides when stronger review is required, findings and decisions are preserved in the Work Record, and CI independently checks the agent's declarations against the final diff. This isn't yet evidence of lower defect rates or ROI — it's evidence the workflow acts as an engineering control rather than just producing paperwork.
+
 ## Documentation
 
 | Topic | Doc |
