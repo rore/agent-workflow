@@ -1,4 +1,7 @@
 <!-- agent-workflow:start -->
+<!-- A `**Label:**` at the start of a line inside this block is parsed as a
+     field; an unrecognized one fails the record. Keep bold sub-headings out of a
+     field's prose value (put such structure below the block, or use plain text). -->
 **Outcome:**
 <!-- what should be true when complete -->
 
