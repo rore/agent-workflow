@@ -62,7 +62,7 @@ Clean-context read-only agent review recorded under `## Plan review` below. Verd
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -71,7 +71,10 @@ Clean-context read-only agent review recorded under `## Plan review` below. Verd
 
 ## Evidence
 
-_(populated at Verify)_
+- **Full suite green:** `PATH=/tmp/pyshim:$PATH bash tests/run-all.sh` → **all layers ok** (budget, schema, work-record, checker, redline, tuner, hooks, links, package). The `package` layer confirms `dist/agent-workflow/` matches source after regeneration.
+- **Runner default flipped:** both jobs `runs-on: ubuntu-latest` in source (`core/…:44,250`), regenerated `dist/…`, and synced `.claude/skills/…`. `docs/INTEGRATION.md:9` reframes self-hosted as the enterprise alternative; the only remaining `self-hosted` in `core/`+`docs/` is that intentional "change to `[self-hosted]`" alternative mention.
+- **Minimal, no unintended drift:** 4 tracked files changed (`core/` template, `dist/` template, `.claude/skills/` template, `docs/INTEGRATION.md`). `manifest.txt` is unchanged because `ubuntu-latest` and `[self-hosted]` are both 13 chars → identical byte counts.
+- **No renormalization performed:** the CRLF premise was disproven (`od -c` raw bytes + `git ls-files --eol` → repo already pure LF, 0 files CRLF/mixed). Renormalize attempts correctly staged 0 files.
 
 ## Plan review
 
