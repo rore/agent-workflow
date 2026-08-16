@@ -159,6 +159,45 @@ class TestClassifyFiles:
         assert c["blue"] == ["src/main/app/OrderService.java"]
         assert c["watch"] == ["src/main/app/OrderService.java"]
 
+    def test_work_record_excluded_by_default(self):
+        # The agent-workflow bookkeeping folder is excluded by a built-in
+        # default even when the policy sets NO excludes of its own. This is
+        # the fix for the self-referential bug where a task's own Work
+        # Record landed in the gray catch-all and forced detected risk to
+        # Elevated, making the Routine tier unreachable.
+        policy = self.policy_with_zones()  # no zones, no excludes
+        c = classify_files([".agent-workflow/tasks/my-task.md"], policy)
+        assert c["excluded"] == [".agent-workflow/tasks/my-task.md"]
+        assert c["gray"] == []
+        assert c["blue"] == []
+        assert c["red"] == []
+        assert c["watch"] == []
+
+    def test_work_record_excluded_even_when_blue_matches(self):
+        # A repo may still list the WR folder as blue (a pre-fix workaround).
+        # Excludes are evaluated before blue, so the WR is excluded, not blue.
+        policy = self.policy_with_zones(blue=[".agent-workflow/tasks/**"])
+        c = classify_files([".agent-workflow/tasks/some-slug.md"], policy)
+        assert c["excluded"] == [".agent-workflow/tasks/some-slug.md"]
+        assert c["blue"] == []
+        assert c["gray"] == []
+
+    def test_default_exclude_is_additive_with_policy_excludes(self):
+        # The built-in default must MERGE with the policy's own excludes,
+        # not replace them: both a policy-excluded path and a Work Record
+        # land in `excluded`.
+        policy = self.policy_with_zones(
+            blue=["**"],
+            excludes=["**/generated/**"],
+        )
+        c = classify_files(
+            ["src/main/generated/Foo.java", ".agent-workflow/tasks/t.md"],
+            policy,
+        )
+        assert "src/main/generated/Foo.java" in c["excluded"]
+        assert ".agent-workflow/tasks/t.md" in c["excluded"]
+        assert c["blue"] == []
+
 
 # --------------------------------------------------------------------------
 # Signal detection
@@ -496,6 +535,17 @@ class TestClassifyVerdict:
         v = classify(base_policy, diff)
         assert v.verdict == "GRAY"
 
+    def test_work_record_only_diff_is_not_gray(self, base_policy):
+        # A PR that changes ONLY its own Work Record must not be dragged to
+        # GRAY (and thus to detected Elevated downstream). The WR folder is
+        # excluded by default, so a WR-only diff has no gray zone and reads
+        # BLUE — the reporter-side guarantee that the Routine tier is
+        # reachable. base_policy sets no excludes; the default supplies it.
+        diff = Diff([".agent-workflow/tasks/my-task.md"], 1, 10)
+        v = classify(base_policy, diff)
+        assert v.verdict == "BLUE"
+        assert v.exit_code == 0
+
     def test_pr_size_warn(self, base_policy):
         base_policy["prRules"] = {
             "maxChangedFiles": {"warn": 5, "fail": 100},
@@ -549,6 +599,36 @@ class TestClassifyVerdict:
         assert v.pr_size["lines"] == 5
         assert v.pr_size["excludedFiles"] == 2
         assert v.pr_size["excludedLines"] == 10000
+        assert v.pr_size["verdict"] == "ok"
+
+    def test_pr_size_excludes_work_record_by_default(self, base_policy):
+        # The built-in default exclude also keeps the Work Record out of the
+        # size budget (files AND lines), even with NO policy excludes set —
+        # a task's bookkeeping should never inflate its own PR size.
+        base_policy["prRules"] = {
+            "maxChangedFiles": {"warn": 3, "fail": 6},
+            "maxLinesChanged": {"warn": 100, "fail": 300},
+        }
+        diff = Diff(
+            changed_files=[
+                "src/main/foo/Real.java",
+                ".agent-workflow/tasks/exclude-workrecord-from-redline.md",
+            ],
+            files_changed=2,
+            lines_changed=205,
+            lines_by_file={
+                "src/main/foo/Real.java": 5,
+                ".agent-workflow/tasks/exclude-workrecord-from-redline.md": 200,
+            },
+        )
+        v = classify(base_policy, diff)
+        assert v.pr_size["files"] == 1
+        assert v.pr_size["lines"] == 5
+        assert v.pr_size["excludedFiles"] == 1
+        assert v.pr_size["excludedLines"] == 200
+        # If the WR's 200 lines ever bled back into the budget, lines would
+        # be 205 (> warn:100) and the verdict would flip to "warn" — assert
+        # "ok" so that regression fails the test.
         assert v.pr_size["verdict"] == "ok"
 
     def test_pr_size_falls_back_to_scalar_without_lines_per_file(self, base_policy):

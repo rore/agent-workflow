@@ -4,7 +4,7 @@ agent-redline/assets/schema/agent-policy.schema.json	12645
 agent-redline/assets/schema/boundary-violations.schema.json	2260
 agent-redline/assets/schema/suppressions.schema.json	2005
 agent-redline/assets/templates/AGENTS.md.template	972
-agent-redline/assets/templates/agent-policy.yaml.template	2932
+agent-redline/assets/templates/agent-policy.yaml.template	3481
 agent-redline/assets/templates/pr-template.md	401
 agent-redline/assets/templates/pre-push-check.sh	4990
 agent-redline/assets/templates/suppressions.yaml	600
@@ -31,7 +31,7 @@ agent-redline/references/per-checkpoint/persistence-change-checkpoint.md	2673
 agent-redline/references/per-checkpoint/pr-discipline.md	2367
 agent-redline/references/per-checkpoint/red-zone-change.md	1902
 agent-redline/references/per-checkpoint/security-change-checkpoint.md	2171
-agent-redline/scripts/agent-redline-report.py	80307
+agent-redline/scripts/agent-redline-report.py	82196
 assets/schema/agent-workflow.schema.json	3933
 bootstrap-mode.md	24433
 hooks/check-plan.py	4854

@@ -177,6 +177,28 @@ def test_red_without_disambiguator_stays_elevated() -> None:
     assert v.detected_risk() == "Elevated"
 
 
+def test_work_record_only_diff_detected_routine() -> None:
+    """Checker-side half of the WR-exclusion fix: empty zones → Routine.
+
+    This documents the checker boundary, not the reporter fix itself: the
+    reporter now excludes `.agent-workflow/**`, so a WR-only diff yields a
+    verdict with EMPTY zones, and this asserts `detected_risk()` returns
+    Routine for that verdict. The reporter-side proof that the WR actually
+    lands in `excluded` (and would flip BLUE→GRAY if the fix were reverted)
+    lives in `test_work_record_only_diff_is_not_gray` in the reporter tests.
+    """
+    v = RedlineVerdict(
+        boundary_violations=[],
+        zones={"blue": [], "gray": [], "red": [], "watch": []},
+        checkpoints=[],
+        api_changed=False,
+        schema_changed=False,
+        security_changed=False,
+        runtime_config_changed=False,
+    )
+    assert v.detected_risk() == "Routine"
+
+
 @pytest.mark.parametrize(
     "declared,detected,expected",
     [
