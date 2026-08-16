@@ -58,9 +58,9 @@ This repo dogfoods both skills it ships. The install is **deliberately partial**
 | `agent-workflow.yaml` | Present. `redline: required`. | Same shape, copied from template. |
 | `agent-redline-policy.yaml` | Zone-only shape (no `pyproject.toml`). Red zone: schemas, SPEC, governance config, CI workflow. | Shape varies by language extension. |
 | `.agent-redline/suppressions.yaml` | Stack-neutral defaults. | Bootstrap copies from chosen extension. |
-| `scripts/agent-redline-report.py` | Vendored from `dist/agent-workflow/agent-redline/scripts/`. | Same. |
+| agent-redline reporter | **NOT vendored at repo root.** CI runs `python core/agent-redline/core/reporter/reporter.py` directly (dogfood) — a committed copy would drift. | Vendored from `dist/agent-workflow/agent-redline/scripts/` as `scripts/agent-redline-report.py`. |
 | `scripts/agent-workflow-check.py` | **NOT vendored.** CI uses `python -m core.checker` directly — vendoring would be dead code. | Vendored from `dist/agent-workflow/scripts/`. |
-| CI workflow | Two jobs (`agent-workflow` + `redline`). `agent-workflow` job runs `python -m core.checker`; `redline` job runs the vendored reporter. | Two jobs from template; both invoke vendored scripts. |
+| CI workflow | Two jobs (`agent-workflow` + `redline`). `agent-workflow` job runs `python -m core.checker`; `redline` job runs the reporter from source (`core/agent-redline/core/reporter/reporter.py`). | Two jobs from template; both invoke vendored scripts. |
 
 ## Where the surfaces live
 
