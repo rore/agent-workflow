@@ -626,6 +626,10 @@ class TestClassifyVerdict:
         assert v.pr_size["lines"] == 5
         assert v.pr_size["excludedFiles"] == 1
         assert v.pr_size["excludedLines"] == 200
+        # If the WR's 200 lines ever bled back into the budget, lines would
+        # be 205 (> warn:100) and the verdict would flip to "warn" — assert
+        # "ok" so that regression fails the test.
+        assert v.pr_size["verdict"] == "ok"
 
     def test_pr_size_falls_back_to_scalar_without_lines_per_file(self, base_policy):
         # Without --lines-per-file, the scalar is the only signal
