@@ -103,7 +103,11 @@ jobs:
         run: |
           set +e
           # Zone-only shape — no boundary-violations.json to feed.
-          python scripts/agent-redline-report.py \
+          # Dev-repo dogfood: run the reporter from source, mirroring the
+          # agent-workflow job's `python -m core.checker`. (Consumers vendor
+          # the reporter from dist/; this repo runs its own current code so a
+          # stale committed copy can't drift out from under CI.)
+          python core/agent-redline/core/reporter/reporter.py \
             --policy agent-redline-policy.yaml \
             --changed-files changed-files.txt \
             --pr-labels "${{ steps.review_inputs.outputs.labels }}" \
