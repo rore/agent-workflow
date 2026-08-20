@@ -79,7 +79,7 @@ OCP="core/skill/opencode/agent-workflow.mjs"
 if [[ -f "$OCP" ]]; then
   ctx="$(sed -n 's/^CTX="\(.*\)"$/\1/p' "$H/seed-workflow.sh")"
   seed="$(sed -n 's/^const SEED = "\(.*\)";$/\1/p' "$OCP")"
-  if [[ -n "$ctx" && "$seed" == "$ctx" ]]; then echo "  ok: plugin SEED matches seed-workflow.sh CTX"; else echo "  FAIL: SEED/CTX parity drift"; fail=1; fi
+  if [[ -n "$ctx" && -n "$seed" && "$seed" == "$ctx" ]]; then echo "  ok: plugin SEED matches seed-workflow.sh CTX"; else echo "  FAIL: SEED/CTX parity drift"; fail=1; fi
   grep -q 'experimental.chat.system.transform' "$OCP" && echo "  ok: injects via experimental.chat.system.transform" || { echo "  FAIL: missing system.transform hook"; fail=1; }
   if grep -q 'try {' "$OCP" && grep -q 'catch' "$OCP"; then echo "  ok: fail-open (try/catch present)"; else echo "  FAIL: no try/catch fail-open guard"; fail=1; fi
   grep -q 'Array.isArray(output.system)' "$OCP" && echo "  ok: guards output.system shape" || { echo "  FAIL: missing output.system guard"; fail=1; }
