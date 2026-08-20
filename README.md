@@ -77,6 +77,8 @@ Adopt agent-workflow on a repo:
 
 Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
+**OpenCode.** Alongside the Claude Code hooks, bootstrap installs an OpenCode plugin ([`core/skill/opencode/agent-workflow.mjs`](core/skill/opencode/agent-workflow.mjs)) at the consumer's `.opencode/plugins/agent-workflow.mjs`. OpenCode auto-loads it and it injects the Work-Record reminder into the system prompt each turn — a fail-open nudge mirroring `.claude/hooks/seed-workflow.sh`. The CI checker stays the enforcer.
+
 ## What CI enforces
 
 The checker reads the Work Record and the classifier's verdict — it does not re-run your tests. It fails CI on blocking violations (and blocks merge where configured as a required check):
