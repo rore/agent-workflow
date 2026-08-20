@@ -69,6 +69,7 @@ required_paths=(
   "core/skill/hooks/check-plan.py"
   "core/skill/hooks/install-settings.py"
   "core/skill/hooks/merge-agents-section.py"
+  "core/skill/opencode/agent-workflow.mjs"
   "core/templates/checkpoints"
   "core/templates/agents-section.md.template"
   "core/templates/work-record-routine.md"
@@ -111,6 +112,7 @@ mkdir -p "$TARGET/templates/checkpoints" \
          "$TARGET/assets/schema" \
          "$TARGET/scripts" \
          "$TARGET/hooks" \
+         "$TARGET/opencode" \
          "$TARGET/agent-redline/references/per-checkpoint" \
          "$TARGET/agent-redline/assets/schema" \
          "$TARGET/agent-redline/assets/templates" \
@@ -296,6 +298,9 @@ cp "$REPO_ROOT/scripts/agent-workflow-tune.py"    "$TARGET/scripts/"
 # Claude Code hooks (verbatim — shell + python, no path substitution).
 cp "$REPO_ROOT/core/skill/hooks/"* "$TARGET/hooks/"
 chmod +x "$TARGET/hooks/"*.sh 2>/dev/null || true
+
+# OpenCode engagement plugin (verbatim — JS, no path substitution).
+cp "$REPO_ROOT/core/skill/opencode/"* "$TARGET/opencode/"
 
 bash "$REPO_ROOT/scripts/build-vendored-checker.sh" "$TARGET/scripts/agent-workflow-check.py"
 chmod +x "$TARGET/scripts/agent-workflow-check.py" 2>/dev/null || true

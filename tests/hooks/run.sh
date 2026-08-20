@@ -70,6 +70,24 @@ for hk in seed-workflow:UserPromptSubmit reinforce-workflow:PostToolUse; do
 done
 
 
+echo "[ opencode plugin: seed parity + fail-open shape ]"
+# The OpenCode plugin is the runtime-analog of seed-workflow.sh. Its SEED const
+# MUST stay byte-identical to the hook's CTX, so an agent under OpenCode gets the
+# same Work-Record rule. Extraction relies on both being single-line double-quoted
+# strings with no " or \ (enforced by seed-workflow.sh's own comment).
+OCP="core/skill/opencode/agent-workflow.mjs"
+if [[ -f "$OCP" ]]; then
+  ctx="$(sed -n 's/^CTX="\(.*\)"$/\1/p' "$H/seed-workflow.sh")"
+  seed="$(sed -n 's/^const SEED = "\(.*\)";$/\1/p' "$OCP")"
+  if [[ -n "$ctx" && "$seed" == "$ctx" ]]; then echo "  ok: plugin SEED matches seed-workflow.sh CTX"; else echo "  FAIL: SEED/CTX parity drift"; fail=1; fi
+  grep -q 'experimental.chat.system.transform' "$OCP" && echo "  ok: injects via experimental.chat.system.transform" || { echo "  FAIL: missing system.transform hook"; fail=1; }
+  if grep -q 'try {' "$OCP" && grep -q 'catch' "$OCP"; then echo "  ok: fail-open (try/catch present)"; else echo "  FAIL: no try/catch fail-open guard"; fail=1; fi
+  grep -q 'Array.isArray(output.system)' "$OCP" && echo "  ok: guards output.system shape" || { echo "  FAIL: missing output.system guard"; fail=1; }
+else
+  echo "  FAIL: $OCP missing"; fail=1
+fi
+
+
 echo "[ settings installer ]"
 INST="$H/install-settings.py"
 TMP="$(mktemp -d)"
