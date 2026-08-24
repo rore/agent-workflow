@@ -228,6 +228,31 @@ def test_field_values_may_span_multiple_lines() -> None:
     assert "another continuation" in record["outcome"]
 
 
+def test_template_hint_comments_are_stripped_from_field_values() -> None:
+    """Allowed-values hint comments the templates place after a field (issue
+    #9: the trailing State hint) must not leak into the field value. The last
+    field's value runs to the end of the block, so without stripping it would
+    swallow the comment and fail state validation."""
+    text = _block(
+        "**Outcome:** o",
+        "**Target:** t",
+        "**Scope:** s",
+        "**Constraints:** c",
+        "**Completion criteria:** cc",
+        "**Risk:** Routine",
+        "<!-- Routine | Elevated | High -->",
+        "**Complexity:** Simple",
+        "**Reason:** —",
+        "**Approach:** a",
+        "**Verification:** v",
+        "**State:** Ready for review",
+        "<!-- Ready to implement | Blocked | Ready for review -->",
+    )
+    record = parse(text)
+    assert record["state"] == "Ready for review"
+    assert record["risk"] == "Routine"
+
+
 def test_prose_outside_markers_is_ignored() -> None:
     """Notes above and below the marker block must not affect parsing."""
     inner = _block(
@@ -325,6 +350,36 @@ def test_expanded_pass_fixture_parses_via_dispatcher() -> None:
         assert value, f"field {key!r} parsed to empty string"
     assert record["risk"] == "Elevated"
     assert record["complexity"] == "Moderate"
+
+
+def test_expanded_hint_comments_are_stripped_via_dispatcher() -> None:
+    """Companion to the routine hint-stripping test, on the expanded shape.
+    The expanded template carries a hint comment after every field (incl.
+    the terminal State field); all go through the same `_extract_fields`
+    path, so `parse_record()` must return clean values here too."""
+    text = _block(
+        "**Outcome:** o",
+        "**Target:** t",
+        "**Scope:** s",
+        "**Constraints:** c",
+        "**Completion criteria:** cc",
+        "**Risk:** Elevated",
+        "<!-- Routine | Elevated | High -->",
+        "**Complexity:** Moderate",
+        "**Reason:** r",
+        "**Discovery:** d",
+        "**Material assumptions:** a",
+        "**Plan:** p",
+        "**Verification plan:** vp",
+        "**Plan review:** self",
+        "**Approvals:** —",
+        "**State:** Ready for review",
+        "<!-- Ready to implement | Blocked | Ready for review -->",
+    )
+    parsed = parse_record(text)
+    assert parsed.shape == "expanded"
+    assert parsed.record["state"] == "Ready for review"
+    assert parsed.record["risk"] == "Elevated"
 
 
 def test_routine_pass_fixture_parses_via_dispatcher() -> None:

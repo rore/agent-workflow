@@ -162,7 +162,7 @@ Write the committed artifacts. Branch each step on existing files; never overwri
 | 4.4 | AGENTS.md reference section | Marker-wrapped. No existing instruction file → fresh `AGENTS.md` from `templates/agents-section.md.template`. Existing instruction file, no markers → append the marker-wrapped section. **Existing markers (re-bootstrap) → reconcile, don't skip:** run `python <install-root>/hooks/merge-agents-section.py --file <instruction-file> --template <install-root>/templates/agents-section.md.template` — it refreshes only the bytes between the markers to the current template (idempotent; leaves surrounding prose byte-identical). Skipping when markers exist silently freezes the section at its first-installed version. |
 | 4.5 | `.agent-redline/suppressions.yaml` | Invoke redline's Phase 4 write step. |
 | 4.6 | `docs/agent-redline/skills/` | Invoke redline's Phase 4 write step. |
-| 4.7 | `docs/agent-workflow/` | Copy `templates/checkpoints/*.md` from the installed skill. |
+| 4.7 | `docs/agent-workflow/` | Copy `templates/checkpoints/` (keep the `checkpoints/` subdir) **and** `templates/skill-feedback.md` (as a sibling of `checkpoints/`) from the installed skill. Mirroring the skill's layout keeps the review-result → `../skill-feedback.md` cross-link resolvable. |
 | 4.8 | `.agent-workflow/tasks/README.md` | Skeleton explaining the `{slug}.md` convention; references operating-mode.md. |
 
 ### 4.4 marker shape
