@@ -421,6 +421,12 @@ _FIELD_HEADER_RE = re.compile(r"^\*\*([^*]+?):\*\*\s*", re.MULTILINE)
 _START_MARKER_RE = re.compile(rf"^[ \t]*{re.escape(_START_MARKER)}[ \t]*$", re.MULTILINE)
 _END_MARKER_RE = re.compile(rf"^[ \t]*{re.escape(_END_MARKER)}[ \t]*$", re.MULTILINE)
 
+# Templates put an allowed-values hint comment right after a field (notably
+# the trailing State hint). The last field's value runs to the end of the
+# block, so it would otherwise swallow that comment and fail validation.
+# Comments in the marker block are always hints, never field content.
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+
 
 def _extract_block(text: str) -> str:
     """Return the substring strictly between the start and end markers.
@@ -480,7 +486,7 @@ def _extract_fields(block: str) -> dict[str, str]:
         label = match.group(1).strip()
         value_start = match.end()
         value_end = matches[i + 1].start() if i + 1 < len(matches) else len(block)
-        value = block[value_start:value_end].strip()
+        value = _HTML_COMMENT_RE.sub("", block[value_start:value_end]).strip()
         if label in out:
             raise WorkRecordParseError(
                 f"duplicate field {label!r} in Work Record block — "

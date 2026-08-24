@@ -228,6 +228,31 @@ def test_field_values_may_span_multiple_lines() -> None:
     assert "another continuation" in record["outcome"]
 
 
+def test_template_hint_comments_are_stripped_from_field_values() -> None:
+    """Allowed-values hint comments the templates place after a field (issue
+    #9: the trailing State hint) must not leak into the field value. The last
+    field's value runs to the end of the block, so without stripping it would
+    swallow the comment and fail state validation."""
+    text = _block(
+        "**Outcome:** o",
+        "**Target:** t",
+        "**Scope:** s",
+        "**Constraints:** c",
+        "**Completion criteria:** cc",
+        "**Risk:** Routine",
+        "<!-- Routine | Elevated | High -->",
+        "**Complexity:** Simple",
+        "**Reason:** —",
+        "**Approach:** a",
+        "**Verification:** v",
+        "**State:** Ready for review",
+        "<!-- Ready to implement | Blocked | Ready for review -->",
+    )
+    record = parse(text)
+    assert record["state"] == "Ready for review"
+    assert record["risk"] == "Routine"
+
+
 def test_prose_outside_markers_is_ignored() -> None:
     """Notes above and below the marker block must not affect parsing."""
     inner = _block(
