@@ -352,6 +352,36 @@ def test_expanded_pass_fixture_parses_via_dispatcher() -> None:
     assert record["complexity"] == "Moderate"
 
 
+def test_expanded_hint_comments_are_stripped_via_dispatcher() -> None:
+    """Companion to the routine hint-stripping test, on the expanded shape.
+    The expanded template carries a hint comment after every field (incl.
+    the terminal State field); all go through the same `_extract_fields`
+    path, so `parse_record()` must return clean values here too."""
+    text = _block(
+        "**Outcome:** o",
+        "**Target:** t",
+        "**Scope:** s",
+        "**Constraints:** c",
+        "**Completion criteria:** cc",
+        "**Risk:** Elevated",
+        "<!-- Routine | Elevated | High -->",
+        "**Complexity:** Moderate",
+        "**Reason:** r",
+        "**Discovery:** d",
+        "**Material assumptions:** a",
+        "**Plan:** p",
+        "**Verification plan:** vp",
+        "**Plan review:** self",
+        "**Approvals:** —",
+        "**State:** Ready for review",
+        "<!-- Ready to implement | Blocked | Ready for review -->",
+    )
+    parsed = parse_record(text)
+    assert parsed.shape == "expanded"
+    assert parsed.record["state"] == "Ready for review"
+    assert parsed.record["risk"] == "Elevated"
+
+
 def test_routine_pass_fixture_parses_via_dispatcher() -> None:
     """The routine fixture parses as the routine shape through the dispatcher."""
     parsed = parse_record(ROUTINE_PASS.read_text(encoding="utf-8"))
