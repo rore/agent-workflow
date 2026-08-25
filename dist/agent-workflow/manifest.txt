@@ -22,7 +22,7 @@ agent-redline/extensions/python/profile.md	17205
 agent-redline/extensions/python/scaffold.md	18961
 agent-redline/extensions/python/scripts/run-import-linter.py	14003
 agent-redline/extensions/python/suppressions.yaml	629
-agent-redline/operating-mode.md	5502
+agent-redline/operating-mode.md	6173
 agent-redline/references/per-checkpoint/api-change-checkpoint.md	2228
 agent-redline/references/per-checkpoint/blue-zone-work.md	1265
 agent-redline/references/per-checkpoint/boundary-violation.md	2818
