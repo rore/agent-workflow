@@ -48,8 +48,8 @@
 **Exceptions:**
 <!-- Optional. Records task-level rule waivers per SPEC §11. Empty / "—" when no exception is recorded. When present, see `templates/checkpoints/plan-and-review.md` § Exceptions for the entry shape and non-waivable rules. -->
 
-**State:** Ready to implement
 <!-- Ready to implement | Blocked | Ready for review -->
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 <!--
