@@ -33,6 +33,6 @@
 **Verification:**
 <!-- the test(s) and CI job(s) that prove it -->
 
-**State:** Ready to implement
 <!-- Ready to implement | Blocked | Ready for review -->
+**State:** Ready to implement
 <!-- agent-workflow:end -->
