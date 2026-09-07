@@ -9,7 +9,7 @@ This repository uses [agent-workflow](https://github.com/rore/agent-workflow) â€
 | `agent-workflow.yaml` | Per-repo config. Edit cautiously. |
 | `agent-redline-policy.yaml` | Per-repo redline policy (zones, boundaries, checkpoints). Architecture-review required. |
 | `.agent-redline/suppressions.yaml` | Suppression markers for redline. |
-| `.agent-workflow/tasks/<slug>.md` | One Work Record per task / branch. Slug derives from branch name. |
+| `.agent-workflow/tasks/<slug>.md` | One Work Record per non-exempt task. Slug derives from branch name. |
 | `scripts/agent-workflow-check.py` | Vendored CI checker. |
 | `scripts/agent-redline-report.py` | Vendored redline reporter. |
 | `docs/agent-workflow/` | Per-checkpoint reference docs. |

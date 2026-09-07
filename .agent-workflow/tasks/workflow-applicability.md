@@ -64,10 +64,15 @@ Stop conditions: unresolved semantics between workflow exemption and direct-main
 - Established task context from the approved design discussion and inspected the existing config, checker, CI, bootstrap, hooks, packaging, and Pallium consumer surfaces.
 
 - Added typed applicability config and pure deny-overrides evaluator with focused schema/unit coverage.
+- Routed reporter, checker, source/template CI, and vendored consumers through one strict NUL-delimited no-rename path contract; legacy input cannot grant exemption and invalid/missing risk evidence fails closed.
+- Added live actual-default-branch protection + ruleset checking, bootstrap discovery/approval guidance, applicability-first Claude/OpenCode reminders, and protected governance/task-path precedence.
+- Dogfooded approved `docs/`, `roadmap/`, and root `README.md` paths with direct-main disabled; regenerated source-aligned distribution and local install.
 
 ## Evidence
 
-- Pending.
+- Focused checker/schema/reporter suite: 312 passed.
+- Caller matrix covers approved/mixed/protected paths, README/roadmap, rename pairs, Unicode/newlines, staged/unstaged/untracked Git scope, invalid/partial evidence, custom/deleted task paths, directory/submodule paths, protection/ruleset states, legacy input, and source/template CI contracts.
+- Skill budgets pass; hook parity passes; packaged consumer applicability/bootstrap E2E passes.
 
 ## Result review
 

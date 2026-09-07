@@ -14,6 +14,7 @@ Profile-specific mapping of the workflow and harness contract (`SPEC.md`) to Git
 - **Verification:** repository commands and GitHub CI
 - **Approval and merge enforcement:** GitHub required reviewers, required checks, and branch protection
 - **Exceptions:** recorded in the Work Record's structured block (the marker-bounded Markdown section), approved under team policy
+- **Applicability:** an optional, bootstrap-approved documentation-only rule may omit the Work Record. Mixed, protected, risky, or uncertain changes use the normal workflow; direct-default work additionally requires live proof that the branch is unprotected.
 - **External post-merge follow-up:** separate linked issue or task accepted by its delivery or operational owner
 
 ### Repository Delivery Guidance

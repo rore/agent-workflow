@@ -46,11 +46,11 @@ jobs:
       - name: Compute changed-files list from PR base→head
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" > changed-files.txt
-          echo "--- changed-files.txt ---"
-          cat changed-files.txt
+          git diff --name-only -z --no-renames "${BASE_SHA}" "${HEAD_SHA}" > changed-files.z
+          echo "--- changed-files.z ---"
+          python -c 'import sys; print(open(sys.argv[1], "rb").read().split(b"\0"))' changed-files.z
 
       - name: Compute PR labels and CODEOWNER approvals (slice G)
         id: review_inputs
@@ -109,7 +109,7 @@ jobs:
           # stale committed copy can't drift out from under CI.)
           python core/agent-redline/core/reporter/reporter.py \
             --policy agent-redline-policy.yaml \
-            --changed-files changed-files.txt \
+            --changed-files-z changed-files.z \
             --pr-labels "${{ steps.review_inputs.outputs.labels }}" \
             --codeowner-approvals "${{ steps.review_inputs.outputs.codeowner_approvals }}" \
             --json-out redline-verdict.json
@@ -173,12 +173,16 @@ jobs:
           header: agent-redline
 
       - name: Enforce reporter exit code
-        # Exit 2 (boundary violation) fails the job. Exit 1 (shadow
+        # Exit 2 or an unexpected code fails the job. Exit 1 (shadow
         # warning) stays green; the sticky surfaces it.
         run: |
           EXIT="${{ steps.report.outputs.exit_code }}"
-          if [[ "$EXIT" == "2" ]]; then
-            echo "redline exited 2 (boundary violation); failing CI."
+          if [[ ! -s redline-verdict.json ]] || ! python -c 'import json; json.load(open("redline-verdict.json"))'; then
+            echo "redline did not produce valid verdict JSON; failing CI."
+            exit 1
+          fi
+          if [[ "$EXIT" != "0" && "$EXIT" != "1" ]]; then
+            echo "redline exited $EXIT (blocking or unexpected); failing CI."
             exit 1
           fi
           echo "redline exited $EXIT — non-blocking."
@@ -213,11 +217,11 @@ jobs:
       - name: Compute changed-files list from PR base→head
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" > changed-files.txt
-          echo "--- changed-files.txt ---"
-          cat changed-files.txt
+          git diff --name-only -z --no-renames "${BASE_SHA}" "${HEAD_SHA}" > changed-files.z
+          echo "--- changed-files.z ---"
+          python -c 'import sys; print(open(sys.argv[1], "rb").read().split(b"\0"))' changed-files.z
 
       - name: Derive task slug from the PR's source branch
         id: slug
@@ -256,7 +260,7 @@ jobs:
           fi
           python -m core.checker \
             --repo-root . \
-            --changed-files changed-files.txt \
+            --changed-files-z changed-files.z \
             --slug "${{ steps.slug.outputs.slug }}" \
             --base-ref "$BASE_SHA" \
             --head-ref "$HEAD_SHA" \
@@ -278,12 +282,16 @@ jobs:
           header: agent-workflow
 
       - name: Enforce checker exit code
-        # Exit 2 (any blocking predicate failed on any record) fails CI.
+        # Exit 2 or an unexpected code fails CI.
         # Exit 1 (advisory) stays green.
         run: |
           EXIT="${{ steps.check.outputs.exit_code }}"
-          if [[ "$EXIT" == "2" ]]; then
-            echo "checker exited 2 (blocking); failing CI."
+          if [[ ! -s verdict.json ]] || ! python -c 'import json; json.load(open("verdict.json"))'; then
+            echo "checker did not produce valid verdict JSON; failing CI."
+            exit 1
+          fi
+          if [[ "$EXIT" != "0" && "$EXIT" != "1" ]]; then
+            echo "checker exited $EXIT (blocking or unexpected); failing CI."
             exit 1
           fi
           echo "checker exited $EXIT — non-blocking."

@@ -95,6 +95,10 @@ zones:
   blue:
     - path: "tests/**"
       reason: tests
+    - path: "roadmap/**"
+      reason: product roadmap documentation
+    - path: "README.md"
+      reason: repository overview
     - path: "docs/**"
       reason: documentation (SPEC.md handled above under red)
     - path: "scripts/**"

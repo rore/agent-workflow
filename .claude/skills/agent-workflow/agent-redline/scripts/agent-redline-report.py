@@ -1719,8 +1719,18 @@ def load_diff_from_files(
     lines_changed: int = 0,
     lines_per_file_path: Path | None = None,
     diff_unified_path: Path | None = None,
+    nul_delimited: bool = False,
 ) -> Diff:
-    files = [line.strip() for line in changed_files_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if nul_delimited:
+        raw = changed_files_path.read_bytes()
+        if not raw or not raw.endswith(b"\0"):
+            raise ValueError("NUL-delimited changed-files input is empty or incomplete")
+        raw_paths = raw.split(b"\0")
+        if raw_paths[-1] != b"" or any(path == b"" for path in raw_paths[:-1]):
+            raise ValueError("NUL-delimited changed-files input contains an empty path")
+        files = [path.decode("utf-8") for path in raw_paths[:-1]]
+    else:
+        files = [line.strip() for line in changed_files_path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
     lines_by_file: dict[str, int] | None = None
     if lines_per_file_path is not None and lines_per_file_path.exists():
@@ -1852,8 +1862,11 @@ def _load_api_spec_diff(base: Path | None, head: Path | None) -> dict[str, Any] 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="agent-redline reporter")
     p.add_argument("--policy", required=True, type=Path, help="Path to agent-redline-policy.yaml")
-    p.add_argument("--changed-files", type=Path,
-                   help="Path to a newline-separated list of changed files (overrides --base/--head)")
+    changed = p.add_mutually_exclusive_group()
+    changed.add_argument("--changed-files", type=Path,
+                         help="Legacy newline-separated changed paths")
+    changed.add_argument("--changed-files-z", type=Path,
+                         help="Lossless NUL-separated changed paths from `git diff --name-only -z --no-renames`")
     p.add_argument("--lines-changed", type=int, default=0,
                    help="Total lines changed (size check). Used as the fallback "
                         "when --lines-per-file is not given. The scalar is "
@@ -1918,15 +1931,17 @@ def main(argv: list[str] | None = None) -> int:
         policy["modes"] = {}
     policy["modes"].setdefault("default", default_mode)
 
-    if args.changed_files is None:
-        sys.stderr.write("error: --changed-files required in v0.1 (git-driven mode is roadmap)\n")
+    changed_files_path = args.changed_files_z or args.changed_files
+    if changed_files_path is None:
+        sys.stderr.write("error: --changed-files or --changed-files-z is required\n")
         return 1
 
     diff = load_diff_from_files(
-        args.changed_files,
+        changed_files_path,
         args.lines_changed,
         lines_per_file_path=args.lines_per_file,
         diff_unified_path=args.diff_unified,
+        nul_delimited=args.changed_files_z is not None,
     )
 
     if args.archunit_xml is not None:

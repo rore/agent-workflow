@@ -8,11 +8,11 @@ The checker is in [`core/checker/`](../core/checker/). It runs in CI via [`core/
 
 The checker reads:
 
-- `agent-workflow.yaml` at the repo root (backend selection, classifier integration).
+- `agent-workflow.yaml` at the repo root (backend, classifier, and approved applicability policy).
 - The Work Record at `<taskPath substituted with {slug}>`, where the slug comes from the PR's source branch.
 - The risk classifier's verdict artifact at the path configured by `redlineVerdictPath` (when CI ran the classifier first).
 
-It runs every predicate against every Work Record the PR touched (multi-record mode), aggregates the results into a single verdict, and posts a sticky comment on the PR. Exit codes:
+It runs every predicate against every Work Record the PR touched. With no record, it may instead evaluate the complete PR path set against an approved documentation-only rule. It aggregates the results into a single verdict and posts a sticky comment. Exit codes:
 
 | Exit | Meaning | Effect on CI |
 |---|---|---|
@@ -22,6 +22,11 @@ It runs every predicate against every Work Record the PR touched (multi-record m
 
 The checker does **not** call out to GitHub or any external service. It reads files. It is reproducible offline: running `python scripts/agent-workflow-check.py --repo-root . --slug <slug>` locally produces the same JSON CI produces.
 
+## Documentation-only applicability
+
+CI passes one NUL-delimited, no-rename path list to both Redline and the checker. The exemption passes only when every path is human-approved, none is a governance/protected surface, and Redline accounts for the exact set as blue with no watch, checkpoint, boundary, API, schema, security, or runtime-config signal. Newline input remains supported but cannot grant the exemption. Any missing, malformed, duplicated, mixed, or risky evidence requires the normal workflow.
+
+`workflow.applicability` records this decision. A passing result means the PR needs no Work Record; Redline and repository tests still run. Direct default-branch work is not a CI permission: bootstrap enables its config flag only after explicit approval and conclusive live proof that the actual default branch is unprotected, and operating mode rechecks protection before suggesting it. Protected or unknown means branch/PR without a Work Record.
 ## Predicate reference
 
 Disposition column legend:
@@ -36,7 +41,7 @@ Disposition column legend:
 |---|---|---|---|
 | `workrecord.exists` | A file resolves at the configured `taskPath` for the slug. | Blocking, non-waivable | Create the Work Record at the path the predicate names. Slug is derived from the branch — see "Slug derivation" below. |
 | `workrecord.markers_present` | The marker pair `<!-- agent-workflow:start --> … <!-- agent-workflow:end -->` bounds a single block. | Blocking, non-waivable | Use [`core/templates/work-record-routine.md`](../core/templates/work-record-routine.md) or [`work-record-expanded.md`](../core/templates/work-record-expanded.md) as the reference. |
-| `workrecord.required_for_branch_changes` | When `--changed-files` lists code paths but the checker resolved no Work Record at the branch slug, this synthetic predicate names the missing record. Fires only at PR time (not on `--slug`-only local runs). | Blocking (default). Opt out per-repo with `workRecord.requiredForBranchChanges: false` in `agent-workflow.yaml` for genuine housekeeping repos. | Create the Work Record for this branch, or set the opt-out flag if this PR really is housekeeping. |
+| `workrecord.required_for_branch_changes` | When `--changed-files` or `--changed-files-z` lists non-exempt paths but the checker resolved no Work Record at the branch slug, this synthetic predicate names the missing record. Fires only at PR time (not on `--slug`-only local runs). | Blocking (default). Opt out per-repo with `workRecord.requiredForBranchChanges: false` in `agent-workflow.yaml` for genuine housekeeping repos. | Create the Work Record for this branch, or set the opt-out flag if this PR really is housekeeping. |
 
 ### Classification — is the risk/complexity declaration valid
 
@@ -93,7 +98,7 @@ The slug is the per-task identifier — the `{slug}` substituted into the `taskP
 1. Strip the first matching prefix: `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, `demo/`.
 2. Replace remaining `/` with `-`.
 
-If the PR touched Work Records (the `--changed-files` mode used in CI), each touched record is checked. If `--changed-files` finds no records, the checker falls back to `--slug` and validates the Work Record at the configured `taskPath` for that slug — closing the case where a feature branch's WR landed on an earlier commit and this push touches only code. PRs with no matching WR at the slug AND code paths in the diff fail blocking via `workrecord.required_for_branch_changes` by default — set `workRecord.requiredForBranchChanges: false` in `agent-workflow.yaml` to opt out for genuine housekeeping repos (vendored-script bumps, formatter passes).
+If the PR touched Work Records (the lossless `--changed-files-z` mode used in CI), each touched record is checked. If changed-file discovery finds no records, the checker falls back to `--slug` and validates the Work Record at the configured `taskPath` for that slug — closing the case where a feature branch's WR landed on an earlier commit and this push touches only code. PRs with no matching WR at the slug AND code paths in the diff fail blocking via `workrecord.required_for_branch_changes` by default — set `workRecord.requiredForBranchChanges: false` in `agent-workflow.yaml` to opt out for genuine housekeeping repos (vendored-script bumps, formatter passes).
 
 ## Non-waivable predicates
 

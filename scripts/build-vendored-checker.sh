@@ -60,6 +60,7 @@ SOURCES = [
     "core/work_record/parser.py",
     "core/work_record/backend.py",
     "core/work_record/local_backend.py",
+    "core/config/applicability.py",
     "core/config/loader.py",
     "core/checker/verdict.py",
     "core/checker/redline_verdict.py",
@@ -101,7 +102,7 @@ import re
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Protocol, TypedDict, runtime_checkable
+from typing import Any, Iterable, Literal, Protocol, TypedDict, runtime_checkable
 
 import jsonschema
 import yaml

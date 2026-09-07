@@ -172,4 +172,50 @@ if [[ ! -s probe-output.txt ]]; then
   exit 2
 fi
 
+# --- Step 4: packaged applicability path. The conversational phases are
+# represented by an explicitly approved config; the vendored checker receives
+# the same lossless path set and complete Redline evidence CI supplies.
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: consumer-repo}\n"
+    "workRecord:\n  backend: local\n  local:\n"
+    "    taskPath: \".agent-workflow/tasks/{slug}.md\"\n"
+    "redline: required\nredlineVerdictPath: redline-verdict.json\n"
+    "applicability:\n  documentationOnly:\n"
+    "    paths: [docs/, README.md]\n    workflowRequired: false\n"
+    "    directDefaultBranchAllowed: false\n",
+    encoding="utf-8",
+)
+paths = ["docs/guide.md", "README.md"]
+Path("changed.z").write_bytes(b"\0".join(p.encode() for p in paths) + b"\0")
+verdict = {
+    "verdict": "BLUE",
+    "zones": {"blue": paths, "gray": [], "red": [], "watch": []},
+    "boundaryViolations": [], "checkpoints": [],
+    "apiChanges": {"detected": False}, "schemaChanges": {"detected": False},
+    "securityChanges": {"detected": False},
+    "runtimeConfigChanges": {"detected": False},
+}
+Path("redline-verdict.json").write_text(json.dumps(verdict), encoding="utf-8")
+PYEOF
+
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --changed-files-z changed.z --redline-verdict redline-verdict.json \
+  > applicability-output.json 2>&1
+APPLICABILITY_EXIT=$?
+set -e
+if (( APPLICABILITY_EXIT != 0 )); then
+  echo "FAIL: packaged applicability checker exit $APPLICABILITY_EXIT" >&2
+  cat applicability-output.json >&2
+  exit 2
+fi
+"$PY" - <<'PYEOF' || { echo "FAIL: packaged applicability verdict was not explicit" >&2; exit 2; }
+import json
+payload = json.load(open("applicability-output.json", encoding="utf-8"))
+predicates = [p for r in payload["records"] for p in r["predicates"]]
+assert any(p["name"] == "workflow.applicability" and p["passed"] for p in predicates)
+PYEOF
 echo "ok: e2e bootstrap simulation passed (install → Phase 4 writes → Phase 6 probe; checker exit $PROBE_EXIT)."
