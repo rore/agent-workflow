@@ -63,6 +63,8 @@ Stop conditions: unresolved semantics between workflow exemption and direct-main
 
 - Established task context from the approved design discussion and inspected the existing config, checker, CI, bootstrap, hooks, packaging, and Pallium consumer surfaces.
 
+- Added typed applicability config and pure deny-overrides evaluator with focused schema/unit coverage.
+
 ## Evidence
 
 - Pending.
