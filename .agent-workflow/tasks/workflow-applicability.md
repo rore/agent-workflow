@@ -56,7 +56,7 @@ Stop conditions: unresolved semantics between workflow exemption and direct-main
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -73,10 +73,11 @@ Stop conditions: unresolved semantics between workflow exemption and direct-main
 - Focused checker/schema/reporter suite: 312 passed.
 - Caller matrix covers approved/mixed/protected paths, README/roadmap, rename pairs, Unicode/newlines, staged/unstaged/untracked Git scope, invalid/partial evidence, custom/deleted task paths, directory/submodule paths, protection/ruleset states, legacy input, and source/template CI contracts.
 - Skill budgets pass; hook parity passes; packaged consumer applicability/bootstrap E2E passes.
+- Full required `tests/run-all.sh`: all nine layers passed (budget, schema, work-record, checker, redline, tuner, hooks, links, package).
 
 ## Result review
 
-- Pending.
+- Pending clean-context smart-model review of the verified implementation.
 
 ## Plan review
 
