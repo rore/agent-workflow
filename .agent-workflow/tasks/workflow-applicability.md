@@ -65,19 +65,19 @@ Stop conditions: unresolved semantics between workflow exemption and direct-main
 
 - Added typed applicability config and pure deny-overrides evaluator with focused schema/unit coverage.
 - Routed reporter, checker, source/template CI, and vendored consumers through one strict NUL-delimited no-rename path contract; legacy input cannot grant exemption and invalid/missing risk evidence fails closed.
-- Added live actual-default-branch protection + ruleset checking, bootstrap discovery/approval guidance, applicability-first Claude/OpenCode reminders, and protected governance/task-path precedence.
+- Added live actual-default-branch protection + ruleset checking, a deterministic bootstrap approval seam, applicability-first Claude/OpenCode reminders, and protected governance/task/instruction precedence at any depth.
 - Dogfooded approved `docs/`, `roadmap/`, and root `README.md` paths with direct-main disabled; regenerated source-aligned distribution and local install.
 
 ## Evidence
 
 - Focused checker/schema/reporter suite: 312 passed.
-- Caller matrix covers approved/mixed/protected paths, README/roadmap, rename pairs, Unicode/newlines, staged/unstaged/untracked Git scope, invalid/partial evidence, custom/deleted task paths, directory/submodule paths, protection/ruleset states, legacy input, and source/template CI contracts.
-- Skill budgets pass; hook parity passes; packaged consumer applicability/bootstrap E2E passes.
+- Caller matrix covers approved/mixed/protected paths, nested agent instructions, README/roadmap, rename pairs, Unicode/newlines, prospective scope, committed/staged/unstaged/untracked Git scope, diverged PR bases, invalid/partial evidence, custom/deleted task paths, directory/submodule paths, protection/ruleset states, legacy input, and source/template CI contracts.
+- Skill budgets and hook parity pass; packaged consumer E2E exercises approval/rejection, real reporter/checker calls, nested-instruction denial, and two layouts.
 - Full required `tests/run-all.sh`: all nine layers passed (budget, schema, work-record, checker, redline, tuner, hooks, links, package).
 
 ## Result review
 
-- Pending clean-context smart-model review of the verified implementation.
+- Four smart final-review passes found ten blockers in total; all were corrected. Final disposition: no blocking findings. Residual limits are explicit: local scope/approval remain agent-mediated, live GitHub protection was not externally integration-tested, and PR CI cannot prevent direct pushes. 65 focused applicability tests, packaged acceptance, and the full nine-layer suite pass.
 
 ## Plan review
 

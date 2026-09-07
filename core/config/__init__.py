@@ -17,6 +17,7 @@ from .applicability import (
     ApplicabilityConfig,
     ApplicabilityDecision,
     DocumentationOnlyConfig,
+    approve_documentation_only,
     evaluate_applicability,
 )
 from .loader import (
@@ -37,6 +38,7 @@ __all__ = [
     "LocalBackendConfig",
     "RedlineConfig",
     "WorkRecordConfig",
+    "approve_documentation_only",
     "evaluate_applicability",
     "load",
 ]

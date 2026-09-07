@@ -20,13 +20,12 @@
 #       * scripts/agent-redline-report.py vendored from agent-redline/scripts/
 #       * .github/workflows/agent-workflow.yml from templates/.github/workflows/
 #       * .agent-workflow/tasks/ skeleton
-#   - Bootstrap Phase 6 probe: write a _probe Work Record using the
-#     compact-shape template, run the vendored checker, expect exit
-#     code 0 or 1 (clean / advisory) — exit 2 means the probe broke.
+#   - Bootstrap Phase 6 probe plus the deterministic applicability approval
+#     seam and packaged reporter/checker journeys in two consumer layouts.
 #
 # What this does NOT cover:
-#   - Conversational bootstrap behaviour (the Phase 1–3 inspection /
-#     proposal / adapt steps need an LLM; layer-3 stays mechanical).
+#   - LLM judgment used to identify candidate documentation paths; the test
+#     covers validation, partial/rejected approval, and persistence mechanically.
 #   - Actual CI runs in a consumer repo's GitHub Actions.
 #
 # Exit codes:
@@ -172,35 +171,74 @@ if [[ ! -s probe-output.txt ]]; then
   exit 2
 fi
 
-# --- Step 4: packaged applicability path. The conversational phases are
-# represented by an explicitly approved config; the vendored checker receives
-# the same lossless path set and complete Redline evidence CI supplies.
+# --- Step 4: packaged applicability approval and first layout. Drive the
+# documented CLI, prove partial/rejected/injected approval, then run both
+# shipped callers on the resulting config.
+"$PY" - <<'PYEOF'
+from pathlib import Path
+Path("proposal.z").write_bytes(b"docs/\0roadmap/\0README.md\0")
+Path("approved.z").write_bytes(b"docs/\0README.md\0")
+Path("rejected.z").write_bytes(b"")
+Path("injected.z").write_bytes(b"handbook/\0")
+PYEOF
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --bootstrap-applicability-proposal-z proposal.z \
+  --bootstrap-applicability-approved-z approved.z \
+  --bootstrap-direct-default-branch-approved \
+  --bootstrap-protection-status protected > applicability-rule.json
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --bootstrap-applicability-proposal-z proposal.z \
+  --bootstrap-applicability-approved-z rejected.z \
+  --bootstrap-protection-status unavailable > rejected-rule.json
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --bootstrap-applicability-proposal-z proposal.z \
+  --bootstrap-applicability-approved-z injected.z \
+  --bootstrap-protection-status unprotected >/dev/null 2>&1
+INJECTED_EXIT=$?
+set -e
+if (( INJECTED_EXIT != 2 )); then
+  echo "FAIL: packaged approval CLI accepted an unproposed path" >&2
+  exit 2
+fi
 "$PY" - <<'PYEOF'
 import json
 from pathlib import Path
+rule = json.loads(Path("applicability-rule.json").read_text(encoding="utf-8"))
+assert rule == {
+    "paths": ["docs/", "README.md"],
+    "workflowRequired": False,
+    "directDefaultBranchAllowed": False,
+}
+assert json.loads(Path("rejected-rule.json").read_text(encoding="utf-8")) is None
 Path("agent-workflow.yaml").write_text(
     "version: 1\nproject: {name: consumer-repo}\n"
     "workRecord:\n  backend: local\n  local:\n"
     "    taskPath: \".agent-workflow/tasks/{slug}.md\"\n"
     "redline: required\nredlineVerdictPath: redline-verdict.json\n"
     "applicability:\n  documentationOnly:\n"
-    "    paths: [docs/, README.md]\n    workflowRequired: false\n"
-    "    directDefaultBranchAllowed: false\n",
+    f"    paths: [{', '.join(rule['paths'])}]\n"
+    "    workflowRequired: false\n"
+    f"    directDefaultBranchAllowed: {str(rule['directDefaultBranchAllowed']).lower()}\n",
+    encoding="utf-8",
+)
+Path("agent-redline-policy.yaml").write_text(
+    "version: 1\nproject: {name: consumer-repo}\n"
+    "zones:\n  red:\n    - path: agent-redline-policy.yaml\n"
+    "      reason: governance\n      checkpoint: architecture-review\n"
+    "  blue:\n    - path: docs/**\n      reason: documentation\n"
+    "    - path: README.md\n      reason: repository overview\n"
+    "boundaryAdapter: {outputFormat: none}\napi: {type: none}\n"
+    "checkpoints:\n  architecture-review:\n    description: review\n"
+    "    satisfiedBy: [{label: architecture-reviewed}]\n"
+    "modes: {default: binding}\n",
     encoding="utf-8",
 )
 paths = ["docs/guide.md", "README.md"]
 Path("changed.z").write_bytes(b"\0".join(p.encode() for p in paths) + b"\0")
-verdict = {
-    "verdict": "BLUE",
-    "zones": {"blue": paths, "gray": [], "red": [], "watch": []},
-    "boundaryViolations": [], "checkpoints": [],
-    "apiChanges": {"detected": False}, "schemaChanges": {"detected": False},
-    "securityChanges": {"detected": False},
-    "runtimeConfigChanges": {"detected": False},
-}
-Path("redline-verdict.json").write_text(json.dumps(verdict), encoding="utf-8")
 PYEOF
-
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed.z --json-out redline-verdict.json >/dev/null
 set +e
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json \
@@ -218,4 +256,62 @@ payload = json.load(open("applicability-output.json", encoding="utf-8"))
 predicates = [p for r in payload["records"] for p in r["predicates"]]
 assert any(p["name"] == "workflow.applicability" and p["passed"] for p in predicates)
 PYEOF
-echo "ok: e2e bootstrap simulation passed (install → Phase 4 writes → Phase 6 probe; checker exit $PROBE_EXIT)."
+
+# A nested agent instruction remains protected even though Redline labels it blue.
+printf 'docs/AGENTS.md\0' > changed.z
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed.z --json-out redline-verdict.json >/dev/null
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null 2>&1
+NESTED_EXIT=$?
+set -e
+if (( NESTED_EXIT != 2 )); then
+  echo "FAIL: packaged nested instruction was not denied (exit $NESTED_EXIT)" >&2
+  exit 2
+fi
+
+# --- Step 5: second consumer layout. The same production approval CLI and
+# both packaged callers use noncanonical paths and a relocated Work Record.
+printf 'handbook/\0plans/\0' > proposal.z
+printf 'handbook/\0' > approved.z
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --bootstrap-applicability-proposal-z proposal.z \
+  --bootstrap-applicability-approved-z approved.z \
+  --bootstrap-direct-default-branch-approved \
+  --bootstrap-protection-status unprotected > applicability-rule.json
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+rule = json.loads(Path("applicability-rule.json").read_text(encoding="utf-8"))
+assert rule["paths"] == ["handbook/"]
+assert rule["directDefaultBranchAllowed"] is True
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: second-layout}\n"
+    "workRecord:\n  backend: local\n  local:\n"
+    "    taskPath: \".work/items/{slug}.record.md\"\n"
+    "redline: required\nredlineVerdictPath: redline-verdict.json\n"
+    "applicability:\n  documentationOnly:\n"
+    "    paths: [handbook/]\n    workflowRequired: false\n"
+    "    directDefaultBranchAllowed: true\n",
+    encoding="utf-8",
+)
+Path("agent-redline-policy.yaml").write_text(
+    "version: 1\nproject: {name: second-layout}\n"
+    "zones:\n  red:\n    - path: agent-redline-policy.yaml\n"
+    "      reason: governance\n      checkpoint: architecture-review\n"
+    "  blue:\n    - path: handbook/**\n      reason: documentation\n"
+    "boundaryAdapter: {outputFormat: none}\napi: {type: none}\n"
+    "checkpoints:\n  architecture-review:\n    description: review\n"
+    "    satisfiedBy: [{label: architecture-reviewed}]\n"
+    "modes: {default: binding}\n",
+    encoding="utf-8",
+)
+Path("changed.z").write_bytes(b"handbook/guide.md\0")
+PYEOF
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed.z --json-out redline-verdict.json >/dev/null
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null
+
+echo "ok: e2e bootstrap simulation passed (install → probe → approved packaged applicability in two layouts; checker exit $PROBE_EXIT)."

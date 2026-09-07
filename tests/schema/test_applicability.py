@@ -9,6 +9,7 @@ import pytest
 from core.config import (
     ConfigError,
     DocumentationOnlyConfig,
+    approve_documentation_only,
     evaluate_applicability,
     load,
 )
@@ -41,6 +42,43 @@ def test_docs_only_change_is_exempt_and_direct_branch_is_allowed() -> None:
     assert result.matched_rule == "documentationOnly"
     assert result.paths == ("docs/guide.md",)
     assert "documentation_only" in result.reason_codes
+
+
+def test_bootstrap_approval_persists_only_selected_discovered_paths() -> None:
+    result = approve_documentation_only(
+        ("handbook/", "plans/", "README.md"),
+        ("handbook/", "README.md"),
+        direct_default_branch_approved=True,
+        protection_status="unprotected",
+    )
+    assert result == rule(("handbook/", "README.md"))
+
+
+@pytest.mark.parametrize("protection", ["protected", "unavailable"])
+def test_bootstrap_approval_cannot_enable_direct_on_unclear_protection(
+    protection: str,
+) -> None:
+    result = approve_documentation_only(
+        ("docs/",),
+        ("docs/",),
+        direct_default_branch_approved=True,
+        protection_status=protection,
+    )
+    assert result == rule(("docs/",), direct=False)
+
+
+def test_bootstrap_rejection_omits_policy_and_unproposed_paths_fail() -> None:
+    assert approve_documentation_only(
+        ("docs/",), (),
+        direct_default_branch_approved=False,
+        protection_status="unavailable",
+    ) is None
+    with pytest.raises(ValueError, match="not proposed"):
+        approve_documentation_only(
+            ("docs/",), ("roadmap/",),
+            direct_default_branch_approved=False,
+            protection_status="unprotected",
+        )
 
 
 def test_multiple_approved_paths_use_all_path_semantics() -> None:

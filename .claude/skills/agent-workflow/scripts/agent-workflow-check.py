@@ -1208,6 +1208,38 @@ def _matches(path: str, rule: str) -> bool:
     return path == rule or (rule.endswith("/") and path.startswith(rule))
 
 
+def approve_documentation_only(
+    discovered_paths: Iterable[str],
+    approved_paths: Iterable[str],
+    *,
+    direct_default_branch_approved: bool,
+    protection_status: ProtectionStatus | str,
+) -> DocumentationOnlyConfig | None:
+    """Persist only a valid human-approved subset of an inert proposal."""
+    discovered, discovered_valid = _path_tuple(discovered_paths)
+    approved, approved_valid = _path_tuple(approved_paths)
+    if (
+        not discovered_valid
+        or not approved_valid
+        or not discovered
+        or any(not _valid_repo_path(path, allow_prefix=True) for path in discovered + approved)
+        or not isinstance(direct_default_branch_approved, bool)
+        or protection_status not in {"unprotected", "protected", "unavailable"}
+    ):
+        raise ValueError("invalid documentation-only proposal or approval")
+    if any(path not in discovered for path in approved):
+        raise ValueError("approval contains a path that was not proposed")
+    if not approved:
+        return None
+    return DocumentationOnlyConfig(
+        paths=approved,
+        workflow_required=False,
+        direct_default_branch_allowed=(
+            direct_default_branch_approved and protection_status == "unprotected"
+        ),
+    )
+
+
 def evaluate_applicability(
     changed_paths: Iterable[str],
     risk_status: RiskStatus | str,
@@ -3626,7 +3658,10 @@ Programmatic:
 
 
 import dataclasses
+import os
+import stat
 import subprocess
+from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
 
@@ -3907,6 +3942,9 @@ _PROTECTED_APPLICABILITY_PATHS: tuple[str, ...] = (
     "docs/SPEC.md",
     "docs/DECISIONS.md",
 )
+_PROTECTED_INSTRUCTION_FILENAMES: frozenset[str] = frozenset(
+    {"AGENTS.md", "CLAUDE.md", "GEMINI.md", "copilot-instructions.md"}
+)
 
 
 def read_changed_paths(
@@ -3981,6 +4019,43 @@ def task_path_prefix(task_path_template: str) -> str:
     return prefix[: prefix.rfind("/") + 1]
 
 
+def _windows_reparse_point(path: Path) -> bool:
+    """Detect junctions/reparse points on Python versions without Path.is_junction."""
+    if os.name != "nt":
+        return False
+    try:
+        attrs = path.lstat().st_file_attributes
+        mask = stat.FILE_ATTRIBUTE_REPARSE_POINT
+    except FileNotFoundError:
+        return False
+    except (AttributeError, OSError):
+        return True
+    return bool(attrs & mask)
+
+
+def _unsafe_applicability_path(repo_root: Path, path: str) -> bool:
+    """Reject directories and any symlink/junction traversal, including prospective paths."""
+    root = repo_root.resolve()
+    candidate = repo_root / path
+    try:
+        candidate.resolve(strict=False).relative_to(root)
+    except (OSError, ValueError):
+        return True
+    if candidate.is_dir():
+        return True
+    for ancestor in (candidate, *candidate.parents):
+        if ancestor == repo_root:
+            break
+        try:
+            if ancestor.is_symlink() or (
+                hasattr(ancestor, "is_junction") and ancestor.is_junction()
+            ) or _windows_reparse_point(ancestor):
+                return True
+        except OSError:
+            return True
+    return False
+
+
 def _github_default_branch_protection(repo_root: Path) -> str:
     """Return a fresh GitHub protection status; any failed query is unavailable."""
     def gh(*args: str):
@@ -4048,6 +4123,13 @@ def main(argv: list[str] | None = None) -> int:
         help="Complete NUL-delimited paths from `git diff --name-only -z --no-renames`.",
     )
     parser.add_argument("--redline-verdict", type=Path, default=None)
+    parser.add_argument("--bootstrap-applicability-proposal-z", type=Path)
+    parser.add_argument("--bootstrap-applicability-approved-z", type=Path)
+    parser.add_argument("--bootstrap-direct-default-branch-approved", action="store_true")
+    parser.add_argument(
+        "--bootstrap-protection-status",
+        choices=("unprotected", "protected", "unavailable"),
+    )
     parser.add_argument("--base-ref", type=str, default=None)
     parser.add_argument("--head-ref", type=str, default=None)
     parser.add_argument(
@@ -4055,6 +4137,34 @@ def main(argv: list[str] | None = None) -> int:
         help="Query GitHub live before reporting direct-default-branch eligibility.",
     )
     args = parser.parse_args(argv)
+
+    bootstrap_proposal = args.bootstrap_applicability_proposal_z
+    if bootstrap_proposal is not None:
+        if args.bootstrap_applicability_approved_z is None or args.bootstrap_protection_status is None:
+            parser.error("bootstrap applicability needs proposal, approved paths, and protection status")
+        try:
+            discovered = read_changed_paths(bootstrap_proposal, nul_delimited=True)
+            approved_file = args.bootstrap_applicability_approved_z
+            approved = (
+                [] if approved_file.read_bytes() == b""
+                else read_changed_paths(approved_file, nul_delimited=True)
+            )
+            rule = approve_documentation_only(
+                discovered,
+                approved,
+                direct_default_branch_approved=args.bootstrap_direct_default_branch_approved,
+                protection_status=args.bootstrap_protection_status,
+            )
+        except (OSError, UnicodeError, ValueError) as exc:
+            print(f"bootstrap applicability approval failed: {exc}", file=sys.stderr)
+            return 2
+        fragment = None if rule is None else {
+            "paths": list(rule.paths),
+            "workflowRequired": rule.workflow_required,
+            "directDefaultBranchAllowed": rule.direct_default_branch_allowed,
+        }
+        print(json.dumps(fragment))
+        return 0
 
     changed_path = args.changed_files_z or args.changed_files
     trusted_paths = args.changed_files_z is not None
@@ -4151,10 +4261,7 @@ def main(argv: list[str] | None = None) -> int:
             redline_error = str(exc)
         if redline is not None:
             risk_status = redline.applicability_risk_status(paths)
-            if any(
-                (repo_root / path).is_symlink() or (repo_root / path).is_dir()
-                for path in paths
-            ):
+            if any(_unsafe_applicability_path(repo_root, path) for path in paths):
                 risk_status = "risky"
 
     applicability = None
@@ -4170,6 +4277,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     if trusted_paths and discovery_succeeded and cfg is not None and not verdict.records:
         protected_paths = list(_PROTECTED_APPLICABILITY_PATHS)
+        protected_paths.extend(
+            path
+            for path in paths
+            if PurePosixPath(path).name in _PROTECTED_INSTRUCTION_FILENAMES
+        )
         if cfg.work_record.local is not None:
             prefix = task_path_prefix(cfg.work_record.local.task_path)
             if prefix:

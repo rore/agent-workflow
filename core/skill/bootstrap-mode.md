@@ -148,7 +148,7 @@ Ask the developer **only** what the inspection didn't already answer:
 - PR-driven vs push-driven? (Confirm Phase 1's detection.)
 - Per-checkpoint reference docs under `docs/agent-workflow/` (default) or somewhere else?
 
-Update both drafts. Require separate explicit approval for the exact applicability paths and direct-default flag; omission or refusal omits the block. Show revised drafts. Loop until explicit sign-off.
+Update both drafts using the approval command in [`applicability.md`](core/templates/checkpoints/applicability.md); use only its emitted fragment. Direct-default needs separate approval. Show revised drafts until explicit sign-off.
 
 ## Phase 4 — Write
 

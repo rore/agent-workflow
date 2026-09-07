@@ -70,6 +70,38 @@ def _matches(path: str, rule: str) -> bool:
     return path == rule or (rule.endswith("/") and path.startswith(rule))
 
 
+def approve_documentation_only(
+    discovered_paths: Iterable[str],
+    approved_paths: Iterable[str],
+    *,
+    direct_default_branch_approved: bool,
+    protection_status: ProtectionStatus | str,
+) -> DocumentationOnlyConfig | None:
+    """Persist only a valid human-approved subset of an inert proposal."""
+    discovered, discovered_valid = _path_tuple(discovered_paths)
+    approved, approved_valid = _path_tuple(approved_paths)
+    if (
+        not discovered_valid
+        or not approved_valid
+        or not discovered
+        or any(not _valid_repo_path(path, allow_prefix=True) for path in discovered + approved)
+        or not isinstance(direct_default_branch_approved, bool)
+        or protection_status not in {"unprotected", "protected", "unavailable"}
+    ):
+        raise ValueError("invalid documentation-only proposal or approval")
+    if any(path not in discovered for path in approved):
+        raise ValueError("approval contains a path that was not proposed")
+    if not approved:
+        return None
+    return DocumentationOnlyConfig(
+        paths=approved,
+        workflow_required=False,
+        direct_default_branch_allowed=(
+            direct_default_branch_approved and protection_status == "unprotected"
+        ),
+    )
+
+
 def evaluate_applicability(
     changed_paths: Iterable[str],
     risk_status: RiskStatus | str,
