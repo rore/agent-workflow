@@ -17,6 +17,8 @@ from typing import Any
 import jsonschema
 import yaml
 
+from .applicability import ApplicabilityConfig, DocumentationOnlyConfig
+
 # ---------------------------------------------------------------------------
 # Public types
 # ---------------------------------------------------------------------------
@@ -96,6 +98,7 @@ class Config:
     project_name: str
     work_record: WorkRecordConfig
     redline: RedlineConfig
+    applicability: ApplicabilityConfig | None
     raw: dict[str, Any]
 
 
@@ -192,6 +195,24 @@ def _to_config(data: dict[str, Any]) -> Config:
         verdict_path=data.get("redlineVerdictPath", "build/redline-verdict.json"),
     )
 
+    applicability_block = data.get("applicability")
+    applicability = None
+    if applicability_block is not None:
+        documentation_only = applicability_block.get("documentationOnly")
+        applicability = ApplicabilityConfig(
+            documentation_only=(
+                None
+                if documentation_only is None
+                else DocumentationOnlyConfig(
+                    paths=tuple(documentation_only["paths"]),
+                    workflow_required=documentation_only["workflowRequired"],
+                    direct_default_branch_allowed=documentation_only[
+                        "directDefaultBranchAllowed"
+                    ],
+                )
+            )
+        )
+
     return Config(
         version=data["version"],
         project_name=data["project"]["name"],
@@ -203,6 +224,7 @@ def _to_config(data: dict[str, Any]) -> Config:
             ),
         ),
         redline=redline,
+        applicability=applicability,
         raw=data,
     )
 

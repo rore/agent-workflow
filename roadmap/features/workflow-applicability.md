@@ -1,7 +1,7 @@
 ---
 id: workflow-applicability
 title: 'Configurable workflow applicability and direct-main exceptions'
-status: queued
+status: shipped
 priority: medium
 commitment: committed
 ---

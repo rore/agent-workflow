@@ -28,6 +28,17 @@ workRecord:
 redline: required
 redlineVerdictPath: redline-verdict.json
 
+# Human-approved dogfood applicability. CI may omit a Work Record only
+# when every changed path is in this set and Redline proves the diff low-risk.
+# Direct main is disabled because this repository's main branch is protected.
+applicability:
+  documentationOnly:
+    paths:
+      - "docs/"
+      - "roadmap/"
+      - "README.md"
+    workflowRequired: false
+    directDefaultBranchAllowed: false
 # Claude Code plan-mode gate: this repo's code roots (it has no src/).
 # The gate requires a plan touching these prefixes to include the Work
 # Record step. Prefixes match on a path boundary, case-insensitively.

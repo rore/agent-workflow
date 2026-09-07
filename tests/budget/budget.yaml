@@ -61,6 +61,9 @@ ceilings:
   # Per-checkpoint reference docs — loaded only when the matching checkpoint
   # is entered. Trimmed in 2026-06 to rules + tables + anti-patterns; rationale
   # externalized to docs/skill-rationale.md.
+  - path: core/templates/checkpoints/applicability.md
+    max_tokens: 600
+    why: loaded only when bootstrap proposes or a configured repo evaluates the documentation-only exception; carries deny-overrides priority, approval, live protection, and CI limits.
   - path: core/templates/checkpoints/establish-context.md
     max_tokens: 700
     why: loaded when starting a task. Five-field reference with examples.

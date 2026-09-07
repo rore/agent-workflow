@@ -239,3 +239,40 @@ def test_defensive_defaults_for_missing_keys(tmp_path: Path) -> None:
     assert v.security_changed is False
     assert v.runtime_config_changed is False
     assert v.detected_risk() == "Routine"
+
+
+def _applicability_verdict(paths: list[str]) -> RedlineVerdict:
+    raw = {
+        "verdict": "BLUE",
+        "zones": {"blue": paths, "gray": [], "red": [], "watch": []},
+        "boundaryViolations": [],
+        "checkpoints": [],
+        "apiChanges": {"detected": False},
+        "schemaChanges": {"detected": False},
+        "securityChanges": {"detected": False},
+        "runtimeConfigChanges": {"detected": False},
+    }
+    return RedlineVerdict(
+        boundary_violations=[], zones=raw["zones"], checkpoints=[],
+        api_changed=False, schema_changed=False, security_changed=False,
+        runtime_config_changed=False, raw=raw,
+    )
+
+
+def test_applicability_risk_requires_complete_blue_evidence() -> None:
+    paths = ["docs/guide.md", "README.md"]
+    verdict = _applicability_verdict(paths)
+    assert verdict.applicability_risk_status(paths) == "low"
+    assert verdict.applicability_risk_status(paths + ["roadmap/now.md"]) == "unavailable"
+
+
+def test_applicability_risk_rejects_any_risk_signal() -> None:
+    verdict = _applicability_verdict(["docs/guide.md"])
+    verdict.raw["zones"]["watch"] = ["docs/guide.md"]
+    assert verdict.applicability_risk_status(["docs/guide.md"]) == "risky"
+
+
+def test_applicability_risk_rejects_partial_verdict_shape() -> None:
+    verdict = _applicability_verdict(["docs/guide.md"])
+    del verdict.raw["schemaChanges"]
+    assert verdict.applicability_risk_status(["docs/guide.md"]) == "unavailable"

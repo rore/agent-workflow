@@ -13,6 +13,13 @@ Public API:
 - :exc:`ConfigError` — raised on any malformed input.
 """
 
+from .applicability import (
+    ApplicabilityConfig,
+    ApplicabilityDecision,
+    DocumentationOnlyConfig,
+    approve_documentation_only,
+    evaluate_applicability,
+)
 from .loader import (
     Config,
     ConfigError,
@@ -23,10 +30,15 @@ from .loader import (
 )
 
 __all__ = [
+    "ApplicabilityConfig",
+    "ApplicabilityDecision",
     "Config",
     "ConfigError",
+    "DocumentationOnlyConfig",
     "LocalBackendConfig",
     "RedlineConfig",
     "WorkRecordConfig",
+    "approve_documentation_only",
+    "evaluate_applicability",
     "load",
 ]

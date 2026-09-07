@@ -69,6 +69,7 @@ Read on the agent-workflow side:
 - **Existing CI:** `.github/workflows/`. Note whether `agent-workflow.yml` exists, name collisions on `redline-verdict`, and dominant trigger style (`pull_request:` vs `push:`).
 - **Existing CODEOWNERS:** `.github/CODEOWNERS` or `CODEOWNERS` at root. Bootstrap doesn't modify it.
 - **Flow signal:** `gh pr list --state merged --limit 30 --json number` vs `git log --since="3 months ago" --pretty=format:%h | wc -l`. Used to pick PR-driven vs push-driven; agent-workflow CI template assumes PR-driven.
+- **Applicability candidates:** load [`applicability.md`](templates/checkpoints/applicability.md); discover actual documentation/roadmap/root-README paths and live default-branch protection. Do not assume path names.
 - **Workflow tuner (slice G2):** if repo is org-scoped (`<org>/<name>`), has ≥10 merged PRs, and `gh` is authenticated, run `python <install-root>/scripts/agent-workflow-tune.py --repo <slug> --limit 30`. Capture **Calibration suggestions** for Phase 2 and **Proposed `.github/CODEOWNERS`** for Phase 3. If `## Inspection skipped: <reason>` is emitted, note the reason; Phase 3 falls back to `@TODO-codeowners-team` placeholder.
 
 Then invoke redline's Phase 1 (extension pick, build files, source layout, boundary-rule backend, pre-push hook).
@@ -86,6 +87,8 @@ Then invoke redline's Phase 1 (extension pick, build files, source layout, bound
 **Authoritative sources found:** <requirements / architecture / decisions — paths or "none">
 **Existing CI:** <paths to workflows / "none">
 **Existing CODEOWNERS:** <yes / no>
+**Applicability candidates + protection:** <exact paths / none>; <protected / unprotected / unavailable>
+
 **YAML-formatting gate:** <yes (Spotless/jackson-YAML — `agent-workflow.yaml` + policy must be canonical) / no>
 **Detected flow mode:** <PR-driven / push-driven / mixed>
 **Detected language extension** (from redline's Phase 1): <jvm-archunit / python / other / zone-only>
@@ -125,6 +128,8 @@ Backend is always `local`. The taskPath template is the canonical default; don't
 
 **`hooks.guardedPaths`** — the plan-mode gate hook (4.3h) requires a plan to include the Work Record step when it touches these path prefixes. Detect this repo's code root(s) from inspection (the layout that holds the code redline treats as sensitive — e.g. `src/` for a standard Maven/Gradle repo, or the actual top-level dirs like `core/`, `lib/`, `app/`), propose them here, and confirm with the developer in Phase 3. Prefixes match on a path boundary, case-insensitively. If omitted the gate defaults to `["src/"]`.
 
+If candidates exist, add `applicability.documentationOnly` to the inert draft with exact paths. Set direct-default true only when live checks prove unprotected; otherwise false.
+
 ### Draft 2: `agent-redline-policy.yaml`
 
 Invoke redline's Phase 2 ([`agent-redline/bootstrap-mode.md`](agent-redline/bootstrap-mode.md) §"Phase 2"). Adapt the chosen extension's `profile.md` to this repo. Show the draft inline.
@@ -143,7 +148,7 @@ Ask the developer **only** what the inspection didn't already answer:
 - PR-driven vs push-driven? (Confirm Phase 1's detection.)
 - Per-checkpoint reference docs under `docs/agent-workflow/` (default) or somewhere else?
 
-Update both drafts. Show revised drafts. Loop until explicit sign-off.
+Update both drafts using the approval command in [`applicability.md`](templates/checkpoints/applicability.md); use only its emitted fragment. Direct-default needs separate approval. Show revised drafts until explicit sign-off.
 
 ## Phase 4 — Write
 

@@ -39,8 +39,31 @@ from core.reporter.reporter import (  # noqa: E402
     diff_openapi_specs,
     openapi_diff_is_empty,
     resolve_boundary_input,
+    load_diff_from_files,
     load_policy,
 )
+
+
+class TestChangedPathInput:
+
+    def test_nul_delimited_paths_are_lossless(self, tmp_path):
+        changed = tmp_path / "changed-files.z"
+        paths = [" docs/leading.md", "docs/trailing.md ", "docs/用户\n指南.md"]
+        changed.write_bytes(b"\0".join(path.encode("utf-8") for path in paths) + b"\0")
+        assert load_diff_from_files(changed, nul_delimited=True).changed_files == paths
+
+    def test_empty_nul_delimited_diff_is_valid(self, tmp_path: Path) -> None:
+        changed = tmp_path / "changed.z"
+        changed.write_bytes(b"")
+        diff = load_diff_from_files(changed, nul_delimited=True)
+        assert diff.changed_files == []
+        assert diff.files_changed == 0
+
+    def test_nul_delimited_paths_require_terminal_separator(self, tmp_path: Path) -> None:
+        changed = tmp_path / "changed.z"
+        changed.write_bytes(b"docs/guide.md")
+        with pytest.raises(ValueError, match="incomplete"):
+            load_diff_from_files(changed, nul_delimited=True)
 
 
 # --------------------------------------------------------------------------

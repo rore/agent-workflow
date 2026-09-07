@@ -155,6 +155,44 @@ class RedlineVerdict:
         # Step 3: nothing flagged — blue-only or empty diff.
         return "Routine"
 
+    def applicability_risk_status(self, changed_paths: list[str]) -> str:
+        """Return low only for complete, exact, blue-only evidence."""
+        if not changed_paths or len(set(changed_paths)) != len(changed_paths):
+            return "unavailable"
+        raw_zones = self.raw.get("zones")
+        required_lists = ("boundaryViolations", "checkpoints")
+        change_keys = (
+            "apiChanges",
+            "schemaChanges",
+            "securityChanges",
+            "runtimeConfigChanges",
+        )
+        if self.raw.get("verdict") != "BLUE" or not isinstance(raw_zones, dict):
+            return "unavailable"
+        if any(not isinstance(self.raw.get(key), list) for key in required_lists):
+            return "unavailable"
+        for key in ("blue", "gray", "red", "watch"):
+            value = raw_zones.get(key)
+            if not isinstance(value, list) or any(not isinstance(path, str) for path in value):
+                return "unavailable"
+        for key in change_keys:
+            value = self.raw.get(key)
+            if not isinstance(value, dict) or not isinstance(value.get("detected"), bool):
+                return "unavailable"
+
+        classified = set(raw_zones["blue"] + raw_zones["gray"] + raw_zones["red"])
+        if classified != set(changed_paths):
+            return "unavailable"
+        if (
+            self.boundary_violations
+            or self.checkpoints
+            or raw_zones["red"]
+            or raw_zones["gray"]
+            or raw_zones["watch"]
+            or any(self.raw[key]["detected"] for key in change_keys)
+        ):
+            return "risky"
+        return "low"
     def is_binding(self, check_name: str) -> bool:
         """Whether ``check_name`` is binding under the verdict's modes config.
 

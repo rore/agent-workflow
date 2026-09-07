@@ -21,9 +21,9 @@ Bootstrap is a six-phase conversation. You stay in the loop the whole time.
 
 | Phase | What happens | Your decision |
 |---|---|---|
-| 1. Inspect | The agent reads the repo: existing agent-instruction files, CI workflows, CODEOWNERS, build tooling, recent PR flow. Reports a structured finding. | Confirm or correct the finding. |
-| 2. Propose | The agent drafts `agent-workflow.yaml` and the risk-classification policy at `agent-redline-policy.yaml` — both inert, nothing written. | Read both drafts. |
-| 3. Adapt | The agent walks the **zone-utility check**, optionally runs the **tuner** against your recent PRs, and asks the few questions inspection couldn't answer. See [§Risk classification and how to keep it useful](#risk-classification-and-how-to-keep-it-useful). | Sign off explicitly to advance. |
+| 1. Inspect | The agent reads the repo, discovers actual documentation/roadmap/root-README candidates, and checks live default-branch protection. Reports a structured finding. | Confirm or correct the finding. |
+| 2. Propose | The agent drafts `agent-workflow.yaml` and `agent-redline-policy.yaml` — both inert. Any applicability block lists discovered paths, never assumed canonical names. | Read both drafts. |
+| 3. Adapt | The agent walks the **zone-utility check**, optionally runs the tuner, and asks unresolved questions. Applicability paths and direct-default permission require separate explicit approval. | Sign off explicitly to advance. |
 | 4. Write | The agent writes the committed artifacts: configs, vendored checker/reporter scripts, AGENTS.md reference section, per-checkpoint reference docs, `.agent-workflow/tasks/README.md`. | None — but review the diff afterwards. |
 | 5. Confirm CI | The agent always writes `docs/agent-workflow-ci-proposal.md`. It then asks whether to install the workflow file at `.github/workflows/agent-workflow.yml` directly or leave it in the proposal doc only. | **Decide.** This is the integration point that gates every future PR. |
 | 6. Self-summary | The agent writes `docs/agent-workflow-bootstrap-summary.md`, runs a local probe of the checker, and reports what's installed, what's proposed, and what still needs human action. | Read it. Branch protection and CODEOWNERS additions need you. |
@@ -129,7 +129,7 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 | Notice | Meaning |
 |---|---|
 | Two new sticky PR comments | Risk-classifier + agent-workflow verdicts. They refresh on every push. |
-| A required field for every PR | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
+| A required field for every non-exempt task | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
 | `Risk` and `Complexity` in the Work Record | Mandatory. Determine the record's shape and the controls applied. |
 | `shadow` in `agent-redline-policy.yaml` | Zone classification is advisory until you flip it. Boundary violations still block. |
 | `redline: required` in `agent-workflow.yaml` | The checker treats a missing classifier verdict as a CI configuration error. Default; leave it. |
