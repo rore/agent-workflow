@@ -481,6 +481,15 @@ def _github_default_branch_protection(repo_root: Path) -> str:
     metadata = gh("api", f"repos/{repo}")
     if not isinstance(metadata, dict) or not isinstance(metadata.get("default_branch"), str):
         return "unavailable"
+    try:
+        current = subprocess.run(
+            ["git", "branch", "--show-current"], cwd=repo_root,
+            capture_output=True, text=True, encoding="utf-8", timeout=20, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "unavailable"
+    if current.returncode != 0 or current.stdout.strip() != metadata["default_branch"]:
+        return "unavailable"
     branch = quote(metadata["default_branch"], safe="")
     branch_info = gh("api", f"repos/{repo}/branches/{branch}")
     rules = gh("api", f"repos/{repo}/rules/branches/{branch}")

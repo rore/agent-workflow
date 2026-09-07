@@ -1723,8 +1723,10 @@ def load_diff_from_files(
 ) -> Diff:
     if nul_delimited:
         raw = changed_files_path.read_bytes()
-        if not raw or not raw.endswith(b"\0"):
-            raise ValueError("NUL-delimited changed-files input is empty or incomplete")
+        if not raw:
+            return Diff([], 0, lines_changed)
+        if not raw.endswith(b"\0"):
+            raise ValueError("NUL-delimited changed-files input is incomplete")
         raw_paths = raw.split(b"\0")
         if raw_paths[-1] != b"" or any(path == b"" for path in raw_paths[:-1]):
             raise ValueError("NUL-delimited changed-files input contains an empty path")

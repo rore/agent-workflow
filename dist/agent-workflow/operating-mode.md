@@ -42,7 +42,7 @@ git rev-parse --abbrev-ref HEAD
 
 Strip the first matching prefix from `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, `demo/`. Replace any remaining `/` with `-`. Result is the slug.
 
-On `main` (or another long-lived branch), stop unless the applicability gate already granted direct-default work.
+On a long-lived branch, stop unless it is the default and the applicability gate passed.
 
 ## Step 3 — Classify, then read or initialise the Work Record
 

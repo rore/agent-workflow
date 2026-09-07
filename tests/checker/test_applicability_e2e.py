@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import stat
 import subprocess
 from pathlib import Path
@@ -11,6 +12,9 @@ from pathlib import Path
 import pytest
 
 from core.checker.checker import discover_slugs_from_changed_files, main
+
+GIT = shutil.which("git")
+assert GIT is not None
 
 
 def _config(*, workflow_required: bool = False) -> str:
@@ -192,6 +196,7 @@ def test_ci_uses_one_lossless_path_contract_and_validates_outputs(workflow: Path
     assert text.count("git diff --name-only -z --no-renames") == 2
     assert text.count("git merge-base") == 2
     assert '"${MERGE_BASE}" "${HEAD_SHA}"' in text
+    assert '--base-ref "$BASE_SHA"' in text
     assert "--changed-files-z changed-files.z" in text
     assert "redline did not produce valid verdict JSON" in text
     assert "checker did not produce valid verdict JSON" in text
@@ -235,12 +240,33 @@ def test_live_protection_checks_actual_default_branch_and_rulesets(
 
     def fake_run(args, **_kwargs):
         calls.append(args)
+        if args[0] == "git":
+            return subprocess.CompletedProcess(args, 0, "release/v2\n", "")
         return subprocess.CompletedProcess(args, 0, json.dumps(next(outputs)), "")
 
     monkeypatch.setattr("core.checker.checker.subprocess.run", fake_run)
     assert _github_default_branch_protection(tmp_path) == "protected"
-    assert calls[2][-1].endswith("branches/release%2Fv2")
-    assert calls[3][-1].endswith("rules/branches/release%2Fv2")
+    assert calls[3][-1].endswith("branches/release%2Fv2")
+    assert calls[4][-1].endswith("rules/branches/release%2Fv2")
+
+
+def test_live_protection_denies_when_current_branch_is_not_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from core.checker.checker import _github_default_branch_protection
+
+    outputs = iter([
+        {"nameWithOwner": "org/repo"},
+        {"default_branch": "main"},
+    ])
+
+    def fake_run(args, **_kwargs):
+        if args[0] == "git":
+            return subprocess.CompletedProcess(args, 0, "release\n", "")
+        return subprocess.CompletedProcess(args, 0, json.dumps(next(outputs)), "")
+
+    monkeypatch.setattr("core.checker.checker.subprocess.run", fake_run)
+    assert _github_default_branch_protection(tmp_path) == "unavailable"
 
 def test_changed_deleted_record_under_approved_custom_layout_still_blocks(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -286,32 +312,32 @@ def test_local_actual_scope_includes_committed_staged_unstaged_and_untracked(
     (repo / "docs").mkdir()
     (repo / "docs" / "tracked.md").write_text("old\n", encoding="utf-8")
     (repo / "README.md").write_text("old\n", encoding="utf-8")
-    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
-    subprocess.run(["git", "add", "."], cwd=repo, check=True)
-    subprocess.run(["git", "commit", "-qm", "baseline"], cwd=repo, check=True)
+    subprocess.run([GIT, "init", "-q"], cwd=repo, check=True)
+    subprocess.run([GIT, "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run([GIT, "config", "user.name", "Test"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "."], cwd=repo, check=True)
+    subprocess.run([GIT, "commit", "-qm", "baseline"], cwd=repo, check=True)
     base = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+        [GIT, "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
 
     (repo / "docs" / "committed.md").write_text("committed\n", encoding="utf-8")
-    subprocess.run(["git", "add", "docs/committed.md"], cwd=repo, check=True)
-    subprocess.run(["git", "commit", "-qm", "docs change"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "docs/committed.md"], cwd=repo, check=True)
+    subprocess.run([GIT, "commit", "-qm", "docs change"], cwd=repo, check=True)
 
     (repo / "docs" / "tracked.md").write_text("unstaged\n", encoding="utf-8")
     (repo / "README.md").write_text("staged\n", encoding="utf-8")
-    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "README.md"], cwd=repo, check=True)
     (repo / "roadmap").mkdir()
     (repo / "roadmap" / "new.md").write_text("untracked\n", encoding="utf-8")
 
     def actual_paths(intended: tuple[str, ...] = ()) -> list[str]:
         tracked = subprocess.run(
-            ["git", "diff", "--name-only", "-z", "--no-renames", base],
+            [GIT, "diff", "--name-only", "-z", "--no-renames", base],
             cwd=repo, check=True, capture_output=True,
         ).stdout
         untracked = subprocess.run(
-            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+            [GIT, "ls-files", "--others", "--exclude-standard", "-z"],
             cwd=repo, check=True, capture_output=True,
         ).stdout
         fields = [part for part in (tracked + untracked).split(b"\0") if part]
@@ -423,31 +449,31 @@ def test_prospective_scope_works_before_first_edit_and_expansion_denies(
 def test_merge_base_pr_scope_excludes_target_only_changes(tmp_path: Path) -> None:
     repo = tmp_path / "diverged"
     repo.mkdir()
-    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    subprocess.run([GIT, "init", "-q", "-b", "main"], cwd=repo, check=True)
+    subprocess.run([GIT, "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run([GIT, "config", "user.name", "Test"], cwd=repo, check=True)
     (repo / "base.txt").write_text("base\n", encoding="utf-8")
-    subprocess.run(["git", "add", "."], cwd=repo, check=True)
-    subprocess.run(["git", "commit", "-qm", "base"], cwd=repo, check=True)
-    subprocess.run(["git", "switch", "-qc", "feature"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "."], cwd=repo, check=True)
+    subprocess.run([GIT, "commit", "-qm", "base"], cwd=repo, check=True)
+    subprocess.run([GIT, "switch", "-qc", "feature"], cwd=repo, check=True)
     (repo / "docs.md").write_text("docs\n", encoding="utf-8")
-    subprocess.run(["git", "add", "."], cwd=repo, check=True)
-    subprocess.run(["git", "commit", "-qm", "feature docs"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "."], cwd=repo, check=True)
+    subprocess.run([GIT, "commit", "-qm", "feature docs"], cwd=repo, check=True)
     head = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+        [GIT, "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
-    subprocess.run(["git", "switch", "-q", "main"], cwd=repo, check=True)
+    subprocess.run([GIT, "switch", "-q", "main"], cwd=repo, check=True)
     (repo / "app.py").write_text("main only\n", encoding="utf-8")
-    subprocess.run(["git", "add", "."], cwd=repo, check=True)
-    subprocess.run(["git", "commit", "-qm", "target moved"], cwd=repo, check=True)
+    subprocess.run([GIT, "add", "."], cwd=repo, check=True)
+    subprocess.run([GIT, "commit", "-qm", "target moved"], cwd=repo, check=True)
     target = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+        [GIT, "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
     merge_base = subprocess.run(
-        ["git", "merge-base", target, head], cwd=repo, check=True, capture_output=True, text=True
+        [GIT, "merge-base", target, head], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
     paths = subprocess.run(
-        ["git", "diff", "--name-only", merge_base, head],
+        [GIT, "diff", "--name-only", merge_base, head],
         cwd=repo, check=True, capture_output=True, text=True,
     ).stdout.splitlines()
     assert paths == ["docs.md"]

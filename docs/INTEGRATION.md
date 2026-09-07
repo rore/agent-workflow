@@ -129,7 +129,7 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 | Notice | Meaning |
 |---|---|
 | Two new sticky PR comments | Risk-classifier + agent-workflow verdicts. They refresh on every push. |
-| A required field for every PR | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
+| A required field for every non-exempt task | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
 | `Risk` and `Complexity` in the Work Record | Mandatory. Determine the record's shape and the controls applied. |
 | `shadow` in `agent-redline-policy.yaml` | Zone classification is advisory until you flip it. Boundary violations still block. |
 | `redline: required` in `agent-workflow.yaml` | The checker treats a missing classifier verdict as a CI configuration error. Default; leave it. |

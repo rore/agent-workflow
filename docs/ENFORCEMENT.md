@@ -20,7 +20,7 @@ It runs every predicate against every Work Record the PR touched. With no record
 | `1` | Advisory failures only. | Job green. Sticky surfaces the warning. |
 | `2` | At least one blocking predicate failed. | Job red. Merge blocks if the check is required. |
 
-The checker does **not** call out to GitHub or any external service. It reads files. It is reproducible offline: running `python scripts/agent-workflow-check.py --repo-root . --slug <slug>` locally produces the same JSON CI produces.
+The checker reads files and is reproducible offline by default: `python scripts/agent-workflow-check.py --repo-root . --slug <slug>` produces the same JSON as CI. The optional `--check-default-branch-protection` gate is the exception: it calls GitHub through `gh repo view` and `gh api`; failed or ambiguous queries return unavailable.
 
 ## Documentation-only applicability
 
@@ -41,7 +41,7 @@ Disposition column legend:
 |---|---|---|---|
 | `workrecord.exists` | A file resolves at the configured `taskPath` for the slug. | Blocking, non-waivable | Create the Work Record at the path the predicate names. Slug is derived from the branch — see "Slug derivation" below. |
 | `workrecord.markers_present` | The marker pair `<!-- agent-workflow:start --> … <!-- agent-workflow:end -->` bounds a single block. | Blocking, non-waivable | Use [`core/templates/work-record-routine.md`](../core/templates/work-record-routine.md) or [`work-record-expanded.md`](../core/templates/work-record-expanded.md) as the reference. |
-| `workrecord.required_for_branch_changes` | When `--changed-files` or `--changed-files-z` lists non-exempt paths but the checker resolved no Work Record at the branch slug, this synthetic predicate names the missing record. Fires only at PR time (not on `--slug`-only local runs). | Blocking (default). Opt out per-repo with `workRecord.requiredForBranchChanges: false` in `agent-workflow.yaml` for genuine housekeeping repos. | Create the Work Record for this branch, or set the opt-out flag if this PR really is housekeeping. |
+| `workrecord.required_for_branch_changes` | When `--changed-files` or `--changed-files-z` lists non-exempt paths but the checker resolved no Work Record at the branch slug, this synthetic predicate names the missing record. Fires only on changed-file runs. | Blocking. Without applicability policy, `workRecord.requiredForBranchChanges: false` opts out. With `applicability.documentationOnly`, trusted `-z` paths must pass that rule or require a record regardless of the legacy flag. | Create the Work Record, or use the legacy opt-out only when no applicability rule overrides it. |
 
 ### Classification — is the risk/complexity declaration valid
 

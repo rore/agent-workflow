@@ -274,7 +274,7 @@ jobs:
             --repo-root . \
             --changed-files-z changed-files.z \
             --slug "${{ steps.slug.outputs.slug }}" \
-            --base-ref "${{ steps.changed.outputs.merge_base }}" \
+            --base-ref "$BASE_SHA" \
             --head-ref "$HEAD_SHA" \
             $VERDICT_ARG > verdict.json
           EXIT=$?
