@@ -23,7 +23,7 @@ The workflow is:
 
 **Establish Task Context → Discover → Assess Risk and Complexity → Plan and Review → Implement Within Approved Scope → Verify → Review**
 
-Every change **MUST** satisfy the purpose and gate of each checkpoint. This does not require a separate document or ceremony for every checkpoint.
+Every change to which the workflow applies **MUST** satisfy the purpose and gate of each checkpoint. This does not require a separate document or ceremony for every checkpoint.
 
 Routine work **SHOULD** use a compact fast path. Higher-risk or more complex work requires stronger planning, review, verification, and recovery state.
 
@@ -121,9 +121,19 @@ The implementation **MUST** distinguish between:
 
 A requirement **MUST NOT** be described as enforced unless a technical control blocks its violation.
 
+### Workflow Applicability
+
+The workflow applies by default. A repository **MAY** define a deterministic documentation-only applicability policy that identifies repository-relative documentation, roadmap, and root README paths approved by a human during bootstrap.
+
+An exemption applies only when every path in the complete intended or actual change set is approved and no path is risky, protected, ambiguous, or outside the repository. Any non-exempt path makes the whole change subject to the workflow. Applicability **MUST** be reassessed when scope changes and against the authoritative diff in CI.
+
+Configuration, policy, schema, CI, agent-instruction, installed harness, configured Work Record, and repository-defined governance surfaces **MUST NOT** exempt themselves. Missing or invalid policy, incomplete path or risk evidence, and unavailable checks **MUST NOT** produce an exemption. Independent tests, security checks, architectural boundaries, and repository controls remain applicable.
+
+Permission to work directly on the default branch is separate and lower priority than workflow exemption. It requires explicit human approval, an all-path documentation-only exemption, low-risk classification, and a fresh determination that the actual default branch has no protection or applicable ruleset. Protected, unsupported, stale, or unavailable status denies direct-default-branch work. This permission does not authorize commit or push, bypass branch protection, or replace repository access controls.
+
 ## 6. Work Record
 
-Every engineering task **MUST** have one canonical Work Record.
+Every engineering task to which the workflow applies **MUST** have one canonical Work Record.
 
 The Work Record is an index and decision log. It stores workflow state and material decisions and links to authoritative evidence in Jira, source control, CI, or other engineering systems.
 
@@ -553,7 +563,7 @@ Rule composition works as follows:
 - **Ordered requirements:** apply the stricter value
 - **Contradictory requirements:** block until resolved
 
-A task exception **MUST** record:
+Applicability is decided before task workflow begins and is not a task exception. For work to which the workflow applies, a task exception **MUST** record:
 
 - rule being waived
 - reason and scope
@@ -579,7 +589,7 @@ A conforming harness **MUST** provide the following guarantees.
 
 ### 13.1 Canonical Work Record
 
-The harness **MUST** maintain or update one canonical Work Record that exposes:
+For work to which the workflow applies, the harness **MUST** maintain or update one canonical Work Record that exposes:
 
 - current readiness state
 - Task Context
