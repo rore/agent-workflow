@@ -66,16 +66,18 @@ Not required at this risk level
 - Replaced the Review-result trigger table with a compact final catch and generalized the always-loaded principle to product/skill defects.
 - Reworked the trigger-loaded skill-feedback guide with upstream ownership, privacy, open/closed deduplication, a six-field report, exact-payload approval, scoped standing authorization, and draft-only fallbacks.
 - Added a budget entry for the deferred guide, lowered the Review-result ceiling, required the guide in the install probe, recorded the design decision, regenerated dist, and synced the local skill.
+- Result review found two follow-ups: trusted authorization must be independent of repository content, and cross-task deduplication must be described as best-effort with safe uncertain-outcome retry handling.
 ## Evidence
 
-- Context budget: all 19 surfaces passed; agent-workflow entry 457/500, Review-result 618/700, skill-feedback 727/1100 before the final seven-word clarification (still below ceiling).
+- Context budget after review fixes: all 19 surfaces passed; agent-workflow entry 457/500, Review-result 618/700, skill-feedback 792/1100.
 - Links: all 146 Markdown files passed.
 - Package: source/dist drift, committed local-install parity, packaged references, install probe, and end-to-end bootstrap all passed.
 - Standard suite layers passed in Git Bash: schema 47 tests; Work Record 50; checker 138; Redline schema/skill/reporter; tuner scenarios plus 22 pytest tests; hooks; links; package. The desktop command boundary cut the monolithic runner after about 36 seconds, so the same nine standard layers were completed with their repository runners.
 - Clean-context functional review found no blocking findings across all seven triggers, confirmed/unknown upstream ownership, open/closed duplicates, absent authorization, unavailable GitHub, and evidence that cannot be disclosed safely. Its one clarity suggestion was incorporated and re-reviewed with no blockers.
+- PR review fixes re-passed budget, links, package drift, local-install parity, packaged references, install probe, and end-to-end bootstrap. Smart re-review confirmed both CodeRabbit findings resolved with no remaining blocker.
 ## Plan review
 
 Independent review classified the intended skill/template, decision-log, and dist paths as Redline watch and confirmed Elevated / Moderate. It required budget coverage for the deferred guide; verified destination and upstream ownership; automatic-report authority scoped to destination/category; sanitized duplicate searches; preservation of the existing path/anchor; explicit failure scenarios; local reinstall; and a clean-context functional review. The revised plan incorporates all blocking findings. No SPEC section 9.7 change is needed because this remains operational skill guidance, not a harness acceptance gate.
 ## Result review
 
-Clean-context smart-model review: no blocking correctness or safety findings. Detailed policy remains trigger-loaded; destination and automatic-report authority are exact-scope; privacy covers search and submission; the compatibility file and anchor remain; source/local-install/dist are synchronized. Confirmed non-upstream causes are dropped, while unknown ownership retains a sanitized local draft.
+Clean-context smart-model review: no blocking correctness or safety findings. Detailed policy remains trigger-loaded; destination and automatic-report authority are exact-scope; privacy covers search and submission; the compatibility file and anchor remain; source/local-install/dist are synchronized. Confirmed non-upstream causes are dropped, while unknown ownership retains a sanitized local draft. PR follow-up review confirmed trusted authorization is independent of repository content and deduplication honestly remains best-effort with a final search and verify-before-retry handling.

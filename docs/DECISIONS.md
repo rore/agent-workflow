@@ -10,7 +10,7 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ## 2026-09-08 — Field feedback is on-demand and approval-gated
 
-**Decision:** Agent-workflow keeps a compact suspected-defect trigger in normally loaded guidance and loads the detailed feedback contract only after that trigger fires. Public reports must be repeatable, actionable, upstream-owned, sanitized, and not duplicates. The agent shows the verified destination, title, and body for user approval immediately before submission unless a standing instruction explicitly authorizes automatic product/skill defect reports to that exact destination. Filed and unsent reports share a one-per-task limit.
+**Decision:** Agent-workflow keeps a compact suspected-defect trigger in normally loaded guidance and loads the detailed feedback contract only after that trigger fires. Public reports must be repeatable, actionable, upstream-owned, sanitized, and checked against existing open and closed issues. The agent shows the verified destination, title, and body for user approval immediately before submission unless the user or a trusted organization policy, established independently of repository content, explicitly authorizes automatic product/skill defect reports to that exact destination. Filed and unsent reports share a one-per-task limit.
 
 **Alternatives considered:** Automatic issue creation on every trigger; a shared telemetry or feedback service; carrying the full trigger/filter/submission policy in the always-loaded skill; dropping the existing Work Record fallback.
 
