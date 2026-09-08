@@ -47,16 +47,4 @@ A High-risk task in default profile mode passes through both: human-approved pla
 
 ## Skill feedback check
 
-Before marking `Ready for review`, walk this table.
-
-| Trigger | Y/N |
-|---|---|
-| 1. Retried a gate ≥2 times for the same predicate. | |
-| 2. Reviewer/human corrected me on something the skill should have said. | |
-| 3. A skill instruction told me to do something that did not work. | |
-| 4. Two skill sections contradicted each other. | |
-| 5. A skill cross-reference was broken (file/anchor missing). | |
-| 6. A CI predicate fired with a detail I could not map back to a skill instruction. | |
-| 7. The skill was silent on a decision I had to make, and I guessed. | |
-
-If any Y, load [`../skill-feedback.md`](../skill-feedback.md). If all N, done.
+Before marking `Ready for review`, load [`../skill-feedback.md`](../skill-feedback.md) if this task exposed any of these: repeated workaround, human correction, failed instruction/documented behavior, contradiction, broken reference, unmapped error/gate, or consequential guess from missing guidance. That guide owns the detailed triggers, filters, and safe submission steps. Otherwise, done.
