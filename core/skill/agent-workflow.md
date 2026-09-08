@@ -23,7 +23,7 @@ Read only the file for the mode that applies.
 - **Update State at transitions.** `Ready to implement` → `Ready for review` only when verification passes.
 - **Pause on assumption failure.** Stop and update the assumption + affected fields. Do not continue under stale assumptions.
 - **Marker block is the structured surface.** Prose around it is human notes. Don't put structured state outside the markers; don't put free prose inside them.
-- **Report skill problems upstream.** Run the Skill-feedback check at Review the Result. If a trigger fired, file an issue against the source repo per [`templates/skill-feedback.md`](templates/skill-feedback.md).
+- **Report upstream defects.** If product/skill behavior fails, contradicts guidance, or forces a consequential guess, load [`templates/skill-feedback.md`](templates/skill-feedback.md). Review the Result is the final catch.
 
 ## Decision priority
 

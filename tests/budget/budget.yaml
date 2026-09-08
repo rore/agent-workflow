@@ -83,8 +83,11 @@ ceilings:
     max_tokens: 800
     why: loaded during Verify. Grammar table + State-transition rule + failed-verification handling. SPEC restatements moved to docs.
   - path: core/templates/checkpoints/review-result.md
-    max_tokens: 800
-    why: loaded during Review-the-Result. Checkpoint-satisfied predicate + satisfy-by paths + plan-time/PR-time distinction + Skill-feedback check (trigger table). Bumped 700 -> 800 in skill-feedback-loop slice to absorb the trigger table; prevents skill defects in consumer repos going unreported and closes the cross-reference gap from the top-level skill's new Principles bullet. Elevated-task operational total still well under 6500 ceiling.
+    max_tokens: 700
+    why: loaded during Review-the-Result. Checkpoint-satisfied predicate + satisfy-by paths + plan-time/PR-time distinction + compact field-feedback catch. Detailed feedback policy moved to the trigger-loaded guide; ceiling reduced 800 -> 700.
+  - path: core/templates/skill-feedback.md
+    max_tokens: 1100
+    why: loaded only after suspected product/skill feedback. Carries detailed triggers, upstream/actionability/privacy filters, deduplication, bounded report schema, approval-gated submission, and the unsent fallback; absent from normal task context.
 
   # Templates copied to consuming repos at bootstrap. Read by agents in
   # consuming repos as part of operating-mode (work-record-*) or once at
