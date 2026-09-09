@@ -42,7 +42,7 @@
 
 ## Implementation
 
-Branch: `feat/handoff-review-evidence`. Clean-context plan review approved the narrow guidance-only approach. It required mode-qualified checkpoint wording and explicit unavailable-evidence handling; both were incorporated. Implementation revision: `29ae3cf`.
+Branch: `feat/handoff-review-evidence`. Clean-context plan review approved the narrow guidance-only approach. It required mode-qualified checkpoint wording and explicit unavailable-evidence handling; both were incorporated. Implementation revision: `c6d8de6`.
 
 Added receiver readiness to the existing record-load step, conditional targeted behavioral checks and exact reviewer identity rules to result review, and narrowed the checker docstring to its Redline-checkpoint subset. Regenerated `dist/` and the dogfood install without adding a stage, artifact, field, model requirement, or predicate.
 
@@ -53,9 +53,9 @@ Added receiver readiness to the existing record-load step, conditional targeted 
 - Package/install/reference/bootstrap checks passed; all 146 Markdown links passed.
 - Checker: 138 tests passed using the repository `.venv`.
 - Full nine-layer suite passed across the repository's standard runners. The combined WSL run's hooks layer was rerun natively after the temporary Windows-Python shim introduced CRLF/exit-code artifacts; native hooks passed every case.
-- Full-suite implementation revision: `29ae3cf`. Final reviewed revision: `8a4ed89`; post-fix budget, package/install, link, and whitespace checks passed.
+- Full-suite implementation revision: `c6d8de6`. Final reviewed revision: `881f361`; post-fix budget, package/install, link, and whitespace checks passed.
 - Initial PR CI exposed that the local machine lacks the budget script's pinned `en_US.UTF-8` locale and under-counted words. The operating guidance was compressed rather than raising its ceiling; the independent reviewer reapproved the strict-budget version.
 
 ## Result review
 
-Clean-context reviewer `/root/handoff_review_result` initially blocked on two wording defects: ambiguous record creation after the new pickup condition, and reviewer identity weaker than SPEC §9.7. Commit `8d55803` made creation explicitly absent-file-only and requires a non-implementer human or clean-context agent for Elevated work and a separate human for High work. After CI exposed the locale-dependent budget under-count, `8a4ed89` compressed the pickup rule without weakening it. The reviewer rechecked source, dist, and installed copies and approved the final revision with no remaining findings.
+Clean-context reviewer `/root/handoff_review_result` initially blocked on ambiguous record creation and reviewer identity weaker than SPEC §9.7; `bd6aba5` fixed both. After CI exposed the locale-dependent budget under-count, `92b7a4d` compressed the pickup rule without weakening it. CodeRabbit then found one remaining unconditional PR-time blocking claim; `881f361` made it binding-mode-only. After rebase onto `a694472`, the reviewer checked the full diff, source/dist/install synchronization, and strict budgets, then approved `881f361` with no remaining findings.
