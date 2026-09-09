@@ -37,9 +37,20 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Branch: `feat/handoff-review-evidence`. Clean-context plan review approved the narrow guidance-only approach. It required mode-qualified checkpoint wording and explicit unavailable-evidence handling; both are incorporated into the plan.
+Branch: `feat/handoff-review-evidence`. Clean-context plan review approved the narrow guidance-only approach. It required mode-qualified checkpoint wording and explicit unavailable-evidence handling; both were incorporated. Implementation revision: `29ae3cf`.
+
+Added receiver readiness to the existing record-load step, conditional targeted behavioral checks and exact reviewer identity rules to result review, and narrowed the checker docstring to its Redline-checkpoint subset. Regenerated `dist/` and the dogfood install without adding a stage, artifact, field, model requirement, or predicate.
+
+## Evidence
+
+- Packaged fresh-session scenarios `/root/handoff_review_scenarios`: complete recovery state proceeds; ambiguous state stops for repair; sufficient direct evidence avoids redundant checks; unavailable multi-step evidence leaves the gate unsatisfied.
+- `bash tests/budget/run.sh --verbose`: all 19 files within existing ceilings (`operating-mode.md` 1892/1900; `review-result.md` 695/700).
+- Package/install/reference/bootstrap checks passed; all 146 Markdown links passed.
+- Checker: 138 tests passed using the repository `.venv`.
+- Full nine-layer suite passed across the repository's standard runners. The combined WSL run's hooks layer was rerun natively after the temporary Windows-Python shim introduced CRLF/exit-code artifacts; native hooks passed every case.
+- Verified implementation revision: `29ae3cf`.
