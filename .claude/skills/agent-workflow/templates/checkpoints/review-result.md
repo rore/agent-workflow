@@ -26,7 +26,7 @@ The reviewer of Elevated and High work MUST also assess:
 - whether assumptions remain unresolved
 - whether the final diff changes the risk classification
 
-Review identity: Routine may use normal PR review; Elevated requires a non-implementer; High requires a human. Model choice is optional; clean context and evidence matter. Agent review never replaces mandated human approval.
+Review identity: Routine may use normal PR review; Elevated requires a non-implementer (human or clean-context agent); High requires a separate human. Model choice is optional. Agent review never replaces mandated human approval.
 
 If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record the result through authoritative PR/evidence references; if unavailable, leave the gate unsatisfied.
 
