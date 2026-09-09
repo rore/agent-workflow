@@ -1,7 +1,5 @@
 # review-result
 
-Closes the workflow. Reviewer evaluates the change against Task Context, plan, Risk/Complexity decision, Verification Record, final diff, and evidence prose. SPEC §9.7 lists the obligations.
-
 ## What the harness enforces
 
 **`review.checkpoints_satisfied`** (mode-dependent, non-waivable). Reads agent-redline's checkpoint satisfaction state from its verdict JSON. Each red-zone or contract-class change triggers one or more named checkpoints (`api-review`, `persistence-review`, `security-review`, `architecture-review`, …) from `agent-redline-policy.yaml`. Each checkpoint's `satisfiedBy` rules — typically:
@@ -11,9 +9,8 @@ Closes the workflow. Reviewer evaluates the change against Task Context, plan, R
 
 Redline evaluates each triggered checkpoint against the PR's labels + CODEOWNER approvals (OR-semantics across `satisfiedBy` entries) and emits `satisfied: true | false`. The checker surfaces unsatisfied checkpoints; they block in binding mode and remain advisory in shadow mode.
 
-The harness does not re-implement redline's matching. Redline owns the rules; we surface the result.
+Redline owns matching; the harness surfaces its result separately from human approval (SPEC §13.4).
 
-Non-waivable per SPEC §13.4: checkpoint satisfaction MUST remain structurally distinct from human approval.
 
 ## What stays reviewer judgment (SPEC §9.7)
 
@@ -26,15 +23,17 @@ The reviewer of Elevated and High work MUST also assess:
 - whether assumptions remain unresolved
 - whether the final diff changes the risk classification
 
+When the repository already uses a roadmap and this work affects a tracked item's progress or scope, reconcile the owning item under that roadmap's guidance: status, shipped scope, remaining scope, obsolete next steps, placement, and directly affected prerequisites. State the result briefly in existing prose; no roadmap edit is needed when already accurate. Skip when no roadmap/item applies.
+
 Review identity: Routine may use normal PR review; Elevated requires a non-implementer (human or clean-context agent); High requires a separate human. Different model optional. Agent review cannot replace mandated human approval.
 
 If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record authoritative result references; if unavailable, leave the gate unsatisfied.
 
 ## Satisfy-by paths in practice
 
-**CODEOWNER approval.** Repo's `CODEOWNERS` maps paths to teams. With "Require Code Owner review" in branch protection, GitHub enforces approvals come from the owning team. The CI template intersects the PR's APPROVED reviewers against this and passes the resulting login list to redline.
+**CODEOWNER approval.** With "Require Code Owner review" enabled, GitHub enforces owning-team approval. CI passes Redline the APPROVED reviewers that intersect `CODEOWNERS`.
 
-When no `CODEOWNERS` exists, CI emits a workflow-log warning and passes an empty approver list. Checkpoints whose only `satisfiedBy` is `codeownerApproval` surface as unsatisfied — that's correct.
+Without `CODEOWNERS`, CI warns and passes no approvers, so codeowner-only checkpoints remain unsatisfied.
 
 **Label satisfaction.** Some checkpoints accept a named label (`label: api-reviewed`). A maintainer applying the label asserts the review happened. Lower friction; suitable when review-by-anyone is acceptable. Redline's policy decides which path a checkpoint accepts.
 
