@@ -49,12 +49,13 @@ Added receiver readiness to the existing record-load step, conditional targeted 
 ## Evidence
 
 - Packaged fresh-session scenarios `/root/handoff_review_scenarios`: complete recovery state proceeds; ambiguous state stops for repair; sufficient direct evidence avoids redundant checks; unavailable multi-step evidence leaves the gate unsatisfied.
-- `bash tests/budget/run.sh --verbose`: all 19 files within existing ceilings (`operating-mode.md` 1892/1900; `review-result.md` 695/700).
+- Budget: all 19 files remain within existing ceilings. Strict `C.UTF-8` counts are `operating-mode.md` 1888/1900 and `review-result.md` 700/700.
 - Package/install/reference/bootstrap checks passed; all 146 Markdown links passed.
 - Checker: 138 tests passed using the repository `.venv`.
 - Full nine-layer suite passed across the repository's standard runners. The combined WSL run's hooks layer was rerun natively after the temporary Windows-Python shim introduced CRLF/exit-code artifacts; native hooks passed every case.
-- Full-suite implementation revision: `29ae3cf`. Final reviewed revision: `8d55803`; post-fix budget, package/install, link, and whitespace checks passed.
+- Full-suite implementation revision: `29ae3cf`. Final reviewed revision: `8a4ed89`; post-fix budget, package/install, link, and whitespace checks passed.
+- Initial PR CI exposed that the local machine lacks the budget script's pinned `en_US.UTF-8` locale and under-counted words. The operating guidance was compressed rather than raising its ceiling; the independent reviewer reapproved the strict-budget version.
 
 ## Result review
 
-Clean-context reviewer `/root/handoff_review_result` initially blocked on two wording defects: ambiguous record creation after the new pickup condition, and reviewer identity weaker than SPEC §9.7. Commit `8d55803` made creation explicitly absent-file-only and requires a non-implementer human or clean-context agent for Elevated work and a separate human for High work. The reviewer rechecked source, dist, and installed copies and approved with no remaining findings.
+Clean-context reviewer `/root/handoff_review_result` initially blocked on two wording defects: ambiguous record creation after the new pickup condition, and reviewer identity weaker than SPEC §9.7. Commit `8d55803` made creation explicitly absent-file-only and requires a non-implementer human or clean-context agent for Elevated work and a separate human for High work. After CI exposed the locale-dependent budget under-count, `8a4ed89` compressed the pickup rule without weakening it. The reviewer rechecked source, dist, and installed copies and approved the final revision with no remaining findings.
