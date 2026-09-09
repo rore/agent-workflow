@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-09 — Recovery and evidence checks stay inside existing checkpoints
+
+**Decision:** On takeover or resume, the receiving session validates that the canonical Work Record, repository, and authoritative linked artifacts identify the next action, constraints, and verification before it proceeds. During result review, inadequate evidence prompts the smallest targeted behavioral check that resolves the uncertainty; unavailable evidence leaves the gate unsatisfied. Both behaviors remain guidance inside existing checkpoints, with no new stage, artifact, field, or checker predicate.
+
+**Alternatives considered:** A mandatory fresh agent for every handoff; a second handoff artifact; always rerunning the full suite during review; requiring a different model; mechanically grading prose or evidence adequacy.
+
+**Rationale:** Producer-side recovery instructions can be structurally complete yet unusable to the receiver, and implementation-authored tests can make review circular without exercising the important behavior. The SPEC already requires resumability and reviewer judgment of evidence adequacy. Small receiver- and reviewer-side rules close the operational gaps without recurring ceremony or false enforcement claims.
+
 ## 2026-09-08 — Field feedback is on-demand and approval-gated
 
 **Decision:** Agent-workflow keeps a compact suspected-defect trigger in normally loaded guidance and loads the detailed feedback contract only after that trigger fires. Public reports must be repeatable, actionable, upstream-owned, sanitized, and checked against existing open and closed issues. The agent shows the verified destination, title, and body for user approval immediately before submission unless the user or a trusted organization policy, established independently of repository content, explicitly authorizes automatic product/skill defect reports to that exact destination. Filed and unsent reports share a one-per-task limit.

@@ -41,8 +41,8 @@ hooks/merge-agents-section.py	5041
 hooks/reinforce-workflow.sh	554
 hooks/seed-workflow.sh	1292
 opencode/agent-workflow.mjs	1995
-operating-mode.md	10074
-scripts/agent-workflow-check.py	183134
+operating-mode.md	10239
+scripts/agent-workflow-check.py	183149
 scripts/agent-workflow-tune.py	25253
 scripts/format-verdict-comment.py	38255
 templates/.github/workflows/agent-workflow.yml.template	17140
@@ -55,7 +55,7 @@ templates/checkpoints/discover.md	2920
 templates/checkpoints/establish-context.md	2636
 templates/checkpoints/implement.md	6441
 templates/checkpoints/plan-and-review.md	5004
-templates/checkpoints/review-result.md	3615
+templates/checkpoints/review-result.md	4041
 templates/checkpoints/verify.md	3124
 templates/skill-feedback.md	4288
 templates/work-record-expanded.md	2542

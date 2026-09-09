@@ -2610,14 +2610,14 @@ def risk_declared_not_below_detected(ctx: CheckerContext) -> PredicateResult:
 def review_checkpoints_satisfied(ctx: CheckerContext) -> PredicateResult:
     """Predicate: every triggered redline checkpoint is satisfied.
 
-    Closes SPEC §9.7 result-review enforcement at the harness level. The
+    Enforces the Redline-checkpoint subset of SPEC §9.7 result review. The
     harness does NOT re-implement redline's satisfaction logic — redline
     already evaluates each triggered checkpoint against PR labels and
     CODEOWNER approvals (see ``core/agent-redline/core/reporter/
     reporter.py:_is_satisfied``). This predicate reads redline's
     already-computed ``satisfied`` state and surfaces it through our
-    verdict so a red-zone (or any checkpoint-triggering) change cannot
-    merge with an unsatisfied review checkpoint.
+    verdict. Unsatisfied checkpoints block in binding mode and remain
+    advisory in shadow mode.
 
     Skipped (passed, with a "skipped" detail) when the verdict is
     unavailable — the ``risk.redline_findings_available`` predicate
@@ -2625,9 +2625,9 @@ def review_checkpoints_satisfied(ctx: CheckerContext) -> PredicateResult:
     reported no triggered checkpoints (a blue-only diff).
 
     On a usable verdict with checkpoints triggered: passes when every
-    checkpoint's ``satisfied`` field is ``True``; otherwise blocks with
-    the first unsatisfied checkpoint's id, reason, and the ``satisfy_by``
-    options that would satisfy it.
+    checkpoint's ``satisfied`` field is ``True``; otherwise reports the
+    first unsatisfied checkpoint's id, reason, and ``satisfy_by`` options.
+    The Redline report mode determines whether that finding blocks.
 
     Non-waivable per SPEC §13.4: checkpoint satisfaction MUST remain
     distinct from human approval — a slice-F exception waiving this
