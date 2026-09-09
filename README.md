@@ -1,14 +1,12 @@
 # agent-workflow
 
-**An enforceable engineering workflow around AI coding agents.**
+**A risk-aware, enforceable engineering workflow around AI coding agents.**
 
-An AI agent works a task through a fixed sequence of checkpoints — establish context, discover, assess risk, plan, implement, verify, review — and records scope, assumptions, risk classification, and verification in a per-task **Work Record** committed alongside the code. At PR time, a CI checker reads that record, compares it against what the diff actually changed, and fails on the objective violations it can detect.
+agent-workflow makes agent work inspectable outside the chat. It guides each task through a fixed sequence of checkpoints — establish context, discover, assess risk, plan, implement, verify, review — and records scope, assumptions, risk classification, and verification in a per-task **Work Record** committed alongside the code.
 
-The result is agent-driven work that's easier to resume, review, and trust. The workflow makes the agent's scope, assumptions, risk assessment, approvals, and verification visible alongside the code; CI independently enforces the parts it can verify objectively. What can't be proved mechanically is recorded and surfaced to the human reviewer instead of disappearing inside the agent's conversation.
+At PR time, CI classifies the actual diff, checks it against the Work Record, and fails on objective violations. Judgment stays with people: higher-risk changes are surfaced with the context and required checkpoints reviewers need, while routine changes do not demand the same attention.
 
 It covers the change itself — from discovery through review. Product discovery, deployment, and production operation stay with the systems that already own them; agent-workflow composes with GitHub, CI, and branch protection rather than replacing them.
-
-**What it runs on.** The workflow model and the CI checker are agent-independent — the checker is a single-file Python script that reads files. The packaged skill currently targets Claude Code / Agent Skills–compatible environments (installed under `.claude/skills/`), and Claude Code hooks add plan-mode enforcement.
 
 ---
 
@@ -24,6 +22,19 @@ agent-workflow makes that state durable, uses risk to focus reviewer attention, 
 - **Risk-aware visibility** — the risk classification decides where a reviewer's attention goes, and what the agent decided and verified is on the record.
 - **Objective CI gates** — mechanically detectable violations fail CI, so they don't depend on the agent reporting itself correctly.
 
+## Risk-aware workflow
+
+Risk and complexity are assessed separately:
+
+- **Risk** — `Routine` / `Elevated` / `High`: how bad is it if this change is wrong? It determines required approvals and reviews, focusing human attention on the PRs and files with the highest blast radius.
+- **Complexity** — `Simple` / `Moderate` / `Large`: how much planning and recovery state does the work need? It determines the Work Record's shape.
+
+A one-line contract change can therefore be `(High, Simple)`.
+
+The bundled classifier, agent-redline, maps changed paths to zones: red for structural decisions, blue for autonomous-safe work, and gray for unclassified work. Watch paths add visibility without adding a gate. During planning, the skill assesses the intended scope against repository policy. At PR time, CI independently classifies the actual diff and posts the classified files and required checkpoints, giving reviewers a prioritized attention queue. Human review remains the authority for judgments CI cannot prove.
+
+Zone classification starts in **shadow** mode — advisory in the PR, not blocking — so teams can calibrate it against their own changes before making it binding. Forbidden cross-layer dependency violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
+
 ## How it works
 
 ```
@@ -35,8 +46,7 @@ developer request
 ```
 
 - **During development** — the skill walks the agent through the checkpoint sequence and writes/updates the Work Record. Planning fields go in *before* any code.
-- **At PR time** — a bundled risk classifier (agent-redline) classifies the actual diff; the checker compares that against the Work Record and enforces objective workflow rules.
-- **For reviewers** — risk assessment drives attention. The Work Record and the two PR sticky comments (classifier verdict + checker verdict) surface the agent's scope, assumptions, detected risk, required reviews, approvals, and verification claims, so a higher-risk change arrives with the context to review it.
+- **At PR time** — CI compares the classified diff against the Work Record, enforces objective workflow rules, and posts the results for reviewers.
 
 The checkpoints, in order:
 
@@ -65,6 +75,8 @@ Its shape is fixed by `(Risk, Complexity)`: this compact form for `(Routine, Sim
 
 ## Quick start
 
+The workflow model and CI checker are agent-independent; the checker is a single-file Python script that reads repository files. The packaged skill currently targets Claude Code / Agent Skills–compatible environments under `.claude/skills/`. Claude Code hooks add plan-mode enforcement, and bootstrap also installs an OpenCode plugin.
+
 Adopt agent-workflow on a repo:
 
 ```text
@@ -77,7 +89,7 @@ Adopt agent-workflow on a repo:
 
 Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
-**OpenCode.** Alongside the Claude Code hooks, bootstrap installs an OpenCode plugin ([`core/skill/opencode/agent-workflow.mjs`](core/skill/opencode/agent-workflow.mjs)) at the consumer's `.opencode/plugins/agent-workflow.mjs`. OpenCode auto-loads it and it injects the Work-Record reminder into the system prompt each turn — a fail-open nudge mirroring `.claude/hooks/seed-workflow.sh`. The CI checker stays the enforcer.
+**OpenCode.** Bootstrap installs [`core/skill/opencode/agent-workflow.mjs`](core/skill/opencode/agent-workflow.mjs) at `.opencode/plugins/agent-workflow.mjs`. OpenCode auto-loads it and injects a Work Record reminder each turn. The CI checker remains the enforcer.
 
 ## What CI enforces
 
@@ -99,17 +111,6 @@ By design — these stay reviewer judgments the checker never touches:
 - Whether the chosen verification method actually proves the criterion.
 - Whether the tests pass — GitHub already knows that.
 - Whether a human genuinely approved. The checker confirms approval-shaped text exists, not who wrote it; this "cheating window" is acknowledged openly. Its answer is visibility — the recorded approvals, classifications, and claims land in the PR conversation and the reviewer's notification, where a human can see them and object.
-
-## Risk-aware workflow
-
-Two independent axes:
-
-- **Risk** — `Routine` / `Elevated` / `High`: how bad is it if this change is wrong? Drives required approvals and reviews, and focuses human attention on the PRs and files with the highest blast radius instead of asking reviewers to inspect everything equally.
-- **Complexity** — `Simple` / `Moderate` / `Large`: how much planning and recovery state does the work need? Drives the Work-Record shape.
-
-They're assessed separately — a one-line change to a contract can be `(High, Simple)`.
-
-The bundled classifier (agent-redline) sorts changed paths into zones (red = architectural decisions; blue = autonomous-safe; gray = unclassified) and detects forbidden cross-layer dependencies. During planning, the skill uses the policy to assess the intended scope; at PR time, the classifier deterministically classifies the actual diff and CI reconciles that verdict with the Work Record — declared intent first, independent validation later. The PR sticky identifies red/watch files and required checkpoints, giving a human reviewer a prioritized attention queue; human review remains the authority for judgment the checker cannot prove. It ships in **shadow** mode — advisory, surfaced in the sticky but not blocking — so you calibrate against your own PRs before flipping it to binding. Boundary violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
 
 ## Evidence from use
 
