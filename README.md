@@ -104,12 +104,12 @@ By design — these stay reviewer judgments the checker never touches:
 
 Two independent axes:
 
-- **Risk** — `Routine` / `Elevated` / `High`: how bad is it if this change is wrong? Drives required approvals and reviews.
+- **Risk** — `Routine` / `Elevated` / `High`: how bad is it if this change is wrong? Drives required approvals and reviews, and focuses human attention on the PRs and files with the highest blast radius instead of asking reviewers to inspect everything equally.
 - **Complexity** — `Simple` / `Moderate` / `Large`: how much planning and recovery state does the work need? Drives the Work-Record shape.
 
 They're assessed separately — a one-line change to a contract can be `(High, Simple)`.
 
-The bundled classifier (agent-redline) sorts changed paths into zones (red = architectural decisions; blue = autonomous-safe; gray = unclassified) and detects forbidden cross-layer dependencies. During planning, the skill uses the policy to assess the intended scope; at PR time, the classifier deterministically classifies the actual diff and CI reconciles that verdict with the Work Record — declared intent first, independent validation later. It ships in **shadow** mode — advisory, surfaced in the sticky but not blocking — so you calibrate against your own PRs before flipping it to binding. Boundary violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
+The bundled classifier (agent-redline) sorts changed paths into zones (red = architectural decisions; blue = autonomous-safe; gray = unclassified) and detects forbidden cross-layer dependencies. During planning, the skill uses the policy to assess the intended scope; at PR time, the classifier deterministically classifies the actual diff and CI reconciles that verdict with the Work Record — declared intent first, independent validation later. The PR sticky identifies red/watch files and required checkpoints, giving a human reviewer a prioritized attention queue; human review remains the authority for judgment the checker cannot prove. It ships in **shadow** mode — advisory, surfaced in the sticky but not blocking — so you calibrate against your own PRs before flipping it to binding. Boundary violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
 
 ## Evidence from use
 
