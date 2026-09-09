@@ -26,9 +26,9 @@ The reviewer of Elevated and High work MUST also assess:
 - whether assumptions remain unresolved
 - whether the final diff changes the risk classification
 
-Review identity: Routine may use normal PR review; Elevated requires a non-implementer (human or clean-context agent); High requires a separate human. Model choice is optional. Agent review never replaces mandated human approval.
+Review identity: Routine may use normal PR review; Elevated requires a non-implementer (human or clean-context agent); High requires a separate human. Different model optional. Agent review cannot replace mandated human approval.
 
-If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record the result through authoritative PR/evidence references; if unavailable, leave the gate unsatisfied.
+If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record authoritative result references; if unavailable, leave the gate unsatisfied.
 
 ## Satisfy-by paths in practice
 
@@ -43,7 +43,7 @@ When no `CODEOWNERS` exists, CI emits a workflow-log warning and passes an empty
 Plan-time approvals (Approvals field, clean-context Plan review reference) are recorded in the Work Record BEFORE implementation. Result-review checkpoint satisfaction happens on the PR AFTER implementation. Structurally distinct:
 
 - **Plan-time** (slice D): agent-attested plan approval in the Work Record. Cheating window acknowledged.
-- **PR-time** (slice G): GitHub + CODEOWNERS evaluate; redline surfaces; checker blocks.
+- **PR-time** (slice G): GitHub + CODEOWNERS evaluate; Redline surfaces; checker blocks only in binding mode.
 
 A High-risk task in default profile mode passes through both: human-approved plan in Approvals + CODEOWNER-approved PR or maintainer-applied review label.
 
