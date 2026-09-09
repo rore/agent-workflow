@@ -4,12 +4,12 @@ Closes the workflow. Reviewer evaluates the change against Task Context, plan, R
 
 ## What the harness enforces
 
-**`review.checkpoints_satisfied`** (blocking, non-waivable). Reads agent-redline's checkpoint satisfaction state from its verdict JSON. Each red-zone or contract-class change triggers one or more named checkpoints (`api-review`, `persistence-review`, `security-review`, `architecture-review`, …) from `agent-redline-policy.yaml`. Each checkpoint's `satisfiedBy` rules — typically:
+**`review.checkpoints_satisfied`** (mode-dependent, non-waivable). Reads agent-redline's checkpoint satisfaction state from its verdict JSON. Each red-zone or contract-class change triggers one or more named checkpoints (`api-review`, `persistence-review`, `security-review`, `architecture-review`, …) from `agent-redline-policy.yaml`. Each checkpoint's `satisfiedBy` rules — typically:
 
 - `codeownerApproval` — a CODEOWNER must approve the PR
 - `{ label: <name> }` — a maintainer must apply a named PR label
 
-Redline evaluates each triggered checkpoint against the PR's labels + CODEOWNER approvals (OR-semantics across `satisfiedBy` entries) and emits `satisfied: true | false`. The agent-workflow checker reads that state and **blocks the merge** when any triggered checkpoint is unsatisfied.
+Redline evaluates each triggered checkpoint against the PR's labels + CODEOWNER approvals (OR-semantics across `satisfiedBy` entries) and emits `satisfied: true | false`. The checker surfaces unsatisfied checkpoints; they block in binding mode and remain advisory in shadow mode.
 
 The harness does not re-implement redline's matching. Redline owns the rules; we surface the result.
 
@@ -26,7 +26,9 @@ The reviewer of Elevated and High work MUST also assess:
 - whether assumptions remain unresolved
 - whether the final diff changes the risk classification
 
-Routine work uses normal PR review; the reviewer still judges adequacy.
+Review identity: Routine may use normal PR review; Elevated requires a non-implementer (human or clean-context agent); High requires a separate human. Different model optional. Agent review cannot replace mandated human approval.
+
+If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record authoritative result references; if unavailable, leave the gate unsatisfied.
 
 ## Satisfy-by paths in practice
 
@@ -41,7 +43,7 @@ When no `CODEOWNERS` exists, CI emits a workflow-log warning and passes an empty
 Plan-time approvals (Approvals field, clean-context Plan review reference) are recorded in the Work Record BEFORE implementation. Result-review checkpoint satisfaction happens on the PR AFTER implementation. Structurally distinct:
 
 - **Plan-time** (slice D): agent-attested plan approval in the Work Record. Cheating window acknowledged.
-- **PR-time** (slice G): GitHub + CODEOWNERS evaluate; redline surfaces; checker blocks.
+- **PR-time** (slice G): GitHub + CODEOWNERS evaluate; Redline surfaces; checker blocks only in binding mode.
 
 A High-risk task in default profile mode passes through both: human-approved plan in Approvals + CODEOWNER-approved PR or maintainer-applied review label.
 
