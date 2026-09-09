@@ -31,6 +31,7 @@ Revision: `a2af7d0` replaces the named-locale `wc -w` call with `awk` field coun
 Evidence:
 
 - `LC_ALL=C` and `LC_ALL=C.UTF-8` budget runs produced identical counts; all 19 files passed.
-- Direct comparison matched UTF-8 `wc -w` for representative Markdown sources.
+- Independent review confirmed every budgeted file matches UTF-8 `wc -w`; `C` and `C.UTF-8` runs are identical.
 - All nine repository test layers passed: 257 Python tests, budget, redline, tuner fixtures, hooks, links, and package/bootstrap E2E.
 - `git diff --check` passed.
+- High-reasoning independent review approved with no actionable findings.
