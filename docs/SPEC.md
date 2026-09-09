@@ -514,6 +514,7 @@ The review **MUST** check:
 - whether assumptions remain unresolved
 - whether important security, compatibility, architecture, or operational risks were missed
 - whether the final diff changes the risk classification
+- when the repository already uses a roadmap and this work affects a tracked item's progress or scope, whether its status, shipped scope, remaining scope, next-step claims, placement, and directly affected prerequisites match the result
 
 Review depth depends on risk:
 

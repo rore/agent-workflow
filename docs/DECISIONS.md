@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-09 — Roadmap reconciliation is conditional at result review
+
+**Decision:** When a repository already uses a roadmap and completed work affects a tracked item's progress or scope, result review reconciles that item through the repository's existing roadmap guidance. The review covers item status, shipped and remaining scope, obsolete next-step claims, placement, and directly affected prerequisites. It records the result briefly, but does not require a roadmap edit when the item is already accurate. Repositories without an applicable roadmap item skip the check entirely.
+
+**Alternatives considered:** A required roadmap field or artifact; a new completion stage; automatic roadmap discovery or feature splitting; Minimap-specific paths and statuses; mandatory roadmap edits for every PR; scanning for a roadmap when none is configured.
+
+**Rationale:** Completion evidence can be correct while the planning surface remains stale, causing later agents to repeat shipped work, close an unfinished umbrella feature, or follow obsolete prerequisites. Keeping the rule conditional and inside result review closes that drift without imposing roadmap tooling or ceremony on repositories and standalone bugs that do not use it.
+
 ## 2026-09-09 — Recovery and evidence checks stay inside existing checkpoints
 
 **Decision:** On takeover or resume, the receiving session validates that the canonical Work Record, repository, and authoritative linked artifacts identify the next action, constraints, and verification before it proceeds. During result review, inadequate evidence prompts the smallest targeted behavioral check that resolves the uncertainty; unavailable evidence leaves the gate unsatisfied. Both behaviors remain guidance inside existing checkpoints, with no new stage, artifact, field, or checker predicate.
