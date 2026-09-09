@@ -26,7 +26,7 @@
 # deliberately rough; overestimates slightly on prose (good — gives margin) and
 # underestimates on code-heavy files (acceptable — code is rare in skill files).
 # A real tokenizer can be substituted later without changing the contract.
-# Pin LC_ALL=en_US.UTF-8 so wc -w counts the same way locally and in CI.
+# Word counting uses awk fields so results do not depend on installed locales.
 #
 # Pattern matching: a glob may apply to multiple files; the ceiling applies to
 # each file individually. Test runner uses bash glob expansion + per-file check.
