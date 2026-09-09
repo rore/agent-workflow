@@ -31,7 +31,7 @@ Risk and complexity are assessed separately:
 
 A one-line contract change can therefore be `(High, Simple)`.
 
-The bundled classifier, agent-redline, maps changed paths to zones: red for structural decisions, blue for autonomous-safe work, and gray for unclassified work. Watch paths add visibility without adding a gate. During planning, the skill assesses the intended scope against repository policy. At PR time, CI independently classifies the actual diff and posts the classified files and required checkpoints, giving reviewers a prioritized attention queue. Human review remains the authority for judgments CI cannot prove.
+The bundled classifier, [`agent-redline`](https://github.com/rore/agent-redline), maps changed paths to zones: red for structural decisions, blue for autonomous-safe work, and gray for unclassified work. Watch paths add visibility without adding a gate. During planning, the skill assesses the intended scope against repository policy. At PR time, CI independently classifies the actual diff and posts the classified files and required checkpoints, giving reviewers a prioritized attention queue. Human review remains the authority for judgments CI cannot prove.
 
 Zone classification starts in **shadow** mode — advisory in the PR, not blocking — so teams can calibrate it against their own changes before making it binding. Forbidden cross-layer dependency violations block from day one. Feature set, policy schema, and calibration: [`docs/REDLINE.md`](docs/REDLINE.md).
 
