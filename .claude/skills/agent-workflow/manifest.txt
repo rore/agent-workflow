@@ -41,7 +41,7 @@ hooks/merge-agents-section.py	5041
 hooks/reinforce-workflow.sh	554
 hooks/seed-workflow.sh	1292
 opencode/agent-workflow.mjs	1995
-operating-mode.md	10252
+operating-mode.md	10055
 scripts/agent-workflow-check.py	183149
 scripts/agent-workflow-tune.py	25253
 scripts/format-verdict-comment.py	38255

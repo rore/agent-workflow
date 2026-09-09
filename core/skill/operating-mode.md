@@ -56,9 +56,9 @@ Decide classification before writing the file. Read [`templates/checkpoints/asse
 | `(Routine, Simple)` | Compact — fewer fields. Template: [`templates/work-record-routine.md`](templates/work-record-routine.md). |
 | Anything else | Expanded — full §9.4 field set. Template: [`templates/work-record-expanded.md`](templates/work-record-expanded.md). |
 
-Substitute the slug into the configured `taskPath`. If the file exists, parse it. On takeover/resume, derive next action, constraints, and verification from it, the repo, and authoritative links; if unclear, name the gap and repair or clarify canonical state before acting. If the file is absent, copy from the matching template and fill in. On parse failure, repair the full template field set — markers alone aren't enough.
+Resolve `taskPath` with the slug. If it exists, parse it. On takeover/resume, confirm next action, constraints, and verification from the record, repo, and authoritative links; repair gaps before acting. If absent, copy the matching template. On parse failure, restore every field.
 
-Surrounding prose above/below the marker block is free-form — Implementation, Evidence, and Result-review references live there.
+Surrounding prose holds Implementation, Evidence, and Result-review references.
 
 ## Step 4 — Walk the checkpoints
 
