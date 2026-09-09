@@ -46,7 +46,7 @@ Not required at this risk level.
 —
 
 <!-- Ready to implement | Blocked | Ready for review -->
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Plan review
@@ -55,4 +55,18 @@ The independent reviewer approved the existing SPEC §9.7 plus `review-result.md
 
 ## Implementation
 
-Branch: `feat/roadmap-reconciliation`. No source edits yet.
+Branch: `feat/roadmap-reconciliation`.
+
+Revision `981c99d` adds the conditional SPEC §9.7 obligation and operational result-review rule, records the design decision, and synchronizes the dist/dogfood copies. No operating-mode, schema, checker, or roadmap-tool-specific behavior changed.
+
+## Evidence
+
+- Budget: `review-result.md` is 679/700 estimated tokens; all 19 budget checks pass with no ceiling change.
+- Full local suite: 257 Python tests plus Redline, tuner fixtures, hooks, links, and package/bootstrap E2E passed.
+- Packaging: source, dist, and `.claude` checkpoint bytes match; generated manifests match.
+- Integrity: `git diff --check` passed.
+- PR CI: pending.
+
+## Result review
+
+High-reasoning independent review task `/root/roadmap_result_review` approved `981c99d` against `main` with no source findings. It checked all conditional/no-op scenarios and confirmed existing reviewer independence, human approval, Redline, unavailable-evidence, and merge-thread obligations remain intact.
