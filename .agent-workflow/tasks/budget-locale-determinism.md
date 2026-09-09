@@ -19,9 +19,18 @@
 
 **Verification:** Compare `awk` with `LC_ALL=C.UTF-8 wc -w`, run budget tests under multiple `LC_ALL` values, then run `bash tests/run-all.sh` and PR CI.
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Branch: `feat/budget-locale-determinism`. Planned files: `tests/budget/check-budget.sh`, `tests/budget/budget.yaml`, and this Work Record.
+Branch: `feat/budget-locale-determinism`.
+
+Revision: `a2af7d0` replaces the named-locale `wc -w` call with `awk` field counting and updates the manifest comment.
+
+Evidence:
+
+- `LC_ALL=C` and `LC_ALL=C.UTF-8` budget runs produced identical counts; all 19 files passed.
+- Direct comparison matched UTF-8 `wc -w` for representative Markdown sources.
+- All nine repository test layers passed: 257 Python tests, budget, redline, tuner fixtures, hooks, links, and package/bootstrap E2E.
+- `git diff --check` passed.
