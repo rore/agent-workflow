@@ -65,7 +65,7 @@ Revision `981c99d` adds the conditional SPEC §9.7 obligation and operational re
 - Full local suite: 257 Python tests plus Redline, tuner fixtures, hooks, links, and package/bootstrap E2E passed.
 - Packaging: source, dist, and `.claude` checkpoint bytes match; generated manifests match.
 - Integrity: `git diff --check` passed.
-- PR CI: pending.
+- PR CI: `test`, `redline`, `agent-workflow`, and CodeRabbit passed; CodeRabbit produced no actionable comments and no inline threads exist.
 
 ## Result review
 
