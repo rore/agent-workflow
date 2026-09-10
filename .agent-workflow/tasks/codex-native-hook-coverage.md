@@ -52,7 +52,7 @@ The reviewer approved the capability-based decision fork and minimal scope, whil
 
 ## Evidence
 
-- Verification revision: `dbeb28fa73ae07c84b1acd262e2b55a46bd93c54`.
+- Verification revision: `5cd8cef18ee9d27403d3dd0ada0136eed2270c45`.
 - Official Codex hook contract: https://learn.chatgpt.com/docs/hooks — `apply_patch` is documented for `PreToolUse`, exit 2 is documented to deny, and specialized tool paths may opt out.
 - Live Codex desktop 0.153.4: trusted wrapper instrumented; blocked Work Record; native `apply_patch` created the target; wrapper-entry log absent. Target and all instrumentation were removed; wrapper and Work Record restored byte-for-byte.
 - Codex CLI 0.153.4 `bypassPermissions`: wrapper received canonical `apply_patch` input and its child returned 2; target was nevertheless created, then removed; wrapper and Work Record restored byte-for-byte.
@@ -60,8 +60,8 @@ The reviewer approved the capability-based decision fork and minimal scope, whil
 - Direct installed evaluator: the same blocked payload returns exit 2.
 - `bash tests/hooks/run.sh` passed, including activation-evidence and package wiring regressions.
 - `bash tests/package/check-e2e-bootstrap.sh` passed in two consumer layouts.
-- On revision `dbeb28fa73ae07c84b1acd262e2b55a46bd93c54`, `bash tests/run-all.sh --verbose` passed all layers using temporary ignored interpreter shims: budget; schema (47); Work Record (50); checker (138); Redline; tuner (22); hooks; 180-link validation; package and bootstrap E2E. The shims were removed after the run.
+- On revision `5cd8cef18ee9d27403d3dd0ada0136eed2270c45`, `bash tests/run-all.sh --verbose` passed all layers using temporary ignored interpreter shims: budget; schema (47); Work Record (50); checker (138); Redline; tuner (22); hooks; 180-link validation; package and bootstrap E2E. The shims were removed after the run.
 
 ## Result review
 
-Initial smart clean-context review requested changes: distinguish evaluator denial from runtime enforcement, downgrade OpenCode until native evidence has a complete version/surface/tool/unchanged-target scope, and identify the exact verified revision plus probe transcript. The first two are fixed in `dbeb28f`; the evidence references above resolve the third. Re-review pending.
+Initial smart clean-context review requested three corrections; `dbeb28f` and `e952676` resolved them. Re-review found one remaining wording bug that implied every evaluator run denies; `5cd8cef` now says evaluator failure returns deny and updates both regression assertions. Final re-review pending.
