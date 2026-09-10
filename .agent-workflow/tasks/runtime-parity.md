@@ -55,7 +55,7 @@
 - Replaced Codex Windows command strings with quote-free `-EncodedCommand` invocations that preserve Git-root resolution from nested directories and execute through `cmd.exe /C`; stdin remains inherited by the PowerShell wrapper.
 - Native probes confirmed OpenCode loading/denial and Claude seed activation; Claude PreToolUse did not activate on this Windows runtime, so the shipped contract reports activation failure as degraded and leaves CI authoritative rather than claiming readiness.
 - Resolved all Astra result-review blockers: trusted remote default scope, unpublished default commits, current-branch Work Record isolation, structured schema-invalid denial, Windows exit/UTF-8/hidden-child handling, exact dogfood drift checks, and honest activation claims.
-- Addressed PR review findings: bootstrap now records per-runtime activation evidence; implementation readiness is non-waivable; incomplete Git scope denies; nested-CWD Codex commands and post-start evaluator failures fail closed across adapters; OpenCode path lookup remains portable.
+- Addressed PR review findings: bootstrap now records per-runtime activation evidence; implementation readiness is non-waivable; incomplete Git scope denies; nested-CWD Codex commands and post-start evaluator failures fail closed across adapters; OpenCode path lookup remains portable. Corrected the package E2E assertion after CI exposed its stale PowerShell prefix.
 
 ## Plan review
 
@@ -69,9 +69,9 @@ The smart clean-context review rejected literal hook copying because Claude's cu
 - Focused hooks: `bash tests/hooks/run.sh` → all hook, installer, wrapper, dogfood, and plugin checks passed.
 - Full regression: `bash tests/run-all.sh` → budget, schema, Work Record, checker, Redline, tuner, hooks, links, and package all passed (WSL reused the checkout's pure-Python pytest packages through temporary `/tmp` links).
 - Packaging: `bash scripts/package-skill.sh` → 65-file manifests regenerated identically for dist, Claude, and Agents installs.
-- Post-feedback static verification: Python syntax parsed; encoded Codex commands decoded to Git-root resolution plus denial exit propagation; source, dist, and dogfood hashes matched. New Node/Bash/full-suite regressions are delegated to CI to avoid the local popup issue.
+- Post-feedback static verification: Python syntax parsed; encoded Codex commands decoded to Git-root resolution plus denial exit propagation; source, dist, and dogfood hashes matched. GitHub CI ran the Node/Bash/full suite on commit 0fe9904: test, agent-workflow, and redline all passed; local popup-producing probes remained disabled.
 - Native evidence: OpenCode stable 1.x loaded and denied; Claude seed activated but Claude PreToolUse did not activate on this Windows host; Codex exposed project hooks, and its Windows quote-wrapping defect was fixed with a quote-free command and covered statically without repeating the popup-producing native probe.
 
 ## Result review
 
-- Astra final static review: APPROVE after nested-CWD resolution, timeout/checker failure denial, exit-code propagation, and dogfood synchronization fixes. Native Windows activation remains unverified; native probes will not be repeated after the popup issue. CI is pending.
+- Astra final static review: APPROVE after nested-CWD resolution, timeout/checker failure denial, exit-code propagation, and dogfood synchronization fixes. Native Windows activation remains unverified; native probes will not be repeated after the popup issue. GitHub test, agent-workflow, and redline checks passed on commit 0fe9904; all inline review threads are resolved.
