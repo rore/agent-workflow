@@ -50,7 +50,7 @@ scripts/agent-workflow-tune.py	25253
 scripts/format-verdict-comment.py	38255
 templates/.github/workflows/agent-workflow.yml.template	17140
 templates/agent-workflow.yaml.template	2564
-templates/agents-section.md.template	2359
+templates/agents-section.md.template	2405
 templates/bootstrap-summary.md.template	3899
 templates/checkpoints/applicability.md	3018
 templates/checkpoints/assess-risk.md	3423

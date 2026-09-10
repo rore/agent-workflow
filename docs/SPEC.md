@@ -701,8 +701,9 @@ the branch unprotected.
 Missing, invalid, or stale workflow evidence **MUST NOT** be reported as ready
 or exempt. Pre-invocation runtime-adapter unavailability **MAY** fail open only
 as an explicitly reported degraded integration state. Once the shared evaluator
-starts, failure to complete **MUST** deny the mutation. CI remains authoritative
-for the final workflow artifacts and applicability decision.
+starts, failure to complete **MUST** return a deny decision. The runtime/path is
+verified only when its native operation honors that decision under the evidence
+rule above. CI remains authoritative for final workflow artifacts and applicability.
 
 The runtime guard need not parse arbitrary shell commands. When shell mutation
 is outside the declared supported-tool set, the harness **MUST** say so: PR CI

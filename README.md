@@ -91,7 +91,7 @@ Adopt agent-workflow on a repo:
 
 Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
-**Runtime limits.** Stable OpenCode 1.x guard loading and denial are verified. On the tested Windows host, Codex 0.153.4 desktop `apply_patch` did not enter `PreToolUse`; CLI `bypassPermissions` entered the hook but ignored its exit-2 denial. Claude Code's seed ran, but mutation denial could not be tested because its API credential was unavailable to the CLI process. Treat every unverified runtime/version/surface/tool combination as degraded. Installed or trusted hooks and direct evaluator tests do not prove interception; CI remains authoritative.
+**Runtime limits.** OpenCode 1.x plugin callback loading and denial are tested, but the existing evidence does not record an exact runtime version, native tool, and unchanged target, so native coverage is degraded under this standard. On the tested Windows host, Codex 0.153.4 desktop `apply_patch` did not enter `PreToolUse`; CLI `bypassPermissions` entered the hook but ignored its exit-2 denial. Claude Code's seed ran, but mutation denial could not be tested because its API credential was unavailable to the CLI process. Treat every unverified runtime/version/surface/tool combination as degraded. Installed or trusted hooks and direct evaluator tests do not prove interception; CI remains authoritative.
 
 ## What CI enforces
 
