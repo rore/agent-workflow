@@ -2,13 +2,13 @@
 
 **A risk-aware, enforceable engineering workflow around AI coding agents.**
 
-Part of the [Rore collection](https://github.com/rore/rore-collection): three local tools for developers working with coding agents.
-
 agent-workflow makes agent work inspectable outside the chat. It guides each task through a fixed sequence of checkpoints — establish context, discover, assess risk, plan, implement, verify, review — and records scope, assumptions, risk classification, and verification in a per-task **Work Record** committed alongside the code.
 
 At PR time, CI classifies the actual diff, checks it against the Work Record, and fails on objective violations. Judgment stays with people: higher-risk changes are surfaced with the context and required checkpoints reviewers need, while routine changes do not demand the same attention.
 
 It covers the change itself — from discovery through review. Product discovery, deployment, and production operation stay with the systems that already own them; agent-workflow composes with GitHub, CI, and branch protection rather than replacing them.
+
+> Part of the [Rore collection](https://github.com/rore/rore-collection): three local tools for developers working with coding agents.
 
 ---
 
