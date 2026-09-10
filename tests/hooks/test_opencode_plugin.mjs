@@ -41,7 +41,7 @@ const savedPython = process.env.PYTHON;
 const savedPath = process.env.PATH;
 const python = process.platform === "win32"
   ? path.join(root, ".venv/Scripts/python.exe")
-  : path.join(root, ".venv/bin/python");
+  : "python3";
 try {
   process.env.PYTHON = python;
   const denial = await plugin({ directory: repo });
