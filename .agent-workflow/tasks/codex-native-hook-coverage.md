@@ -64,4 +64,4 @@ The reviewer approved the capability-based decision fork and minimal scope, whil
 
 ## Result review
 
-Initial smart clean-context review requested three corrections; `dbeb28f` and `e952676` resolved them. Re-review found one remaining wording bug that implied every evaluator run denies; `5cd8cef` now says evaluator failure returns deny and updates both regression assertions. Final re-review pending.
+Smart clean-context result review approved `0e02de1637d85306d96c74d26e22d80a1483f04f` with no remaining findings. Earlier reviews requested three evidence/claim corrections and one evaluator-denial wording correction; `dbeb28f`, `e952676`, and `5cd8cef` resolved them. The reviewer confirmed generated artifacts, assertions, evidence scope, completion criteria, and High risk classification.
