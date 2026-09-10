@@ -15,8 +15,10 @@ and thin adapters around one checker-backed decision for supported structured
 file mutations. The decision uses the complete known change set, permits
 Work-Record-only recovery, and otherwise requires either implementation-ready
 workflow evidence or the existing whole-change exemption. Default-branch work
-requires the exemption independently. Adapter faults are reported as degraded
-and fail open; arbitrary shell mutation remains an explicit non-claim.
+requires the exemption independently. Pre-invocation adapter unavailability is
+reported as degraded and may fail open; once the shared evaluator starts, failure
+to complete denies the mutation. Arbitrary shell mutation remains an explicit
+non-claim.
 
 **Alternatives considered:** Copy Claude's plan-text hook to every runtime;
 maintain separate runtime policy engines; parse arbitrary shell commands; claim
@@ -24,7 +26,8 @@ OpenCode 2 support while it remains beta.
 
 **Rationale:** Observable parity matters more than identical hook names. One
 decision prevents policy drift, while native adapters preserve each platform's
-loader, trust, and denial behavior. Shell parsing and beta compatibility add
+loader and trust behavior. Failing closed after evaluation starts prevents a
+checker crash or timeout from becoming authorization. Shell parsing and beta compatibility add
 complexity without creating a reliable enforcement boundary; CI still validates
 the final repository state.
 

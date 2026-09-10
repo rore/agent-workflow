@@ -366,6 +366,70 @@ def test_missing_redline_policy_denies_not_degrades(tmp_path: Path) -> None:
     assert "DEGRADED" not in result.stderr
 
 
+def test_implementation_readiness_cannot_be_waived(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    record = repo / ".agent-workflow" / "tasks" / "runtime-guard.md"
+    record.parent.mkdir(parents=True)
+    record.write_text(
+        _record().replace(
+            "**State:** Ready to implement",
+            "**Exceptions:**\n"
+            "- rule: workrecord.implementation_ready\n"
+            "  reason: test waiver\n"
+            "  scope: this test\n"
+            "  approver: reviewer\n"
+            "  compensating_validation: none\n\n"
+            "**State:** Ready for review",
+        ),
+        encoding="utf-8",
+    )
+    result = _invoke(repo, "codex", _payload(repo, "src/app.py"))
+    assert result.returncode == 2
+
+
+def test_checker_failure_after_evaluation_starts_denies(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = _repo(tmp_path)
+    spec = importlib.util.spec_from_file_location("runtime_guard_under_test", RUNTIME)
+    assert spec and spec.loader
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
+    monkeypatch.setattr(
+        runtime,
+        "_checker_decision",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("checker crashed")),
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(_payload(repo, "src/app.py"))))
+    assert runtime.main(["--runtime", "codex"]) == 2
+    assert "DENY: workflow evaluation failed: checker crashed" in capsys.readouterr().err
+
+
+def test_invalid_checker_verdict_is_evidence_error() -> None:
+    spec = importlib.util.spec_from_file_location("runtime_guard_under_test", RUNTIME)
+    assert spec and spec.loader
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
+    checked = subprocess.CompletedProcess([], 0, stdout="{}", stderr="")
+    with pytest.raises(runtime.EvidenceError):
+        runtime._checked_payload(checked)
+
+
+def test_git_scope_collection_failure_is_evidence_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    spec = importlib.util.spec_from_file_location("runtime_guard_under_test", RUNTIME)
+    assert spec and spec.loader
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
+    failed = subprocess.CompletedProcess([], 1, stdout=b"", stderr=b"fatal")
+    monkeypatch.setattr(runtime.subprocess, "run", lambda *args, **kwargs: failed)
+    with pytest.raises(runtime.EvidenceError):
+        runtime._git_z(tmp_path, ["status", "--porcelain=v1", "-z"])
+
+
 def test_complete_scope_union_includes_committed_dirty_untracked_and_prospective(
     tmp_path: Path,
 ) -> None:

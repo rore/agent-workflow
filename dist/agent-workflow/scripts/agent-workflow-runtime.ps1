@@ -37,4 +37,7 @@ $utf8 = New-Object System.Text.UTF8Encoding($false)
 $OutputEncoding = $utf8
 $inputText = if ($PSBoundParameters.ContainsKey("HookInput")) { $HookInput } else { [Console]::In.ReadToEnd() }
 $inputText | & $command @prefix @arguments
-exit $LASTEXITCODE
+$childExit = $LASTEXITCODE
+if ($Action -eq "seed" -or $childExit -eq 0 -or $childExit -eq 2) { exit $childExit }
+[Console]::Error.WriteLine("[agent-workflow] DENY: runtime adapter failed with exit $childExit")
+exit 2

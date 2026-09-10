@@ -2703,9 +2703,9 @@ def review_checkpoints_satisfied(ctx: CheckerContext) -> PredicateResult:
 # Predicates that may never be downgraded by a task exception.
 #
 # SPEC §11 explicitly forbids waiving boundary-violation findings.
-# Beyond that, the structural-shape preconditions are also non-
-# waivable — they establish whether the Work Record itself is
-# meaningful, and waiving them would leave the verdict noise.
+# Beyond that, structural-shape preconditions and implementation
+# readiness are also non-waivable: they make the verdict meaningful
+# and prevent a task exception from authorizing implementation.
 _NON_WAIVABLE_PREDICATES: frozenset[str] = frozenset({
     # SPEC §11 — boundary violations never waivable.
     "risk.boundary_violation_absent",
@@ -2715,6 +2715,7 @@ _NON_WAIVABLE_PREDICATES: frozenset[str] = frozenset({
     "risk.declared",
     "complexity.declared",
     "workrecord.shape_matches_classification",
+    "workrecord.implementation_ready",
     # The exception predicates themselves — circular waivers are not
     # honoured. An exception waiving exceptions.well_formed would be
     # the harness telling itself to ignore its own content checks.
@@ -2774,7 +2775,7 @@ def exceptions_not_against_boundary(ctx: CheckerContext) -> PredicateResult:
     """Predicate: no exception waives a non-waivable predicate.
 
     SPEC §11 forbids waiving boundary-violation findings. The harness
-    extends this to the structural-shape preconditions; see
+    extends this to structural preconditions and implementation readiness; see
     :data:`_NON_WAIVABLE_PREDICATES`. An exception naming any of these
     is a blocking failure and the original predicate continues to fire
     normally (the downgrade pass refuses to honour the exception).
@@ -2799,8 +2800,8 @@ def exceptions_not_against_boundary(ctx: CheckerContext) -> PredicateResult:
             detail=(
                 f"exception(s) name non-waivable predicate(s): {names}. "
                 "SPEC §11 forbids waiving boundary-violation findings; "
-                "the harness extends the rule to the structural-shape "
-                "preconditions that establish verdict meaningfulness."
+                "the harness extends the rule to structural preconditions "
+                "and implementation readiness."
             ),
             blocking=True,
         )

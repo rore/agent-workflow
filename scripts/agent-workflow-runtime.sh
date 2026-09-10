@@ -19,4 +19,8 @@ fi
 if [[ "$ACTION" == "seed" ]]; then
   exec "$PY" "$SCRIPT" --runtime "$RUNTIME" --seed
 fi
-exec "$PY" "$SCRIPT" --runtime "$RUNTIME"
+"$PY" "$SCRIPT" --runtime "$RUNTIME"
+STATUS=$?
+if [[ $STATUS -eq 0 || $STATUS -eq 2 ]]; then exit $STATUS; fi
+echo "[agent-workflow] DENY: runtime adapter failed with exit $STATUS" >&2
+exit 2

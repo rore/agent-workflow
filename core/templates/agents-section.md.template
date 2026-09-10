@@ -29,4 +29,4 @@ python scripts/agent-workflow-check.py --repo-root . --slug <slug>
 
 Exit codes: `0` clean, `1` advisory, `2` blocking. CI runs the same check on PR open and posts a sticky verdict comment.
 
-Structured mutations use the runtime guard. Shell mutations bypass it; PR CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. Bootstrap must verify activation per runtime. Until then the guard is unavailable; adapter failures after invocation are degraded, not readiness.
+Structured mutations use the runtime guard. Shell mutations bypass it; PR CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. Bootstrap must verify activation per runtime. Missing adapters degrade; once evaluation starts, failure to complete denies the mutation.

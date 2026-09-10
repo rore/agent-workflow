@@ -91,7 +91,7 @@ Adopt agent-workflow on a repo:
 
 Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
-**Runtime limits.** Stable OpenCode 1.x guard loading and denial are verified. Codex hooks require project trust; the Windows adapter is covered by automated wiring/decision tests but native activation remains unverified on this host. In Claude Code on this Windows host, the seed hook ran but `PreToolUse` did not, so pre-mutation guarding was unavailable and could not self-report degradation. Treat any runtime without a successful bootstrap activation probe as unguarded; adapter failures after invocation report `DEGRADED`, and CI remains authoritative.
+**Runtime limits.** Stable OpenCode 1.x guard loading and denial are verified. Codex hooks require project trust; the Windows adapter is covered by automated wiring/decision tests but native activation remains unverified on this host. In Claude Code on this Windows host, the seed hook ran but `PreToolUse` did not, so pre-mutation guarding was unavailable and could not self-report degradation. Treat any runtime without a successful bootstrap activation probe as unguarded; missing adapters report `DEGRADED`, unexpected evaluator exits deny, and CI remains authoritative.
 
 ## What CI enforces
 

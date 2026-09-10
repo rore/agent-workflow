@@ -10,6 +10,7 @@ const root = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const source = await fs.readFile(path.join(root, "core/skill/opencode/agent-workflow.mjs"), "utf8");
 assert.match(source, /timeout:\s*30000/);
 assert.match(source, /windowsHide:\s*true/);
+assert.match(source, /if \(result\.error\) return \{ deny:/);
 
 function git(cwd, ...args) {
   const result = spawnSync("git", args, { cwd, encoding: "utf8", windowsHide: true });
@@ -53,6 +54,15 @@ try {
     /DENY.*agent-workflow\.yaml/,
   );
 
+  process.env.PYTHON = process.execPath;
+  const failed = await plugin({ directory: repo });
+  await assert.rejects(
+    failed["tool.execute.before"](
+      { tool: "write" },
+      { args: { file_path: path.join(repo, "src/example.py") } },
+    ),
+  );
+
   delete process.env.PYTHON;
   process.env.PATH = "";
   const logs = [];
@@ -74,4 +84,4 @@ try {
   await fs.rm(temp, { recursive: true, force: true });
 }
 
-console.log("ok: OpenCode plugin denial, bounded spawn, and degraded fail-open");
+console.log("ok: OpenCode denial, fail-closed errors, and degraded unavailability");

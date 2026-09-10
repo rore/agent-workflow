@@ -10,9 +10,23 @@ Usage:
     python install-settings.py --runtime claude|codex [--settings PATH]
 """
 import argparse
+import base64
 import json
 import os
 import sys
+
+def _codex_windows_command(action):
+    script = (
+        "& (Join-Path (git rev-parse --show-toplevel) "
+        "'scripts/agent-workflow-runtime.ps1') codex " + action
+        + "; exit $LASTEXITCODE"
+    )
+    encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
+    return (
+        "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass "
+        "-EncodedCommand " + encoded
+    )
+
 
 # event -> (matcher or None, command, optional Windows command)
 _RUNTIME_HOOKS = {
@@ -32,13 +46,13 @@ _RUNTIME_HOOKS = {
             "UserPromptSubmit",
             None,
             'bash "$(git rev-parse --show-toplevel)/scripts/agent-workflow-runtime.sh" codex seed',
-            "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path (git rev-parse --show-toplevel) 'scripts/agent-workflow-runtime.ps1') codex seed\"",
+            _codex_windows_command("seed"),
         ),
         (
             "PreToolUse",
             "Edit|Write|apply_patch",
             'bash "$(git rev-parse --show-toplevel)/scripts/agent-workflow-runtime.sh" codex guard',
-            "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$utf8 = New-Object System.Text.UTF8Encoding($false); [Console]::InputEncoding = $utf8; $hookInput = @($input) -join [Environment]::NewLine; & (Join-Path (git rev-parse --show-toplevel) 'scripts/agent-workflow-runtime.ps1') codex guard -HookInput $hookInput; exit $LASTEXITCODE\"",
+            _codex_windows_command("guard"),
         ),
     ],
 }

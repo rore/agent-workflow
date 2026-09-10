@@ -692,9 +692,10 @@ insufficient: the complete change **MUST** be exempt, direct-default permission
 the branch unprotected.
 
 Missing, invalid, or stale workflow evidence **MUST NOT** be reported as ready
-or exempt. A runtime-adapter execution failure **MAY** fail open only as an
-explicitly reported degraded integration state; CI remains authoritative for
-the final workflow artifacts and applicability decision.
+or exempt. Pre-invocation runtime-adapter unavailability **MAY** fail open only
+as an explicitly reported degraded integration state. Once the shared evaluator
+starts, failure to complete **MUST** deny the mutation. CI remains authoritative
+for the final workflow artifacts and applicability decision.
 
 The runtime guard need not parse arbitrary shell commands. When shell mutation
 is outside the declared supported-tool set, the harness **MUST** say so: PR CI

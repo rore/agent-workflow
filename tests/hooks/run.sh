@@ -124,7 +124,7 @@ printf '%s' '{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command
 before="$("$PY" -c "import json,sys;print(json.dumps(json.load(open(sys.argv[1])),sort_keys=True))" "$TMP/codex.json")"
 "$PY" "$INST" --runtime codex --settings "$TMP/codex.json" >/dev/null 2>&1
 after="$("$PY" -c "import json,sys;print(json.dumps(json.load(open(sys.argv[1])),sort_keys=True))" "$TMP/codex.json")"
-if "$PY" -c "import json,sys; d=json.load(open(sys.argv[1])); hs=[h for groups in d['hooks'].values() for g in groups for h in g['hooks']]; cmds=[h.get('command','') for h in hs]; sys.exit(0 if 'echo keep' in cmds and any('agent-workflow-runtime.sh' in c for c in cmds) and all(h.get('commandWindows') for h in hs if 'agent-workflow-runtime.sh' in h.get('command','')) and any('-HookInput' in h.get('commandWindows','') and 'InputEncoding' in h.get('commandWindows','') and 'exit \$LASTEXITCODE' in h.get('commandWindows','') for h in hs if ' guard' in h.get('command','')) else 1)" "$TMP/codex.json" && [[ "$before" == "$after" ]]; then
+if "$PY" -c "import base64,json,sys; d=json.load(open(sys.argv[1])); hs=[h for groups in d['hooks'].values() for g in groups for h in g['hooks']]; cmds=[h.get('command','') for h in hs]; ours=[h for h in hs if 'agent-workflow-runtime.sh' in h.get('command','')]; decode=lambda h:base64.b64decode(h['commandWindows'].split()[-1]).decode('utf-16le'); sys.exit(0 if 'echo keep' in cmds and ours and all(h.get('commandWindows') and ' -EncodedCommand ' in h['commandWindows'] and '\"' not in h['commandWindows'] and 'git rev-parse --show-toplevel' in decode(h) and 'agent-workflow-runtime.ps1' in decode(h) and 'exit \$LASTEXITCODE' in decode(h) for h in ours) else 1)" "$TMP/codex.json" && [[ "$before" == "$after" ]]; then
   echo "  ok: Codex hooks merge, carry commandWindows, and are idempotent"
 else
   echo "  FAIL: Codex hook installation"; fail=1
@@ -166,6 +166,12 @@ if [[ -d "$DIST" ]]; then
   echo '{}' | bash "$DIST/seed-workflow.sh" | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: packaged seed valid JSON" || { echo "  FAIL: packaged seed JSON"; fail=1; }
   bash scripts/agent-workflow-runtime.sh claude seed | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: Windows Bash runtime wrapper resolves Python path" || { echo "  FAIL: Windows Bash runtime wrapper"; fail=1; }
   grep -q '$OutputEncoding = $utf8' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper forces UTF-8 native-pipeline encoding" || { echo "  FAIL: PowerShell wrapper UTF-8 encoding"; fail=1; }
+  grep -q 'runtime adapter failed with exit' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper fails closed on evaluator errors" || { echo "  FAIL: PowerShell wrapper evaluator failure"; fail=1; }
+  FAILDIR="$(mktemp -d)"
+  printf '#!/usr/bin/env bash\nexit 7\n' > "$FAILDIR/python-fail"; chmod +x "$FAILDIR/python-fail"
+  printf '{}' | PYTHON="$FAILDIR/python-fail" bash scripts/agent-workflow-runtime.sh claude guard 2>"$FAILDIR/error"
+  [[ $? == 2 ]] && grep -q 'DENY: runtime adapter failed with exit 7' "$FAILDIR/error" && echo "  ok: shell wrapper fails closed on evaluator errors" || { echo "  FAIL: shell wrapper evaluator failure"; fail=1; }
+  rm -rf "$FAILDIR"
   # installer wires the packaged gate into a consumer-shaped settings.json
   E2E="$(mktemp -d)"; mkdir -p "$E2E/.claude/hooks"; cp "$DIST"/* "$E2E/.claude/hooks/"
   "$PY" "$DIST/install-settings.py" --settings "$E2E/.claude/settings.json" >/dev/null 2>&1

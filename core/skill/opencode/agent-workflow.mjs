@@ -37,13 +37,13 @@ function runGuard(directory, payload) {
       },
     );
     if (result.error?.code === "ENOENT") continue;
-    if (result.error) return { degraded: result.error.message };
+    if (result.error) return { deny: result.error.message };
     const stderr = (result.stderr || "").trim();
     if (result.status === 2 && stderr.includes("[agent-workflow] DENY:")) {
       return { deny: stderr };
     }
     if (result.status !== 0) {
-      return { degraded: stderr || "runtime guard failed" };
+      return { deny: stderr || "runtime guard failed" };
     }
     return stderr ? { degraded: stderr } : {};
   }
@@ -85,7 +85,7 @@ export default async ({ client, directory }) => ({
       }
     } catch (error) {
       if (error instanceof GuardDenied) throw error;
-      // Adapter faults fail open and remain visible when logging is available.
+      // Adapter faults before a decision fail open and remain visible when logging is available.
       try {
         await client?.app?.log?.({
           body: {

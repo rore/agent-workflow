@@ -2,8 +2,8 @@
 """Shared pre-mutation decision for supported local agent runtimes.
 
 Adapters pass their native tool payload on stdin and identify the runtime with
---runtime. Exit 0 allows the tool, exit 2 denies it. Integration failures are
-reported as DEGRADED and fail open; workflow evidence failures deny.
+--runtime. Exit 0 allows the tool, exit 2 denies it. Pre-invocation integration
+failures report DEGRADED and fail open; evidence and evaluation failures deny.
 """
 
 from __future__ import annotations
@@ -119,22 +119,29 @@ def _extract_paths(payload: object) -> tuple[bool, list[object]]:
 
 
 def _git_z(root: Path, args: list[str]) -> list[str]:
-    result = subprocess.run(
-        ["git", *args],
-        cwd=root,
-        capture_output=True,
-        timeout=20,
-        check=False,
-        creationflags=_WINDOWS_NO_WINDOW,
-    )
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=root,
+            capture_output=True,
+            timeout=20,
+            check=False,
+            creationflags=_WINDOWS_NO_WINDOW,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise EvidenceError("Git scope collection failed") from exc
     if result.returncode != 0:
-        raise RuntimeError(result.stderr.decode("utf-8", "replace").strip() or "git failed")
+        detail = result.stderr.decode("utf-8", "replace").strip() or "git failed"
+        raise EvidenceError(detail)
     raw = result.stdout
     if not raw:
         return []
     if not raw.endswith(b"\0"):
-        raise RuntimeError("git returned incomplete NUL-delimited paths")
-    return [item.decode("utf-8") for item in raw[:-1].split(b"\0") if item]
+        raise EvidenceError("git returned incomplete NUL-delimited paths")
+    try:
+        return [item.decode("utf-8") for item in raw[:-1].split(b"\0") if item]
+    except UnicodeDecodeError as exc:
+        raise EvidenceError("git returned malformed UTF-8 paths") from exc
 
 
 def _current_branch(root: Path) -> str | None:
@@ -146,7 +153,7 @@ def _current_branch(root: Path) -> str | None:
 def _default_ref(root: Path) -> tuple[str | None, str | None]:
     try:
         result = _run(["git", "ls-remote", "--symref", "origin", "HEAD"], root, timeout=8)
-    except subprocess.TimeoutExpired as exc:
+    except (OSError, subprocess.TimeoutExpired) as exc:
         raise EvidenceError("actual default branch is unavailable") from exc
     if result.returncode != 0:
         raise EvidenceError("actual default branch is unavailable")
@@ -158,7 +165,10 @@ def _default_ref(root: Path) -> tuple[str | None, str | None]:
     if oid_match is None:
         raise EvidenceError("actual default-branch revision is unavailable")
     oid = oid_match.group(1)
-    found = _run(["git", "rev-parse", "--verify", "--quiet", f"{oid}^{{commit}}"], root)
+    try:
+        found = _run(["git", "rev-parse", "--verify", "--quiet", f"{oid}^{{commit}}"], root)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise EvidenceError("local default-branch revision is unavailable") from exc
     return name, oid if found.returncode == 0 else None
 
 
@@ -170,7 +180,10 @@ def _changed_paths(
     paths: list[str] = []
     if default_ref is None:
         raise EvidenceError("local default-branch revision is unavailable; committed scope is incomplete")
-    merge_base = _run(["git", "merge-base", "HEAD", default_ref], root)
+    try:
+        merge_base = _run(["git", "merge-base", "HEAD", default_ref], root)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise EvidenceError("merge-base is unavailable; committed scope is incomplete") from exc
     if merge_base.returncode != 0 or not merge_base.stdout.strip():
         raise EvidenceError("merge-base is unavailable; committed scope is incomplete")
     paths.extend(
@@ -292,7 +305,12 @@ def _checked_payload(checked: subprocess.CompletedProcess[str]) -> tuple[int, di
     try:
         payload = json.loads(checked.stdout)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(f"checker returned invalid JSON: {exc}") from exc
+        raise EvidenceError(f"checker returned invalid JSON: {exc}") from exc
+    records = payload.get("records") if isinstance(payload, dict) else None
+    if not isinstance(records, list) or not records or not all(
+        isinstance(record, dict) for record in records
+    ):
+        raise EvidenceError("checker returned an invalid verdict")
     return checked.returncode, payload
 
 
@@ -368,7 +386,20 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         complete = _changed_paths(root, prospective, default_ref)
-        code, verdict = _checker_decision(root, complete, slug, is_default)
+        try:
+            code, verdict = _checker_decision(root, complete, slug, is_default)
+        except EvidenceError:
+            raise
+        except (
+            ImportError,
+            OSError,
+            KeyError,
+            TypeError,
+            ValueError,
+            RuntimeError,
+            subprocess.TimeoutExpired,
+        ) as exc:
+            raise EvidenceError(f"workflow evaluation failed: {exc}") from exc
         if is_default:
             if code < 2 and _is_direct_default_exemption(verdict):
                 return 0
