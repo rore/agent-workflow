@@ -12,14 +12,14 @@ agent-workflow ships with [agent-redline](agent-redline/SKILL.md) bundled. Boots
 
 | Category | What lands | When |
 |---|---|---|
-| **Committed directly** | the skill itself under `.claude/skills/agent-workflow/`, `agent-workflow.yaml`, `agent-redline-policy.yaml`, vendored `scripts/agent-workflow-check.py`, vendored `scripts/agent-redline-report.py`, AGENTS.md reference section, `.agent-redline/suppressions.yaml`, per-checkpoint docs under `docs/agent-redline/skills/`, `.agent-workflow/tasks/README.md` skeleton, the OpenCode plugin `.opencode/plugins/agent-workflow.mjs` | Phase 4, after Phase 3 sign-off |
+| **Committed directly** | identical skill package under `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`, configs, vendored checker/reporter, `scripts/agent-workflow-runtime.py/.sh/.ps1`, merged Claude/Codex settings, owned root `AGENTS.md` marker, docs, Work Record skeleton, and stable OpenCode 1.x plugin | Phase 4, after Phase 3 sign-off |
 | **Committed only with explicit confirmation** | `.github/workflows/agent-workflow.yml` | Phase 5, if developer confirms |
 | **Proposed but never committed by bootstrap** | `docs/agent-workflow-ci-proposal.md` (branch-protection + required-status-checks + CODEOWNERS additions). Workflow file goes here too when developer declines Phase 5. | Phase 5 |
 | **Final summary** | `docs/agent-workflow-bootstrap-summary.md` | Phase 6 |
 
 The split between "committed directly" and "committed only with confirmation" is not negotiable. CI workflows gate every contributor's PR; the developer must see and confirm. Branch protection and CODEOWNERS need platform-admin access bootstrap can't have — they go to the proposal doc regardless.
 
-**The skill itself is a committed artifact.** Bootstrapping commits the skill *in* the repo at `.claude/skills/agent-workflow/` — not a per-developer user/workspace install, which activates for one machine and silently does nothing for every other checkout. Committed alongside the `scripts/agent-workflow-check.py` and `agent-workflow.yaml` it reads, all three stay version-locked and `/agent-workflow` auto-activates for anyone — teammate, fresh agent, CI. (This repo gitignores its own `.claude/skills/` only because it regenerates from the tracked `dist/agent-workflow/` tree; a consumer has no such source.)
+**The skill package is a committed artifact.** Bootstrap copies the identical package into both `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/` so Claude Code and Codex can discover it. Runtime adapters report degraded activation when unavailable; CI remains authoritative. OpenCode support is stable 1.x only; OpenCode 2 beta is excluded.
 
 ## Phases
 
@@ -64,7 +64,7 @@ Read on the agent-workflow side:
 
 - **Existing agent-workflow install:** `agent-workflow.yaml` at repo root (if found, should have switched to operating-mode — sanity-check).
 - **Existing redline install:** `agent-redline-policy.yaml`; contents of `agent-redline/`. If present, you compose in Phase 2.
-- **Existing agent-instruction file:** `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `copilot-instructions.md`, or any `*-instructions.md` at the repo root. First one found wins; bootstrap appends. If none, bootstrap writes a fresh `AGENTS.md`.
+- **Existing agent-instruction files:** inspect `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `copilot-instructions.md`, and any `*-instructions.md`; always create or reconcile only the owned marker in root `AGENTS.md` and preserve every other instruction file.
 - **Authoritative-source map:** what existing files this repo treats as canonical for *what the system should do* (requirements, Jira), *how it's organised* (architecture, ADRs), and *what was decided* (`DECISIONS.md`). Bootstrap doesn't invent these; it lists what it found.
 - **Existing CI:** `.github/workflows/`. Note whether `agent-workflow.yml` exists, name collisions on `redline-verdict`, and dominant trigger style (`pull_request:` vs `push:`).
 - **Existing CODEOWNERS:** `.github/CODEOWNERS` or `CODEOWNERS` at root. Bootstrap doesn't modify it.
@@ -156,15 +156,16 @@ Write the committed artifacts. Branch each step on existing files; never overwri
 
 | Step | Path | Branch on existing |
 |---|---|---|
-| 4.0 | `.claude/skills/agent-workflow/` | Commit the skill itself — the whole tree (`SKILL.md`, `operating-mode.md`, `bootstrap-mode.md`, `agent-redline/`, `templates/`, `scripts/`, `assets/`, `hooks/`) copied **verbatim from a single install source** — `dist/agent-workflow/` in a pinned clone of the agent-workflow repo, or `<install-root>`. Copy the whole directory (`cp -r`); do **not** hand-fetch files one at a time from the API — an incomplete/garbled sync is the failure mode the Phase 6 manifest check exists to catch. A real commit, not a local regen; do **not** gitignore `.claude/skills/`. If it already exists, this is a **re-bootstrap** (updating to a newer version): that is itself a tracked task — you should already hold a Work Record for it (operating-mode) before touching files — so refresh the tree here and let steps 4.1/4.4 reconcile config + the agents-section rather than stopping. |
+| 4.0 | `.claude/skills/agent-workflow/` + `.agents/skills/agent-workflow/` | Copy the whole package verbatim from one install source (`dist/agent-workflow/` or `<install-root>`) to both paths; verify both manifests match. Existing installs are updated through operating mode, preserving config, hooks, and historical Work Records; never delete them to re-bootstrap. |
 | 4.1 | `agent-workflow.yaml` | If exists, you should have switched to operating-mode — sanity-check and stop. Otherwise write the Phase 3 draft. **If Phase 1 found a YAML-formatting gate** (Spotless/jackson-YAML), emit it in the formatter's canonical style so it survives `./gradlew build` — same rule the redline policy uses (`agent-redline/bootstrap-mode.md` §Phase 4): **no `#` comments** (put rationale in the WR/PR, not the YAML) and **quote every string scalar**; keep block sequences (the template is already block-form — do not collapse to `["src/"]`). Do not assume a `---` document-start; match whatever the formatter emits. Run `./gradlew spotlessApply` (or the repo's format task) after writing and commit the result so CI starts clean. |
 | 4.2 | `agent-redline-policy.yaml` | If exists, do **not** overwrite. Mirror existing in the finding; adopt. Otherwise write the Phase 3 draft. |
 | 4.3 | `scripts/agent-workflow-check.py` | Always write. Build from dev repo via `bash scripts/build-vendored-checker.sh <output>`. If you can't run that, copy from `<install-root>/scripts/agent-workflow-check.py`. If neither, stop and tell the developer. |
 | 4.3 | `scripts/format-verdict-comment.py` | Copy `<install-root>/scripts/format-verdict-comment.py`. The CI workflow step `Format verdict for PR comment` invokes it. |
 | 4.3 | `scripts/agent-redline-report.py` | Copy `<install-root>/agent-redline/scripts/agent-redline-report.py`. |
-| 4.3h | `.claude/hooks/` + `.claude/settings.json` | Copy the hook files from `<install-root>/hooks/` into `.claude/hooks/` (committed), then run `python .claude/hooks/install-settings.py` to register the seed/gate/reinforce hooks (idempotent create-or-merge; never removes existing hooks; refuses on invalid JSON). The installer also reads `hooks.guardedPaths` from `agent-workflow.yaml` (written at 4.1, so run this after) and writes the gate's `guarded-paths.json` sidecar; if the key or pyyaml is absent the gate defaults to `src/`. Keeps the workflow engaged in plan mode — a nudge, not the CI floor. |
-| 4.3o | `.opencode/plugins/agent-workflow.mjs` | `mkdir -p .opencode/plugins`, then copy from `<install-root>/opencode/agent-workflow.mjs` (committed). OpenCode analog of the seed hook — a fail-open system-prompt nudge, auto-loaded from `.opencode/plugins/` (no `opencode.json` needed). CI checker stays the gate. |
-| 4.4 | AGENTS.md reference section | Marker-wrapped. No existing instruction file → fresh `AGENTS.md` from `templates/agents-section.md.template`. Existing instruction file, no markers → append the marker-wrapped section. **Existing markers (re-bootstrap) → reconcile, don't skip:** run `python <install-root>/hooks/merge-agents-section.py --file <instruction-file> --template <install-root>/templates/agents-section.md.template` — it refreshes only the bytes between the markers to the current template (idempotent; leaves surrounding prose byte-identical). Skipping when markers exist silently freezes the section at its first-installed version. |
+| 4.3r | `scripts/agent-workflow-runtime.py`, `.sh`, `.ps1` | Copy all three runtime adapters. Structured file mutations use the shared guard; shell mutations bypass it and remain covered by final-artifact/applicability CI only. |
+| 4.3h | `.claude/hooks/` + `.claude/settings.json`; `.codex/hooks.json` | Merge Claude seed/gate/reinforce hooks and Codex UserPromptSubmit/PreToolUse hooks without removing third-party hooks. Record that Codex must trust project hooks; unavailable runtime execution is a reported degraded state. |
+| 4.3o | `.opencode/plugins/agent-workflow.mjs` | Install the stable OpenCode 1.x plugin with its seed and structured-mutation guard; OpenCode 2 beta is outside the support claim. |
+| 4.4 | root `AGENTS.md` owned reference section | Always create or reconcile only the marker-wrapped section in root `AGENTS.md`; preserve every other instruction file, surrounding prose, and third-party hooks. Existing markers are reconciled idempotently. |
 | 4.5 | `.agent-redline/suppressions.yaml` | Invoke redline's Phase 4 write step. |
 | 4.6 | `docs/agent-redline/skills/` | Invoke redline's Phase 4 write step. |
 | 4.7 | `docs/agent-workflow/` | Copy `templates/checkpoints/` (keep the `checkpoints/` subdir) **and** `templates/skill-feedback.md` (as a sibling of `checkpoints/`) from the installed skill. Mirroring the skill's layout keeps the review-result → `../skill-feedback.md` cross-link resolvable. |
@@ -182,7 +183,7 @@ Write the committed artifacts. Branch each step on existing files; never overwri
 
 - Never overwrite an existing `agent-workflow.yaml` without explicit developer confirmation.
 - Never overwrite an existing `agent-redline-policy.yaml` (composition only — adopt the existing policy).
-- Never modify existing content of `AGENTS.md` / `CLAUDE.md` / etc. outside the agent-workflow marker block — append only. The one exception is the marker-wrapped agents-section itself, which `merge-agents-section.py` reconciles in place on re-bootstrap (it touches only the bytes between the markers).
+- Always create or reconcile only the owned marker in root `AGENTS.md`; preserve every other instruction file, surrounding prose, and third-party hooks.
 - Never modify boundary-rule backend definitions (existing ArchUnit tests, import-linter configs). The redline policy's `boundaries:` mirrors them; the existing test stays authoritative.
 - Never write `.github/workflows/*.yml` in Phase 4. That's Phase 5's job, and only with confirmation.
 
@@ -229,7 +230,7 @@ If **proposal-only / no / defer**:
 
 ## Phase 6 — Self-summary
 
-Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summary.md.template`](templates/bootstrap-summary.md.template). Three named sections: Installed (committed directly), Proposed (uncommitted), Needs human action. Each item names a specific governance control and its outcome. The template carries the table structure verbatim — fill in the per-row `<placeholder>` values.
+Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summary.md.template`](templates/bootstrap-summary.md.template). Three named sections: Installed, Proposed, Needs human action. Verify both skill manifests, native runtime activation, and any explicit degraded status.
 
 ### Run the probe
 
@@ -248,7 +249,7 @@ Two things a green probe does NOT catch — check both; both have silently passe
 
 - **Skill resolvable.** Confirm `.claude/skills/agent-workflow/SKILL.md` exists in the target repo. If absent, the CLAUDE.md pointer at `/agent-workflow` is a dead reference (see Phase 4 step 4.0) — hard-fail the bootstrap, tell the developer, don't write the summary as success.
 - **Policy schema-valid.** Confirm `agent-redline-policy.yaml` validates against `.agent-redline/agent-policy.schema.json` (redline Phase 4 ran this; re-assert). A schema-invalid policy passes CI green while its semantics are dead.
-- **Skill install complete.** Confirm every file in `.claude/skills/agent-workflow/manifest.txt` exists with the recorded byte size (forward check — catches a partial/garbled copy, the failure mode of hand-fetching files one by one). One-liner: `python - <<'PY'` reading the manifest and `os.path.getsize`, or eyeball on a small install. Missing/size-mismatch → the copy is incomplete; recopy from the source (below), don't proceed. (Do not fail on *extra* files — a run of the checker leaves `__pycache__`.)
+**Skill install complete.** Confirm every file in both `.claude/skills/agent-workflow/manifest.txt` and `.agents/skills/agent-workflow/manifest.txt` exists with the recorded byte size and that the manifests match. Missing/size-mismatch means recopy from one source; do not proceed. (Do not fail on extra files.)
 
 ### Show the self-summary in conversation
 

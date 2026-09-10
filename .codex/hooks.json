@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/agent-workflow-runtime.sh\" codex seed",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path (git rev-parse --show-toplevel) 'scripts/agent-workflow-runtime.ps1') codex seed\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/agent-workflow-runtime.sh\" codex guard",
+            "commandWindows": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$utf8 = New-Object System.Text.UTF8Encoding($false); [Console]::InputEncoding = $utf8; $hookInput = @($input) -join [Environment]::NewLine; & (Join-Path (git rev-parse --show-toplevel) 'scripts/agent-workflow-runtime.ps1') codex guard -HookInput $hookInput; exit $LASTEXITCODE\""
+          }
+        ],
+        "matcher": "Edit|Write|apply_patch"
+      }
+    ]
+  }
+}

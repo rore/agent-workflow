@@ -667,6 +667,40 @@ The harness **MUST NOT** convert unavailable evidence into a passing result.
 
 When work stops before it is ready for review, the harness **MUST** preserve the current implementation reference, unfinished work, known blockers or failures, and next required action.
 
+### 13.6 Runtime Engagement Parity
+
+A harness that declares support for multiple local agent runtimes **MUST** define
+one observable engagement contract for every supported runtime:
+
+- native skill discovery
+- repository instruction discovery
+- the same applicability-first task seed
+- the same allow, deny, or degraded decision before supported structured file
+  mutations
+
+The mutation decision **MUST** use one shared evaluator. Its complete path set
+includes the prospective mutation plus committed branch changes, dirty changes,
+and untracked files. Creating or repairing only the configured Work Record may
+proceed so a blocked task can recover; a mixed Work Record-and-code operation
+does not receive that exception.
+
+On a non-default branch, a mutation may proceed when the complete change is
+explicitly exempt or the configured Work Record is structurally ready for
+implementation. On the actual default branch, a ready Work Record is
+insufficient: the complete change **MUST** be exempt, direct-default permission
+**MUST** be separately recorded, and a fresh protection check **MUST** report
+the branch unprotected.
+
+Missing, invalid, or stale workflow evidence **MUST NOT** be reported as ready
+or exempt. A runtime-adapter execution failure **MAY** fail open only as an
+explicitly reported degraded integration state; CI remains authoritative for
+the final workflow artifacts and applicability decision.
+
+The runtime guard need not parse arbitrary shell commands. When shell mutation
+is outside the declared supported-tool set, the harness **MUST** say so: PR CI
+validates the resulting artifacts but cannot prove pre-edit ordering or prevent
+direct pushes.
+
 ## 14. Rule and Finding Semantics
 
 Automated tools may produce their own native output formats. The harness only requires equivalent access to:

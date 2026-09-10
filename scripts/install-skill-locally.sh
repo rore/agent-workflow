@@ -24,8 +24,10 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET="$REPO_ROOT/.claude/skills/agent-workflow"
+CLAUDE_TARGET="$REPO_ROOT/.claude/skills/agent-workflow"
+AGENTS_TARGET="$REPO_ROOT/.agents/skills/agent-workflow"
 
-bash "$REPO_ROOT/scripts/package-skill.sh" --dest "$TARGET"
+bash "$REPO_ROOT/scripts/package-skill.sh" --dest "$CLAUDE_TARGET"
+bash "$REPO_ROOT/scripts/package-skill.sh" --dest "$AGENTS_TARGET"
 
-echo "installed agent-workflow skill at $TARGET"
+echo "installed agent-workflow skill at $CLAUDE_TARGET and $AGENTS_TARGET"

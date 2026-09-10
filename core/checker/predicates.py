@@ -64,6 +64,8 @@ from core.work_record import (
 from .redline_verdict import RedlineVerdict, risk_at_least
 from .verdict import PredicateResult
 
+_WINDOWS_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
 # Allowed Work Record state values. Both shapes share the same allowed
 # states; routine fast-path lists three (SPEC §7), expanded uses the
 # same set plus may add others later. We accept the "Blocked or
@@ -1309,6 +1311,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "workrecord.routine_fields_present": "core",
     "workrecord.expanded_fields_present": "core",
     "workrecord.state_valid": "core",
+    "workrecord.implementation_ready": "core",
     "exceptions.well_formed": "core",
     "exceptions.not_against_boundary": "core",
     "exceptions.not_expired": "core",
@@ -1415,6 +1418,7 @@ def workrecord_commit_order(ctx: CheckerContext) -> PredicateResult:
             timeout=_GIT_TIMEOUT_SEC,
             encoding="utf-8",
             errors="replace",
+            creationflags=_WINDOWS_NO_WINDOW,
         )
     except (OSError, subprocess.TimeoutExpired):
         return PredicateResult(
@@ -1455,6 +1459,7 @@ def workrecord_commit_order(ctx: CheckerContext) -> PredicateResult:
                 timeout=_GIT_TIMEOUT_SEC,
                 encoding="utf-8",
                 errors="replace",
+            creationflags=_WINDOWS_NO_WINDOW,
             )
         except (OSError, subprocess.TimeoutExpired):
             # Per-commit failure: don't bail the predicate. Skip this

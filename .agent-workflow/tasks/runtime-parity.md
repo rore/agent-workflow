@@ -1,5 +1,5 @@
 <!-- agent-workflow:start -->
-**Outcome:** Claude Code, Codex, and OpenCode installations provide equivalent workflow discovery, applicability-first engagement, pre-implementation guarding, reinforcement, and CI behavior.
+**Outcome:** Claude Code, Codex, and OpenCode installations provide equivalent workflow discovery, applicability-first engagement, checker-backed pre-implementation decisions where native activation is verified, and CI behavior.
 
 **Target:** agent-workflow.
 
@@ -35,7 +35,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -44,6 +44,17 @@
 - Discover: confirmed asymmetric skill installation and hook coverage; delegated clean-context Redline, Codex, and OpenCode audits.
 - Assess Risk: recorded High risk and received the required verbatim human approval.
 - Plan: incorporated two blocking Astra findings; the independent re-review approved the corrected plan.
+- Added 17 focused runtime-guard tests covering shared decisions, recovery, applicability, custom paths, patch moves, degradation, and complete git scope.
+- Extended focused runtime-guard coverage with default-branch protection and ready-record denial cases.
+- Added Astra regression coverage for unknown defaults, incomplete merge-base scope, nested patch paths, and invalid integration inputs.
+- Updated runtime fixtures with an authoritative local origin and explicit unknown-default opt-out.
+- Updated bootstrap, templates, integration, and packaging docs for dual skill installs, owned AGENTS.md reconciliation, runtime adapters/settings, stable OpenCode 1.x limits, manifest/runtime verification, and update preservation.
+- Extended package E2E coverage for manifest-verified dual installs, runtime hook/plugin installation, idempotency, hook preservation, and AGENTS/instruction-file reconciliation.
+- Added an OpenCode plugin smoke test covering real shared-evaluator denial, bounded spawn options, and missing-interpreter fail-open logging.
+- Hardened default-branch discovery, merge-base completeness, nested-cwd path resolution, malformed-evidence denial, OpenCode degraded diagnostics, and hidden Windows child processes after Astra review.
+- Corrected Codex `commandWindows` stdin forwarding with an explicit `-HookInput` boundary and installer assertion.
+- Native probes confirmed OpenCode loading/denial and Claude seed activation; Claude PreToolUse did not activate on this Windows runtime, so the shipped contract reports activation failure as degraded and leaves CI authoritative rather than claiming readiness.
+- Resolved all Astra result-review blockers: trusted remote default scope, unpublished default commits, current-branch Work Record isolation, structured schema-invalid denial, Windows exit/UTF-8/hidden-child handling, exact dogfood drift checks, and honest activation claims.
 
 ## Plan review
 
@@ -52,8 +63,13 @@ The smart clean-context review rejected literal hook copying because Claude's cu
 ## Evidence
 
 - Official Codex hooks documentation: https://learn.chatgpt.com/docs/hooks
-- Repository runtime audit paths are recorded in Discovery; command/test evidence will be added during verification.
+- Shared runtime matrix: `python -m pytest tests/hooks/test_runtime_guard.py` → 30 passed before the final config fix; the expanded missing/malformed/schema-invalid group then passed 3/3.
+- OpenCode adapter: `node tests/hooks/test_opencode_plugin.mjs` → real evaluator denial, bounded spawn, and degraded fail-open passed.
+- Focused hooks: `bash tests/hooks/run.sh` → all hook, installer, wrapper, dogfood, and plugin checks passed.
+- Full regression: `bash tests/run-all.sh` → budget, schema, Work Record, checker, Redline, tuner, hooks, links, and package all passed (WSL reused the checkout's pure-Python pytest packages through temporary `/tmp` links).
+- Packaging: `bash scripts/package-skill.sh` → 65-file manifests regenerated identically for dist, Claude, and Agents installs.
+- Native evidence: OpenCode stable 1.x loaded and denied; Claude seed activated but Claude PreToolUse did not activate on this Windows host; Codex exposed project hooks, and its Windows input-forwarding defect was fixed and covered statically without repeating the popup-producing native probe.
 
 ## Result review
 
-- Pending.
+- Astra final result review: APPROVE, no actionable blockers. Residual risk is limited to the explicitly documented native activation gaps: Claude Windows mutation guarding was unavailable on this host, and Codex Windows native activation remains unverified; native probes were not repeated after the popup issue.

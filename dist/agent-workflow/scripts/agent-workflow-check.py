@@ -2092,6 +2092,8 @@ from datetime import date
 
 
 
+_WINDOWS_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
 # Allowed Work Record state values. Both shapes share the same allowed
 # states; routine fast-path lists three (SPEC §7), expanded uses the
 # same set plus may add others later. We accept the "Blocked or
@@ -3337,6 +3339,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "workrecord.routine_fields_present": "core",
     "workrecord.expanded_fields_present": "core",
     "workrecord.state_valid": "core",
+    "workrecord.implementation_ready": "core",
     "exceptions.well_formed": "core",
     "exceptions.not_against_boundary": "core",
     "exceptions.not_expired": "core",
@@ -3443,6 +3446,7 @@ def workrecord_commit_order(ctx: CheckerContext) -> PredicateResult:
             timeout=_GIT_TIMEOUT_SEC,
             encoding="utf-8",
             errors="replace",
+            creationflags=_WINDOWS_NO_WINDOW,
         )
     except (OSError, subprocess.TimeoutExpired):
         return PredicateResult(
@@ -3483,6 +3487,7 @@ def workrecord_commit_order(ctx: CheckerContext) -> PredicateResult:
                 timeout=_GIT_TIMEOUT_SEC,
                 encoding="utf-8",
                 errors="replace",
+            creationflags=_WINDOWS_NO_WINDOW,
             )
         except (OSError, subprocess.TimeoutExpired):
             # Per-commit failure: don't bail the predicate. Skip this
@@ -3854,6 +3859,7 @@ def _run_one(
     redline_verdict_path: Path | None,
     base_ref: str | None = None,
     head_ref: str | None = None,
+    require_implementation_ready: bool = False,
 ) -> RecordVerdict:
     """Run the predicate set against one slug and build its RecordVerdict.
 
@@ -3864,6 +3870,22 @@ def _run_one(
     """
     ctx = _build_context(repo_root, slug, redline_verdict_path, base_ref=base_ref, head_ref=head_ref)
     results = [predicate(ctx) for predicate in PREDICATES]
+    if require_implementation_ready:
+        state = (
+            ctx.record["state"].rstrip(".").strip()
+            if ctx.record is not None
+            else None
+        )
+        results.append(PredicateResult(
+            name="workrecord.implementation_ready",
+            passed=state == "Ready to implement",
+            detail=(
+                "Work Record is ready for implementation."
+                if state == "Ready to implement"
+                else f"Work Record state {state!r} is not 'Ready to implement'."
+            ),
+            blocking=True,
+        ))
     results = _apply_exception_downgrades(results, ctx)
     record = aggregate_record(slug, results)
     return dataclasses.replace(record, effective_rules=_effective_rules(results))
@@ -3875,6 +3897,7 @@ def run_checker(
     redline_verdict_path: Path | None = None,
     base_ref: str | None = None,
     head_ref: str | None = None,
+    require_implementation_ready: bool = False,
 ) -> Verdict:
     """Run the checker against one slug; return the wrapped verdict.
 
@@ -3882,7 +3905,14 @@ def run_checker(
     :class:`Verdict` shape so callers (tests, local CLI, CI) treat
     single and multi uniformly.
     """
-    return run_checker_multi(repo_root, [slug], redline_verdict_path, base_ref=base_ref, head_ref=head_ref)
+    return run_checker_multi(
+        repo_root,
+        [slug],
+        redline_verdict_path,
+        base_ref=base_ref,
+        head_ref=head_ref,
+        require_implementation_ready=require_implementation_ready,
+    )
 
 
 def run_checker_multi(
@@ -3891,6 +3921,7 @@ def run_checker_multi(
     redline_verdict_path: Path | None = None,
     base_ref: str | None = None,
     head_ref: str | None = None,
+    require_implementation_ready: bool = False,
 ) -> Verdict:
     """Run the checker against multiple slugs; return the aggregated verdict.
 
@@ -3905,7 +3936,14 @@ def run_checker_multi(
     :func:`aggregate` for the rationale.
     """
     records = [
-        _run_one(repo_root, s, redline_verdict_path, base_ref=base_ref, head_ref=head_ref)
+        _run_one(
+            repo_root,
+            s,
+            redline_verdict_path,
+            base_ref=base_ref,
+            head_ref=head_ref,
+            require_implementation_ready=require_implementation_ready,
+        )
         for s in slugs
     ]
     return aggregate(records)
@@ -3928,6 +3966,8 @@ _PROTECTED_APPLICABILITY_PATHS: tuple[str, ...] = (
     "CLAUDE.md",
     "GEMINI.md",
     ".claude/",
+    ".agents/",
+    ".codex/",
     ".opencode/",
     ".agent-redline/",
     "dist/agent-workflow/",
@@ -3945,6 +3985,7 @@ _PROTECTED_APPLICABILITY_PATHS: tuple[str, ...] = (
 _PROTECTED_INSTRUCTION_FILENAMES: frozenset[str] = frozenset(
     {"AGENTS.md", "CLAUDE.md", "GEMINI.md", "copilot-instructions.md"}
 )
+_WINDOWS_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def read_changed_paths(
@@ -4063,6 +4104,7 @@ def _github_default_branch_protection(repo_root: Path) -> str:
             result = subprocess.run(
                 ["gh", *args], cwd=repo_root, capture_output=True, text=True,
                 encoding="utf-8", timeout=20, check=False,
+                creationflags=_WINDOWS_NO_WINDOW,
             )
         except (OSError, subprocess.TimeoutExpired):
             return None
@@ -4084,6 +4126,7 @@ def _github_default_branch_protection(repo_root: Path) -> str:
         current = subprocess.run(
             ["git", "branch", "--show-current"], cwd=repo_root,
             capture_output=True, text=True, encoding="utf-8", timeout=20, check=False,
+            creationflags=_WINDOWS_NO_WINDOW,
         )
     except (OSError, subprocess.TimeoutExpired):
         return "unavailable"
@@ -4132,6 +4175,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Complete NUL-delimited paths from `git diff --name-only -z --no-renames`.",
     )
     parser.add_argument("--redline-verdict", type=Path, default=None)
+    parser.add_argument(
+        "--require-implementation-ready",
+        action="store_true",
+        help="Require the resolved Work Record state to be Ready to implement.",
+    )
     parser.add_argument("--bootstrap-applicability-proposal-z", type=Path)
     parser.add_argument("--bootstrap-applicability-approved-z", type=Path)
     parser.add_argument("--bootstrap-direct-default-branch-approved", action="store_true")
@@ -4226,7 +4274,7 @@ def main(argv: list[str] | None = None) -> int:
             except Exception:
                 pass
 
-    if config_error is not None and changed_path is not None:
+    if config_error is not None:
         verdict = _synthetic_verdict(
             args.slug or "<configuration>",
             [PredicateResult(
@@ -4255,6 +4303,7 @@ def main(argv: list[str] | None = None) -> int:
             redline_verdict_path=args.redline_verdict,
             base_ref=args.base_ref,
             head_ref=args.head_ref,
+            require_implementation_ready=args.require_implementation_ready,
         )
 
     redline = None
