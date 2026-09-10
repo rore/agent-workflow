@@ -8,6 +8,27 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-10 — Runtime parity is evidence-scoped
+
+**Decision:** This supersedes the prior entry's implication that installed native
+hooks provide equivalent mutation coverage. Parity means every verified native
+path uses the shared decision; coverage is verified only for a recorded runtime
+version, execution surface, and mutation tool when denial leaves the target
+unchanged. Installation, trust, direct evaluator success, bypassed decisions,
+and undispatched tool paths remain degraded. Evaluator failure returns denial;
+native prevention is a separate evidence claim. CI is authoritative for final state.
+
+**Alternatives considered:** Treat installed or trusted hooks as activation;
+remove useful hooks from runtimes with incomplete coverage; add runtime-specific
+policy engines or a general probe framework.
+
+**Rationale:** On the tested Windows host, Codex 0.153.4 desktop `apply_patch`
+did not enter `PreToolUse`; CLI `bypassPermissions` entered the hook and ignored
+its exit-2 denial. Claude mutation denial was unavailable. OpenCode 1.x plugin
+callback denial was observed, but its native evidence lacks the required scope.
+Evidence-scoped claims preserve useful adapters without
+presenting unverified guardrails as enforcement.
+
 ## 2026-09-10 — Supported runtimes share one pre-mutation decision
 
 **Decision:** Claude Code, Codex, and stable OpenCode 1.x use native discovery

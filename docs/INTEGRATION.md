@@ -58,7 +58,7 @@ The CI workflow runs two jobs: the risk classifier (path-based classification, p
 
 ### Runtime support and limits
 
-Bootstrap installs the same package for Claude Code and Codex, plus shared Python/POSIX-shell/PowerShell adapters and native hook settings. Stable OpenCode 1.x uses `tool.execute.before`; Codex requires explicit project trust. Bootstrap verifies guard activation per runtime and records failures as unavailable. Missing adapters report `DEGRADED`; once evaluation starts, an unexpected nonzero result denies the mutation. A hook that never runs cannot self-report, so CI remains authoritative. OpenCode 2 beta is excluded.
+Bootstrap installs the same package for Claude Code and Codex, plus shared Python/POSIX-shell/PowerShell adapters and native hook settings. Stable OpenCode 1.x uses `tool.execute.before`; Codex requires explicit project trust. Bootstrap records installation/trust separately from native mutation coverage. Coverage is verified only for a recorded runtime version, execution surface, and mutation tool when denial leaves the target unchanged; installed hooks, trust, or a direct evaluator pass are insufficient. Everything else is degraded. After evaluation starts, unexpected failure returns a deny decision; actual prevention still requires the native evidence above. A hook that never runs cannot self-report, so CI remains authoritative. OpenCode 2 beta is excluded.
 
 Shell commands bypass runtime guarding. PR CI validates final workflow artifacts and applicability, but cannot guarantee pre-edit ordering or prevent direct pushes.
 

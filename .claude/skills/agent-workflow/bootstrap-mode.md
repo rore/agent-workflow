@@ -19,7 +19,7 @@ agent-workflow ships with [agent-redline](agent-redline/SKILL.md) bundled. Boots
 
 The split between "committed directly" and "committed only with confirmation" is not negotiable. CI workflows gate every contributor's PR; the developer must see and confirm. Branch protection and CODEOWNERS need platform-admin access bootstrap can't have — they go to the proposal doc regardless.
 
-**The skill package is a committed artifact.** Bootstrap copies the identical package into both `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/` so Claude Code and Codex can discover it. Runtime adapters report degraded activation when unavailable; CI remains authoritative. OpenCode support is stable 1.x only; OpenCode 2 beta is excluded.
+**The skill package is a committed artifact.** Bootstrap copies the identical package into both `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/` so Claude Code and Codex can discover it. Runtime adapters may degrade; CI remains authoritative. OpenCode support is stable 1.x only; OpenCode 2 beta is excluded.
 
 ## Phases
 
@@ -163,7 +163,7 @@ Write the committed artifacts. Branch each step on existing files; never overwri
 | 4.3 | `scripts/format-verdict-comment.py` | Copy `<install-root>/scripts/format-verdict-comment.py`. The CI workflow step `Format verdict for PR comment` invokes it. |
 | 4.3 | `scripts/agent-redline-report.py` | Copy `<install-root>/agent-redline/scripts/agent-redline-report.py`. |
 | 4.3r | `scripts/agent-workflow-runtime.py`, `.sh`, `.ps1` | Copy all three runtime adapters. Structured file mutations use the shared guard; shell mutations bypass it and remain covered by final-artifact/applicability CI only. |
-| 4.3h | `.claude/hooks/` + `.claude/settings.json`; `.codex/hooks.json` | Merge Claude seed/gate/reinforce hooks and Codex UserPromptSubmit/PreToolUse hooks without removing third-party hooks. Record that Codex must trust project hooks; unavailable runtime execution is a reported degraded state. |
+| 4.3h | `.claude/hooks/` + `.claude/settings.json`; `.codex/hooks.json` | Merge Claude seed/gate/reinforce hooks and Codex UserPromptSubmit/PreToolUse hooks without removing third-party hooks. Record installation and Codex project trust; do not infer mutation coverage. |
 | 4.3o | `.opencode/plugins/agent-workflow.mjs` | Install the stable OpenCode 1.x plugin with its seed and structured-mutation guard; OpenCode 2 beta is outside the support claim. |
 | 4.4 | root `AGENTS.md` owned reference section | Always create or reconcile only the marker-wrapped section in root `AGENTS.md`; preserve every other instruction file, surrounding prose, and third-party hooks. Existing markers are reconciled idempotently. |
 | 4.5 | `.agent-redline/suppressions.yaml` | Invoke redline's Phase 4 write step. |
@@ -230,7 +230,7 @@ If **proposal-only / no / defer**:
 
 ## Phase 6 — Self-summary
 
-Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summary.md.template`](templates/bootstrap-summary.md.template). Three named sections: Installed, Proposed, Needs human action. Verify both skill manifests, native runtime activation, and any explicit degraded status.
+Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summary.md.template`](templates/bootstrap-summary.md.template). Three named sections: Installed, Proposed, Needs human action. Record installation/trust separately from native mutation coverage; apply the native-coverage hard rule below.
 
 ### Run the probe
 
@@ -287,7 +287,7 @@ Re-bootstrap should be deliberate, not accidental. Hard rule: one-shot install p
 - Never write `.github/workflows/*.yml` outside Phase 5.
 - Never modify branch protection or CODEOWNERS. Always proposal-only.
 - Never proceed past Phase 3 without explicit developer sign-off on the policy drafts.
-- Never claim "verified" for something bootstrap couldn't actually verify. The self-summary names every unverified item.
+- Never infer native mutation coverage from installation, trust, or direct evaluator success. Verified requires a denied native operation with unchanged target and records runtime version, execution surface, and tool; otherwise record degraded.
 
 ## When the repo doesn't fit
 

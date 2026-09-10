@@ -678,6 +678,13 @@ one observable engagement contract for every supported runtime:
 - the same allow, deny, or degraded decision before supported structured file
   mutations
 
+"Supported" is evidence-scoped. Installation, trust, and direct shared-evaluator
+success do not prove native interception. Activation evidence **MUST** identify
+the runtime version, execution surface, and mutation tool, and **MUST** show that
+a denied native operation left its target unchanged. Without that evidence, the
+runtime/path **MUST** be reported as degraded, including permission modes or
+specialized tool paths that bypass or ignore the hook decision.
+
 The mutation decision **MUST** use one shared evaluator. Its complete path set
 includes the prospective mutation plus committed branch changes, dirty changes,
 and untracked files. Creating or repairing only the configured Work Record may
@@ -694,8 +701,9 @@ the branch unprotected.
 Missing, invalid, or stale workflow evidence **MUST NOT** be reported as ready
 or exempt. Pre-invocation runtime-adapter unavailability **MAY** fail open only
 as an explicitly reported degraded integration state. Once the shared evaluator
-starts, failure to complete **MUST** deny the mutation. CI remains authoritative
-for the final workflow artifacts and applicability decision.
+starts, failure to complete **MUST** return a deny decision. The runtime/path is
+verified only when its native operation honors that decision under the evidence
+rule above. CI remains authoritative for final workflow artifacts and applicability.
 
 The runtime guard need not parse arbitrary shell commands. When shell mutation
 is outside the declared supported-tool set, the harness **MUST** say so: PR CI
