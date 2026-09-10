@@ -678,6 +678,13 @@ one observable engagement contract for every supported runtime:
 - the same allow, deny, or degraded decision before supported structured file
   mutations
 
+"Supported" is evidence-scoped. Installation, trust, and direct shared-evaluator
+success do not prove native interception. Activation evidence **MUST** identify
+the runtime version, execution surface, and mutation tool, and **MUST** show that
+a denied native operation left its target unchanged. Without that evidence, the
+runtime/path **MUST** be reported as degraded, including permission modes or
+specialized tool paths that bypass or ignore the hook decision.
+
 The mutation decision **MUST** use one shared evaluator. Its complete path set
 includes the prospective mutation plus committed branch changes, dirty changes,
 and untracked files. Creating or repairing only the configured Work Record may

@@ -1,6 +1,6 @@
 # agent-workflow
 
-This repository uses [agent-workflow](https://github.com/rore/agent-workflow) — a workflow harness for engineering tasks. Bundled with agent-redline for path-based risk classification.
+This repository uses [agent-workflow](https://github.com/rore/agent-workflow) — a workflow harness for engineering tasks. Includes agent-redline risk classification.
 
 **Where things live:**
 
@@ -15,7 +15,7 @@ This repository uses [agent-workflow](https://github.com/rore/agent-workflow) �
 | `docs/agent-redline/skills/` | Redline's per-checkpoint reference docs. |
 | `.claude/hooks/` | Claude Code hooks that keep the workflow engaged in plan mode (see below). |
 | `.codex/hooks.json` | Codex hooks for the seed and structured-mutation guard; project trust is required. |
-| `.opencode/plugins/agent-workflow.mjs` | Stable OpenCode 1.x seed and structured-mutation guard; OpenCode 2 beta is unsupported. |
+| `.opencode/plugins/agent-workflow.mjs` | Stable OpenCode 1.x guard; OpenCode 2 beta unsupported. |
 
 **Start:** invoke `/agent-workflow` or the runtime's native command. If unavailable, read `.claude/skills/agent-workflow/SKILL.md` or `.agents/skills/agent-workflow/SKILL.md`.
 
@@ -29,4 +29,4 @@ python scripts/agent-workflow-check.py --repo-root . --slug <slug>
 
 Exit codes: `0` clean, `1` advisory, `2` blocking. CI runs the same check on PR open and posts a sticky verdict comment.
 
-Structured mutations use the runtime guard. Shell mutations bypass it; PR CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. Bootstrap must verify activation per runtime. Missing adapters degrade; once evaluation starts, failure to complete denies the mutation.
+Native mutation coverage is version/surface/tool-specific: verified requires a denied operation with unchanged target; installation, trust, or a direct evaluator pass is insufficient. Record every other combination as degraded. Shell mutations bypass the guard; CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. Once evaluation starts, failure denies.
