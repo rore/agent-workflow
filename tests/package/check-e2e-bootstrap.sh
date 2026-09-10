@@ -63,10 +63,82 @@ mkdir -p "$CONSUMER" "$(dirname "$SKILL")"
 # --- Step 1: install the skill (the documented "clone this repo and copy
 # dist/agent-workflow/ into your .claude/skills/" path).
 cp -r "$DIST" "$SKILL"
+CODEX_SKILL="$CONSUMER/.agents/skills/agent-workflow"
+mkdir -p "$(dirname "$CODEX_SKILL")"
+cp -r "$DIST" "$CODEX_SKILL"
+"$PY" - "$SKILL" "$CODEX_SKILL" <<'PYEOF'
+import hashlib, sys
+from pathlib import Path
+left, right = map(Path, sys.argv[1:])
+def files(root): return sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
+assert files(left) == files(right)
+manifest = dict(line.split("\t", 1) for line in (left/"manifest.txt").read_text().splitlines())
+for rel in files(left):
+    assert (left/rel).read_bytes() == (right/rel).read_bytes(), rel
+    if rel != "manifest.txt": assert int(manifest[rel]) == (left/rel).stat().st_size, rel
+PYEOF
 
 cd "$CONSUMER"
 
 # --- Step 2: Phase 4 writes — perform mechanical equivalents of what
+# Concrete runtime install operations documented by bootstrap.
+mkdir -p .opencode/plugins .claude/hooks .claude .codex
+cp "$SKILL/opencode/agent-workflow.mjs" .opencode/plugins/agent-workflow.mjs
+cat > agent-workflow.yaml <<'EOF'
+version: 1
+project: {name: consumer-repo}
+workRecord:
+  backend: local
+  local:
+    taskPath: ".agent-workflow/tasks/{slug}.md"
+redline: optional
+hooks:
+  guardedPaths: [src/, lib/]
+EOF
+printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"third-party-claude"}]}]}}\n' > .claude/settings.json
+printf '{"hooks":{"PreToolUse":[{"matcher":"third-party","hooks":[{"type":"command","command":"third-party-codex"}]}]}}\n' > .codex/hooks.json
+cp "$SKILL/hooks/install-settings.py" install-settings.py
+"$PY" install-settings.py --runtime claude --settings .claude/settings.json >/dev/null
+cp .claude/settings.json .claude/before
+"$PY" install-settings.py --runtime claude --settings .claude/settings.json >/dev/null
+cmp -s .claude/settings.json .claude/before || exit 2
+"$PY" install-settings.py --runtime codex --settings .codex/hooks.json >/dev/null
+cp .codex/hooks.json .codex/before
+"$PY" install-settings.py --runtime codex --settings .codex/hooks.json >/dev/null
+cmp -s .codex/hooks.json .codex/before || exit 2
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+c=json.loads(Path(".claude/settings.json").read_text()); x=json.loads(Path(".codex/hooks.json").read_text())
+assert any(h["command"]=="third-party-claude" for g in c["hooks"]["UserPromptSubmit"] for h in g["hooks"])
+assert any(h["command"]=="third-party-codex" for g in x["hooks"]["PreToolUse"] for h in g["hooks"])
+runtime=[h for gs in x["hooks"].values() for g in gs for h in g["hooks"] if "agent-workflow-runtime" in h.get("command","")]
+assert len(runtime)==2 and all(h.get("commandWindows","").startswith("powershell.exe ") and " -EncodedCommand " in h["commandWindows"] for h in runtime)
+assert json.loads(Path(".claude/hooks/guarded-paths.json").read_text())["guardedPaths"]==["src/","lib/"]
+PYEOF
+cat > AGENTS.md <<'EOF'
+# Consumer guidance
+
+Root prose before.
+<!-- agent-workflow:agents-section:start -->
+STALE BODY
+<!-- agent-workflow:agents-section:end -->
+Root prose after.
+EOF
+printf 'Claude-specific instructions\n' > CLAUDE.md
+printf 'Codex-specific instructions\n' > CODEX.md
+cp CLAUDE.md CLAUDE.before; cp CODEX.md CODEX.before
+"$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
+cp AGENTS.md AGENTS.before
+"$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
+cmp -s AGENTS.md AGENTS.before || exit 2
+cmp -s CLAUDE.md CLAUDE.before && cmp -s CODEX.md CODEX.before || exit 2
+"$PY" - <<'PYEOF'
+from pathlib import Path
+t=Path("AGENTS.md").read_text()
+assert "Root prose before." in t and "Root prose after." in t and "STALE BODY" not in t
+PYEOF
+
 # bootstrap-mode would do conversationally. Each write uses a file the
 # packaged skill actually ships; failure here proves a missing template.
 

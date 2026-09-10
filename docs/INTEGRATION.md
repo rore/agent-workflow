@@ -15,7 +15,7 @@ You do **not** need: a database, a service to deploy, an account anywhere, or ad
 
 ### A. Conversational bootstrap (recommended)
 
-Open the repo in Claude Code with the `agent-workflow` skill installed (clone the `agent-workflow` repo and copy [`dist/agent-workflow/`](../dist/agent-workflow/) into the target repo's `.claude/skills/`, or wherever your Claude Code install loads skills from). In a new session, ask the agent to install agent-workflow on the repo. The skill detects the missing `agent-workflow.yaml` and enters bootstrap mode automatically.
+Open the repo in a supported runtime with the identical `agent-workflow` package installed in both `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/` (copy [`dist/agent-workflow/`](../dist/agent-workflow/) to both). In a new session, ask the agent to install agent-workflow. The skill detects the missing `agent-workflow.yaml` and enters bootstrap mode automatically.
 
 Bootstrap is a six-phase conversation. You stay in the loop the whole time.
 
@@ -24,7 +24,7 @@ Bootstrap is a six-phase conversation. You stay in the loop the whole time.
 | 1. Inspect | The agent reads the repo, discovers actual documentation/roadmap/root-README candidates, and checks live default-branch protection. Reports a structured finding. | Confirm or correct the finding. |
 | 2. Propose | The agent drafts `agent-workflow.yaml` and `agent-redline-policy.yaml` — both inert. Any applicability block lists discovered paths, never assumed canonical names. | Read both drafts. |
 | 3. Adapt | The agent walks the **zone-utility check**, optionally runs the tuner, and asks unresolved questions. Applicability paths and direct-default permission require separate explicit approval. | Sign off explicitly to advance. |
-| 4. Write | The agent writes the committed artifacts: configs, vendored checker/reporter scripts, AGENTS.md reference section, per-checkpoint reference docs, `.agent-workflow/tasks/README.md`. | None — but review the diff afterwards. |
+| 4. Write | The agent writes identical dual skill installs, runtime adapters/settings, configs, vendored scripts, the owned root `AGENTS.md` marker, docs, and task skeleton. | None — but review the diff afterwards. |
 | 5. Confirm CI | The agent always writes `docs/agent-workflow-ci-proposal.md`. It then asks whether to install the workflow file at `.github/workflows/agent-workflow.yml` directly or leave it in the proposal doc only. | **Decide.** This is the integration point that gates every future PR. |
 | 6. Self-summary | The agent writes `docs/agent-workflow-bootstrap-summary.md`, runs a local probe of the checker, and reports what's installed, what's proposed, and what still needs human action. | Read it. Branch protection and CODEOWNERS additions need you. |
 
@@ -34,14 +34,12 @@ After Phase 4, you have a normal-looking PR with new committed files. Review and
 
 You can install agent-workflow without the conversational bootstrap. Useful when you already know the shape of the repo and want the artifacts in one shot.
 
-1. Write `agent-workflow.yaml` at the repo root. Start from [`core/templates/agent-workflow.yaml.template`](../core/templates/agent-workflow.yaml.template).
-2. Write the risk-classification policy: copy a starting `agent-redline-policy.yaml` and vendor `scripts/agent-redline-report.py`.
-3. Vendor the checker: build it with `scripts/build-vendored-checker.sh /path/to/your-repo/scripts/agent-workflow-check.py` from the agent-workflow source tree, or copy `<install-root>/scripts/agent-workflow-check.py` (already pre-built in the packaged install).
-4. Vendor the sticky-comment renderer: copy `scripts/format-verdict-comment.py`.
-5. Create `.agent-workflow/tasks/` with a `README.md` explaining the `{slug}.md` convention.
-6. Append the agent-workflow reference section to your `AGENTS.md` / `CLAUDE.md` (template: [`core/templates/agents-section.md.template`](../core/templates/agents-section.md.template)).
-7. Copy per-checkpoint docs to `docs/agent-workflow/` and `docs/agent-redline/skills/`.
-8. Install the CI workflow: copy [`core/templates/.github/workflows/agent-workflow.yml.template`](../core/templates/.github/workflows/agent-workflow.yml.template) to `.github/workflows/agent-workflow.yml`.
+1. Install the identical package into `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/` from one source; verify both manifests.
+2. Write `agent-workflow.yaml` and the risk-classification policy; vendor the checker, reporter, and `scripts/agent-workflow-runtime.py/.sh/.ps1` adapters.
+3. Merge Claude settings and `.codex/hooks.json` without removing third-party hooks; record Codex project trust. Install the stable OpenCode 1.x plugin with its structured-mutation guard; OpenCode 2 beta is excluded.
+4. Create `.agent-workflow/tasks/` with a `README.md` explaining the `{slug}.md` convention.
+5. Create or reconcile only the owned marker in root `AGENTS.md`; preserve all other instruction files. Copy per-checkpoint docs to `docs/agent-workflow/` and `docs/agent-redline/skills/`.
+6. Install the CI workflow: copy [`core/templates/.github/workflows/agent-workflow.yml.template`](../core/templates/.github/workflows/agent-workflow.yml.template) to `.github/workflows/agent-workflow.yml`.
 
 Bootstrap mode does all eight steps for you and inspects the repo first so the drafts fit. **Skip manual install if you can.** The conversational path's value is in Phase 3 — calibrating the risk policy against your codebase. A copy-pasted policy without that step almost always over-classifies.
 
@@ -57,6 +55,12 @@ What you have to authorize:
 4. **Shadow → binding flip.** Bootstrap installs the risk classifier in `shadow` mode (advisory, never blocking). See [§Risk classification](#risk-classification-and-how-to-keep-it-useful) for when and how to flip.
 
 The CI workflow runs two jobs: the risk classifier (path-based classification, posts its own sticky) and agent-workflow (reads the classifier verdict + the Work Record, posts its own sticky). Both stickies stay independently legible in the PR conversation.
+
+### Runtime support and limits
+
+Bootstrap installs the same package for Claude Code and Codex, plus shared Python/POSIX-shell/PowerShell adapters and native hook settings. Stable OpenCode 1.x uses `tool.execute.before`; Codex requires explicit project trust. Bootstrap verifies guard activation per runtime and records failures as unavailable. Missing adapters report `DEGRADED`; once evaluation starts, an unexpected nonzero result denies the mutation. A hook that never runs cannot self-report, so CI remains authoritative. OpenCode 2 beta is excluded.
+
+Shell commands bypass runtime guarding. PR CI validates final workflow artifacts and applicability, but cannot guarantee pre-edit ordering or prevent direct pushes.
 
 ## Risk classification and how to keep it useful
 
@@ -154,13 +158,13 @@ bash scripts/build-vendored-checker.sh /path/to/your-repo/scripts/agent-workflow
 
 Then re-copy `scripts/format-verdict-comment.py` and `core/agent-redline/core/reporter/reporter.py` (→ `scripts/agent-redline-report.py`) the same way. Commit the diff.
 
-For skill source updates, pull the latest `agent-workflow` repo and copy the refreshed `dist/agent-workflow/` into your target repo's `.claude/skills/`.
+For skill source updates, use operating mode to copy the refreshed `dist/agent-workflow/` into both target skill directories. Preserve config, third-party hooks, and historical Work Records; verify both manifests after the update.
 
 ## Re-bootstrap
 
 Bootstrap is one-shot per repo. If you need to start over, delete `agent-workflow.yaml` and the per-task records under `.agent-workflow/tasks/`, then ask the agent to install agent-workflow again. The skill detects the missing config and enters bootstrap mode.
 
-This is intentional: re-bootstrap should be deliberate, not accidental.
+Updates use operating mode: refresh both skill installs and runtime assets while preserving configuration, third-party hooks, and historical Work Records. Do not delete `agent-workflow.yaml` or task history to update an installed repo.
 
 ## When the repo doesn't fit
 

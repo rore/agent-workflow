@@ -6,14 +6,14 @@ How agent-workflow's skill is built, where consumers install it from, and what t
 
 agent-workflow has two surfaces that get distributed independently:
 
-1. **The skill** — markdown the agent reads at session start and during checkpoints. Lives in `core/skill/` (source) and `core/templates/checkpoints/` (per-checkpoint guides). `scripts/package-skill.sh` assembles it into the Agent Skills standard layout. The committed [`dist/agent-workflow/`](../dist/agent-workflow/) tree is the install source — consumers copy it into their `.claude/skills/`.
+1. **The skill** — markdown the agent reads at session start and during checkpoints. Lives in `core/skill/` (source) and `core/templates/checkpoints/` (per-checkpoint guides). `scripts/package-skill.sh` assembles it into the Agent Skills standard layout. The committed [`dist/agent-workflow/`](../dist/agent-workflow/) tree is the install source — consumers copy the identical package into both `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`.
 2. **The CI checker** — a single-file Python script the consumer's repo executes at PR time. Vendored into each consuming repo as `scripts/agent-workflow-check.py`. Distributed via `scripts/build-vendored-checker.sh`, not via the skill tree.
 
 A consumer needs both. The skill alone is just guidance; the checker alone has no source of truth to validate against. Bootstrap-mode installs both.
 
 ## What's in the skill package
 
-The committed `dist/agent-workflow/` tree (52 files), produced by `scripts/package-skill.sh`. After install (clone the repo, copy the directory into your `.claude/skills/`), the skill directory looks like:
+The committed `dist/agent-workflow/` tree (52 files), produced by `scripts/package-skill.sh`. After install (clone the repo, copy the directory identically into `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`), each skill directory looks like:
 
 ```
 agent-workflow/
@@ -31,6 +31,7 @@ agent-workflow/
 │   └── schema/agent-workflow.schema.json
 ├── scripts/
 │   ├── agent-workflow-check.py               # vendored CI checker (pre-built)
+│   ├── agent-workflow-runtime.py/.sh/.ps1    # shared runtime guard adapters
 │   ├── format-verdict-comment.py             # CI sticky renderer
 │   └── agent-workflow-tune.py                # one-shot calibration tuner
 └── agent-redline/                            # self-contained bundled subsystem
@@ -47,7 +48,9 @@ agent-workflow/
         └── python/                           # Python/import-linter profile + adapter + scripts/
 ```
 
-The CI checker source (`core/checker/`), the parser (`core/work_record/`), and the dev-repo tests do **not** ship as part of the skill — only the pre-built `agent-workflow-check.py` does, so consumers can install without running any build. Inside `agent-redline/`, the layout intentionally mirrors what `agent-redline`'s own packaged release produces; the skill text inside it reads as if redline were installed standalone, and the path substitutions `scripts/package-skill.sh` applies make that true.
+The CI checker source (`core/checker/`), the parser (`core/work_record/`), and the dev-repo tests do **not** ship as part of the skill — only the pre-built `agent-workflow-check.py` does, so consumers can install without running any build.
+
+Bootstrap also merges Claude settings and `.codex/hooks.json` without removing third-party hooks, and installs the stable OpenCode 1.x plugin. Codex requires project trust. OpenCode 2 beta is excluded. Runtime adapters report degraded activation when unavailable; shell mutations bypass runtime guarding, while PR CI validates final artifacts and applicability only. Inside `agent-redline/`, the layout intentionally mirrors what `agent-redline`'s own packaged release produces; the skill text inside it reads as if redline were installed standalone, and the path substitutions `scripts/package-skill.sh` applies make that true.
 
 The packaged skill is self-resolving: every internal link in the markdown points at a file that exists inside the package. `tests/package/check-references.sh` enforces this on every PR.
 
@@ -73,7 +76,7 @@ Source: [`core/skill/agent-workflow.md`](../core/skill/agent-workflow.md). When 
 This repo is the install source. The flow:
 
 1. Clone `agent-workflow`.
-2. Copy [`dist/agent-workflow/`](../dist/agent-workflow/) into your target repo's `.claude/skills/` (or wherever your Claude Code install loads skills from).
+2. Copy [`dist/agent-workflow/`](../dist/agent-workflow/) identically into your target repo's `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`.
 3. Open your target repo in Claude Code and ask the agent to install agent-workflow — bootstrap-mode runs from there.
 
 The committed tree is the single artifact a consumer needs. `tests/package/check-package.sh` runs on every PR in this repo and blocks merges when `dist/agent-workflow/` drifts from `core/skill/`, so what's checked in is always what `scripts/package-skill.sh` would produce from the current sources.

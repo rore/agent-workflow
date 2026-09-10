@@ -80,13 +80,25 @@ if [[ -f "$OCP" ]]; then
   ctx="$(sed -n 's/^CTX="\(.*\)"$/\1/p' "$H/seed-workflow.sh")"
   seed="$(sed -n 's/^const SEED = "\(.*\)";$/\1/p' "$OCP")"
   if [[ -n "$ctx" && -n "$seed" && "$seed" == "$ctx" ]]; then echo "  ok: plugin SEED matches seed-workflow.sh CTX"; else echo "  FAIL: SEED/CTX parity drift"; fail=1; fi
+  pyseed="$("$PY" scripts/agent-workflow-runtime.py --runtime codex --seed </dev/null | "$PY" -c "import json,sys; print(json.load(sys.stdin)['hookSpecificOutput']['additionalContext'])")"
+  if [[ "$pyseed" == "$ctx" ]]; then echo "  ok: shared runtime SEED matches Claude/OpenCode"; else echo "  FAIL: shared runtime SEED drift"; fail=1; fi
   grep -q 'experimental.chat.system.transform' "$OCP" && echo "  ok: injects via experimental.chat.system.transform" || { echo "  FAIL: missing system.transform hook"; fail=1; }
+  grep -q '"tool.execute.before"' "$OCP" && echo "  ok: OpenCode structured mutation guard registered" || { echo "  FAIL: missing OpenCode mutation guard"; fail=1; }
   if grep -q 'try {' "$OCP" && grep -q 'catch' "$OCP"; then echo "  ok: fail-open (try/catch present)"; else echo "  FAIL: no try/catch fail-open guard"; fail=1; fi
   grep -q 'Array.isArray(output.system)' "$OCP" && echo "  ok: guards output.system shape" || { echo "  FAIL: missing output.system guard"; fail=1; }
+  cmp -s "$OCP" .opencode/plugins/agent-workflow.mjs && echo "  ok: dogfood OpenCode plugin matches source" || { echo "  FAIL: dogfood OpenCode plugin drift"; fail=1; }
 else
   echo "  FAIL: $OCP missing"; fail=1
 fi
 
+
+echo "[ OpenCode plugin: real guard denial + degraded interpreter ]"
+NODE="$(command -v node || command -v node.exe || true)"
+if [[ -n "$NODE" ]]; then
+  "$NODE" tests/hooks/test_opencode_plugin.mjs || { echo "  FAIL: OpenCode plugin smoke test"; fail=1; }
+else
+  echo "  FAIL: node interpreter not found"; fail=1
+fi
 
 echo "[ settings installer ]"
 INST="$H/install-settings.py"
@@ -106,6 +118,17 @@ if "$PY" -c "import json,sys; d=json.load(open(sys.argv[1])); cmds=[h['command']
 printf '%s' 'not json {' > "$TMP/bad.json"
 "$PY" "$INST" --settings "$TMP/bad.json" >/dev/null 2>&1
 if [[ $? == "1" && "$(cat "$TMP/bad.json")" == "not json {" ]]; then echo "  ok: refuse-invalid (exit 1, unchanged)"; else echo "  FAIL: refuse-invalid"; fail=1; fi
+echo "[ Codex hook installer: merge + Windows command + idempotency ]"
+printf '%s' '{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"echo keep"}]}]}}' > "$TMP/codex.json"
+"$PY" "$INST" --runtime codex --settings "$TMP/codex.json" >/dev/null 2>&1
+before="$("$PY" -c "import json,sys;print(json.dumps(json.load(open(sys.argv[1])),sort_keys=True))" "$TMP/codex.json")"
+"$PY" "$INST" --runtime codex --settings "$TMP/codex.json" >/dev/null 2>&1
+after="$("$PY" -c "import json,sys;print(json.dumps(json.load(open(sys.argv[1])),sort_keys=True))" "$TMP/codex.json")"
+if "$PY" -c "import base64,json,sys; d=json.load(open(sys.argv[1])); hs=[h for groups in d['hooks'].values() for g in groups for h in g['hooks']]; cmds=[h.get('command','') for h in hs]; ours=[h for h in hs if 'agent-workflow-runtime.sh' in h.get('command','')]; decode=lambda h:base64.b64decode(h['commandWindows'].split()[-1]).decode('utf-16le'); sys.exit(0 if 'echo keep' in cmds and ours and all(h.get('commandWindows') and ' -EncodedCommand ' in h['commandWindows'] and '\"' not in h['commandWindows'] and 'git rev-parse --show-toplevel' in decode(h) and 'agent-workflow-runtime.ps1' in decode(h) and 'exit \$LASTEXITCODE' in decode(h) for h in ours) else 1)" "$TMP/codex.json" && [[ "$before" == "$after" ]]; then
+  echo "  ok: Codex hooks merge, carry commandWindows, and are idempotent"
+else
+  echo "  FAIL: Codex hook installation"; fail=1
+fi
 rm -rf "$TMP"
 
 
@@ -141,11 +164,22 @@ if [[ -d "$DIST" ]]; then
   printf '%s' "$d_allow" | PYTHON="$PY" bash "$DIST/check-plan.sh" >/dev/null 2>&1
   [[ $? == 0 ]] && echo "  ok: packaged gate ALLOW" || { echo "  FAIL: packaged gate ALLOW"; fail=1; }
   echo '{}' | bash "$DIST/seed-workflow.sh" | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: packaged seed valid JSON" || { echo "  FAIL: packaged seed JSON"; fail=1; }
+  bash scripts/agent-workflow-runtime.sh claude seed | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: Windows Bash runtime wrapper resolves Python path" || { echo "  FAIL: Windows Bash runtime wrapper"; fail=1; }
+  grep -q '$OutputEncoding = $utf8' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper forces UTF-8 native-pipeline encoding" || { echo "  FAIL: PowerShell wrapper UTF-8 encoding"; fail=1; }
+  grep -q 'runtime adapter failed with exit' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper fails closed on evaluator errors" || { echo "  FAIL: PowerShell wrapper evaluator failure"; fail=1; }
+  FAILDIR="$(mktemp -d)"
+  printf '#!/usr/bin/env bash\nexit 7\n' > "$FAILDIR/python-fail"; chmod +x "$FAILDIR/python-fail"
+  printf '{}' | PYTHON="$FAILDIR/python-fail" bash scripts/agent-workflow-runtime.sh claude guard 2>"$FAILDIR/error"
+  [[ $? == 2 ]] && grep -q 'DENY: runtime adapter failed with exit 7' "$FAILDIR/error" && echo "  ok: shell wrapper fails closed on evaluator errors" || { echo "  FAIL: shell wrapper evaluator failure"; fail=1; }
+  rm -rf "$FAILDIR"
   # installer wires the packaged gate into a consumer-shaped settings.json
   E2E="$(mktemp -d)"; mkdir -p "$E2E/.claude/hooks"; cp "$DIST"/* "$E2E/.claude/hooks/"
   "$PY" "$DIST/install-settings.py" --settings "$E2E/.claude/settings.json" >/dev/null 2>&1
-  "$PY" -c "import json,sys; d=json.load(open(sys.argv[1])); cmds=[h['command'] for e in d['hooks'].values() for g in e for h in g['hooks']]; import sys as s; s.exit(0 if (any('check-plan.sh' in c for c in cmds) and all('.claude/hooks/' in c for c in cmds)) else 1)" "$E2E/.claude/settings.json"     && echo "  ok: installer registers .claude/hooks/ commands" || { echo "  FAIL: installer wiring"; fail=1; }
+  "$PY" -c "import json,sys; d=json.load(open(sys.argv[1])); cmds=[h['command'] for e in d['hooks'].values() for g in e for h in g['hooks']]; import sys as s; s.exit(0 if (any('check-plan.sh' in c for c in cmds) and all(('.claude/hooks/' in c or 'scripts/agent-workflow-runtime.sh' in c) for c in cmds)) else 1)" "$E2E/.claude/settings.json"     && echo "  ok: installer registers .claude/hooks/ commands" || { echo "  FAIL: installer wiring"; fail=1; }
   rm -rf "$E2E"
+  for runtime_file in agent-workflow-runtime.py agent-workflow-runtime.sh agent-workflow-runtime.ps1; do
+    [[ -f "dist/agent-workflow/scripts/$runtime_file" ]] || { echo "  FAIL: packaged $runtime_file missing"; fail=1; }
+  done
 else
   echo "  skip: dist not built"
 fi
@@ -162,6 +196,12 @@ if [[ -d .claude/hooks && -f .claude/settings.json ]]; then
   "$PY" -c "import json,sys; d=json.load(open('.claude/settings.json')); cmds=[h['command'] for e in d['hooks'].values() for g in e for h in g['hooks']]; import sys as s; s.exit(0 if all(any(n in c for c in cmds) for n in ('seed-workflow.sh','check-plan.sh','reinforce-workflow.sh')) else 1)"     && echo "  ok: settings.json registers all 3 hooks" || { echo "  FAIL: settings.json missing hook registration"; fail=1; }
 else
   echo "  skip: no dogfood .claude hooks"
+fi
+
+if [[ -f .codex/hooks.json ]]; then
+  "$PY" -c "import json; d=json.load(open('.codex/hooks.json')); hs=[h for groups in d['hooks'].values() for g in groups for h in g['hooks']]; assert any('agent-workflow-runtime.sh' in h.get('command','') for h in hs); assert all(h.get('commandWindows') for h in hs)"     && echo "  ok: dogfood Codex hooks registered with Windows commands" || { echo "  FAIL: dogfood Codex hooks"; fail=1; }
+else
+  echo "  FAIL: dogfood .codex/hooks.json missing"; fail=1
 fi
 
 

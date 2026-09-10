@@ -70,6 +70,9 @@ required_paths=(
   "core/skill/hooks/install-settings.py"
   "core/skill/hooks/merge-agents-section.py"
   "core/skill/opencode/agent-workflow.mjs"
+  "scripts/agent-workflow-runtime.py"
+  "scripts/agent-workflow-runtime.sh"
+  "scripts/agent-workflow-runtime.ps1"
   "core/templates/checkpoints"
   "core/templates/agents-section.md.template"
   "core/templates/work-record-routine.md"
@@ -292,8 +295,12 @@ cp "$REPO_ROOT/core/schema/agent-workflow.schema.json" "$TARGET/assets/schema/"
 #    any build step in their own repo.
 # ---------------------------------------------------------------------
 
-cp "$REPO_ROOT/scripts/format-verdict-comment.py" "$TARGET/scripts/"
-cp "$REPO_ROOT/scripts/agent-workflow-tune.py"    "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/format-verdict-comment.py"  "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/agent-workflow-tune.py"     "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/agent-workflow-runtime.py"  "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/agent-workflow-runtime.sh"  "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/agent-workflow-runtime.ps1" "$TARGET/scripts/"
+chmod +x "$TARGET/scripts/agent-workflow-runtime.py" "$TARGET/scripts/agent-workflow-runtime.sh" 2>/dev/null || true
 
 # Claude Code hooks (verbatim — shell + python, no path substitution).
 cp "$REPO_ROOT/core/skill/hooks/"* "$TARGET/hooks/"
@@ -391,19 +398,11 @@ echo "manifest: $(wc -l < "$TARGET/manifest.txt" | tr -d ' ') entries"
 
 # When building the default dist (not a --dest invocation), also sync the
 # local dogfood install so it stays in step with the committed dist.
-# Claude Code reads from .claude/skills/agent-workflow/ — always synced.
-# Codex reads from .agents/skills/agent-workflow/ — synced only when the
-# .agents/skills/ parent already exists, so we don't create a Codex tree
-# on machines that never installed Codex.
+# Keep both native skill locations synchronized for runtime-parity dogfood.
 if [[ "$EXPLICIT_DEST" -eq 0 ]]; then
-  LOCAL="$REPO_ROOT/.claude/skills/agent-workflow"
-  bash "$0" --dest "$LOCAL"
-  echo "synced local install at $LOCAL"
-
-  CODEX_PARENT="$REPO_ROOT/.agents/skills"
-  if [[ -d "$CODEX_PARENT" ]]; then
-    CODEX_LOCAL="$CODEX_PARENT/agent-workflow"
-    bash "$0" --dest "$CODEX_LOCAL"
-    echo "synced codex install at $CODEX_LOCAL"
-  fi
+  CLAUDE_LOCAL="$REPO_ROOT/.claude/skills/agent-workflow"
+  CODEX_LOCAL="$REPO_ROOT/.agents/skills/agent-workflow"
+  bash "$0" --dest "$CLAUDE_LOCAL"
+  bash "$0" --dest "$CODEX_LOCAL"
+  echo "synced local installs at $CLAUDE_LOCAL and $CODEX_LOCAL"
 fi

@@ -77,21 +77,21 @@ Its shape is fixed by `(Risk, Complexity)`: this compact form for `(Routine, Sim
 
 ## Quick start
 
-The workflow model and CI checker are agent-independent; the checker is a single-file Python script that reads repository files. The packaged skill currently targets Claude Code / Agent Skills–compatible environments under `.claude/skills/`. Claude Code hooks add plan-mode enforcement, and bootstrap also installs an OpenCode plugin.
+Claude Code, Codex, and stable OpenCode 1.x install the same skill, applicability-first seed, and checker-backed adapter for supported structured file mutations. Native guard activation is runtime-, version-, and host-dependent; bootstrap must verify it separately for each runtime. Shell mutations bypass runtime guarding, and PR CI remains authoritative for final artifacts and applicability. OpenCode 2 beta is excluded.
 
 Adopt agent-workflow on a repo:
 
 ```text
 1. Clone agent-workflow.
-2. Copy dist/agent-workflow/ into your repo's .claude/skills/.
-3. Open your repo in Claude Code.
+2. Copy dist/agent-workflow/ identically into your repo's `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`.
+3. Open the repo in Claude Code, Codex, or stable OpenCode 1.x.
 4. Ask: "Install agent-workflow on this repo."
 5. Review the integration PR it proposes.
 ```
 
 Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
-**OpenCode.** Bootstrap installs [`core/skill/opencode/agent-workflow.mjs`](core/skill/opencode/agent-workflow.mjs) at `.opencode/plugins/agent-workflow.mjs`. OpenCode auto-loads it and injects a Work Record reminder each turn. The CI checker remains the enforcer.
+**Runtime limits.** Stable OpenCode 1.x guard loading and denial are verified. Codex hooks require project trust; the Windows adapter is covered by automated wiring/decision tests but native activation remains unverified on this host. In Claude Code on this Windows host, the seed hook ran but `PreToolUse` did not, so pre-mutation guarding was unavailable and could not self-report degradation. Treat any runtime without a successful bootstrap activation probe as unguarded; missing adapters report `DEGRADED`, unexpected evaluator exits deny, and CI remains authoritative.
 
 ## What CI enforces
 
