@@ -113,7 +113,7 @@ c=json.loads(Path(".claude/settings.json").read_text()); x=json.loads(Path(".cod
 assert any(h["command"]=="third-party-claude" for g in c["hooks"]["UserPromptSubmit"] for h in g["hooks"])
 assert any(h["command"]=="third-party-codex" for g in x["hooks"]["PreToolUse"] for h in g["hooks"])
 runtime=[h for gs in x["hooks"].values() for g in gs for h in g["hooks"] if "agent-workflow-runtime" in h.get("command","")]
-assert len(runtime)==2 and all(h.get("commandWindows","").startswith("powershell ") for h in runtime)
+assert len(runtime)==2 and all(h.get("commandWindows","").startswith("powershell.exe ") and " -EncodedCommand " in h["commandWindows"] for h in runtime)
 assert json.loads(Path(".claude/hooks/guarded-paths.json").read_text())["guardedPaths"]==["src/","lib/"]
 PYEOF
 cat > AGENTS.md <<'EOF'
