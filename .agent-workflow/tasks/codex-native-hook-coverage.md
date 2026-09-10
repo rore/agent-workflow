@@ -52,14 +52,16 @@ The reviewer approved the capability-based decision fork and minimal scope, whil
 
 ## Evidence
 
+- Verification revision: `dbeb28fa73ae07c84b1acd262e2b55a46bd93c54`.
 - Official Codex hook contract: https://learn.chatgpt.com/docs/hooks — `apply_patch` is documented for `PreToolUse`, exit 2 is documented to deny, and specialized tool paths may opt out.
 - Live Codex desktop 0.153.4: trusted wrapper instrumented; blocked Work Record; native `apply_patch` created the target; wrapper-entry log absent. Target and all instrumentation were removed; wrapper and Work Record restored byte-for-byte.
 - Codex CLI 0.153.4 `bypassPermissions`: wrapper received canonical `apply_patch` input and its child returned 2; target was nevertheless created, then removed; wrapper and Work Record restored byte-for-byte.
+- Native-probe transcript: Codex task `01a07c7d-0619-73c2-b2be-0b8f2db45f28`; ephemeral CLI sessions `01a08ba2-d751-7c10-8624-808b804bde29` and `01a08ba4-f131-7361-a3b5-0f6e59a2a287` (results retained here because those probe sessions were disposable).
 - Direct installed evaluator: the same blocked payload returns exit 2.
 - `bash tests/hooks/run.sh` passed, including activation-evidence and package wiring regressions.
 - `bash tests/package/check-e2e-bootstrap.sh` passed in two consumer layouts.
-- `bash tests/run-all.sh --verbose` passed all layers using a temporary interpreter dispatcher: budget; schema (47); Work Record (50); checker (138); Redline; tuner (22); hooks; 180-link validation; package and bootstrap E2E. Temporary dispatcher removed on exit.
+- On revision `dbeb28fa73ae07c84b1acd262e2b55a46bd93c54`, `bash tests/run-all.sh --verbose` passed all layers using temporary ignored interpreter shims: budget; schema (47); Work Record (50); checker (138); Redline; tuner (22); hooks; 180-link validation; package and bootstrap E2E. The shims were removed after the run.
 
 ## Result review
 
-Pending smart clean-context review of the committed implementation diff.
+Initial smart clean-context review requested changes: distinguish evaluator denial from runtime enforcement, downgrade OpenCode until native evidence has a complete version/surface/tool/unchanged-target scope, and identify the exact verified revision plus probe transcript. The first two are fixed in `dbeb28f`; the evidence references above resolve the third. Re-review pending.
