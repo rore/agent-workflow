@@ -139,7 +139,7 @@ t=Path("AGENTS.md").read_text()
 assert "Root prose before." in t and "Root prose after." in t and "STALE BODY" not in t
 assert "verified requires a denied operation with unchanged target" in t
 assert "Record every other combination as degraded." in t
-assert "The evaluator returns deny after it starts; native prevention requires that evidence." in t
+assert "Evaluator failure returns deny; native prevention requires that evidence." in t
 PYEOF
 
 # bootstrap-mode would do conversationally. Each write uses a file the

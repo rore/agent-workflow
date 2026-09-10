@@ -205,7 +205,7 @@ else
 fi
 
 echo "[ runtime coverage evidence is separate from installation ]"
-if "$PY" -c "from pathlib import Path; b=Path('core/templates/bootstrap-summary.md.template').read_text(); a=Path('core/templates/agents-section.md.template').read_text(); assert '| Runtime | Integration | Native mutation coverage | Evidence scope |' in b; assert 'Installation, trust, and direct checks do not verify coverage.' in b; assert 'verified requires a denied operation with unchanged target' in a; assert 'Record every other combination as degraded.' in a; assert 'The evaluator returns deny after it starts; native prevention requires that evidence.' in a"; then
+if "$PY" -c "from pathlib import Path; b=Path('core/templates/bootstrap-summary.md.template').read_text(); a=Path('core/templates/agents-section.md.template').read_text(); assert '| Runtime | Integration | Native mutation coverage | Evidence scope |' in b; assert 'Installation, trust, and direct checks do not verify coverage.' in b; assert 'verified requires a denied operation with unchanged target' in a; assert 'Record every other combination as degraded.' in a; assert 'Evaluator failure returns deny; native prevention requires that evidence.' in a"; then
   echo "  ok: templates cannot present installed/trusted hooks as verified coverage"
 else
   echo "  FAIL: runtime coverage evidence contract"; fail=1

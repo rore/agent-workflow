@@ -29,4 +29,4 @@ python scripts/agent-workflow-check.py --repo-root . --slug <slug>
 
 Exit codes: `0` clean, `1` advisory, `2` blocking. CI runs the same check on PR open and posts a sticky verdict comment.
 
-Native mutation coverage is version/surface/tool-specific: verified requires a denied operation with unchanged target; installation, trust, or a direct evaluator pass is insufficient. Record every other combination as degraded. Shell mutations bypass the guard; CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. The evaluator returns deny after it starts; native prevention requires that evidence.
+Native mutation coverage is version/surface/tool-specific: verified requires a denied operation with unchanged target; installation, trust, or a direct evaluator pass is insufficient. Record every other combination as degraded. Shell mutations bypass the guard; CI validates final artifacts/applicability, not pre-edit ordering or direct pushes. Evaluator failure returns deny; native prevention requires that evidence.
