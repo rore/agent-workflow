@@ -29,7 +29,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -41,3 +41,13 @@
 
 Clean-context reviewer `/root/runtime_guidance_plan_review` approved ownership, portability boundaries, and verification, but required the plan to handle the existing 1,898/1,900 and 396/400 token pressure. The revised plan requires replacing/compressing nearby wording within both ceilings, preserving every rule, and stopping rather than raising budgets. Follow-up review approved the correction with no remaining blocker.
 
+## Evidence
+
+- Reviewed implementation revision `d199a9039847459b20a38130826450943bfe3e61`: focused budget, bootstrap E2E, package consistency, link/reference checks, and `tests/run-all.sh` all passed. Touched skill budgets are 1,898/1,900 and 398/400 tokens.
+- Fresh final-diff Redline verdict: GRAY/Elevated, 9 classified files / 39 lines after exclusions, no boundary violation, checkpoint, suppression, API, schema, security, or runtime-config change.
+
+## Result review
+
+Clean-context reviewer `/root/runtime_guidance_result_review` found one ambiguity that could exclude read-only pass/fail reviewers. The wording and focused assertion were corrected; follow-up review approved the final diff with no remaining findings. Completion criteria are satisfied, assumptions remain valid, and scope did not expand. No roadmap item governs this narrow feedback fix.
+
+Skill-feedback trigger 2 was resolved by this upstream change; no separate defect report is needed.
