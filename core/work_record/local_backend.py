@@ -171,7 +171,7 @@ class LocalBackend:
             raise UnsafeWorkRecordPathError("resolved taskPath exceeds 4096 UTF-8 bytes")
         try:
             path = (self._repo_root / relative).resolve()
-        except (OSError, ValueError) as exc:
+        except (OSError, RuntimeError, ValueError) as exc:
             raise UnsafeWorkRecordPathError(
                 "could not safely resolve Work Record path"
             ) from exc

@@ -453,4 +453,56 @@ for name in (
     assert len(Path(name).read_bytes()) <= 8192
 PYEOF
 
+# Exercise the vendored entrypoint's Python-3.12 symlink-loop shape without
+# depending on host symlink privileges.
+"$PY" - <<'PYEOF'
+import importlib.util
+import io
+import json
+import sys
+from pathlib import Path
+
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: loop-path}\nworkRecord:\n  backend: local\n  local:\n"
+    '    taskPath: ".work/items/{slug}.record.md"\n',
+    encoding="utf-8",
+)
+spec = importlib.util.spec_from_file_location(
+    "packaged_workflow_checker", "scripts/agent-workflow-check.py"
+)
+checker = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = checker
+assert spec.loader is not None
+spec.loader.exec_module(checker)
+original_resolve = checker.Path.resolve
+
+def resolve(path, *args, **kwargs):
+    if path.name == "loop.record.md":
+        raise RuntimeError("Symlink loop from synthetic filesystem")
+    return original_resolve(path, *args, **kwargs)
+
+stdout_bytes, stderr_bytes = io.BytesIO(), io.BytesIO()
+stdout = io.TextIOWrapper(stdout_bytes, encoding="utf-8")
+stderr = io.TextIOWrapper(stderr_bytes, encoding="utf-8")
+old_stdout, old_stderr = sys.stdout, sys.stderr
+checker.Path.resolve = resolve
+try:
+    sys.stdout, sys.stderr = stdout, stderr
+    code = checker.main([
+        "--repo-root", ".", "--resolve-work-record",
+        "--work-record-ref", "agent-workflow:loop",
+    ])
+    stdout.flush()
+    stderr.flush()
+finally:
+    checker.Path.resolve = original_resolve
+    sys.stdout, sys.stderr = old_stdout, old_stderr
+payload = stdout_bytes.getvalue()
+assert code == 2
+assert stderr_bytes.getvalue() == b""
+assert payload.count(b"\n") == 1 and len(payload) <= 8192
+result = json.loads(payload)
+assert (result["status"], result["reason"]) == ("error", "unsafe_record_path")
+PYEOF
+
 echo "ok: e2e bootstrap simulation passed (install → probe → approved applicability in two layouts → packaged read-only resolver; checker exit $PROBE_EXIT)."

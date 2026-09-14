@@ -737,6 +737,28 @@ def test_resolver_maps_backend_failures(
     assert result["reason"] == reason
 
 
+def test_resolver_maps_symlink_loop_to_structured_unsafe_path(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    original_resolve = Path.resolve
+
+    def resolve(path: Path, *args, **kwargs) -> Path:
+        if path.name == "probe.md":
+            raise RuntimeError("Symlink loop from synthetic filesystem")
+        return original_resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve)
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:probe"
+    )
+    assert code == 2
+    assert result["status"] == "error"
+    assert result["reason"] == "unsafe_record_path"
+    assert "safely resolve" in str(result["message"])
+
 def test_resolver_rejects_nul_task_path_as_structured_invalid_config(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

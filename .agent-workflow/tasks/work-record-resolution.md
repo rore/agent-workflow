@@ -79,15 +79,17 @@ Remaining risks: the existing mutation runtime and CI can still derive a differe
 
 ## Evidence
 
-- Focused affected suites: schema/config 50 passing, Work Record/backend 67 passing, checker/resolver 154 passing.
-- Packaged consumer E2E: custom `.work/items/{slug}.record.md` found/absent/malformed matrix; exact exits, empty stderr, ≤8192-byte JSON, and unchanged record all passed without source-checkout imports.
+- Focused affected suites: schema/config 50 passing, Work Record/backend 68 passing, checker/resolver 156 passing.
+- Packaged consumer E2E: custom `.work/items/{slug}.record.md` found/absent/malformed/NUL/symlink-loop matrix; exact exits, empty stderr, ≤8192-byte JSON, and unchanged record all passed without source-checkout imports.
 - Skill budget: all 19 files within existing ceilings; internal link check: all 180 Markdown files valid.
 - Required aggregate `tests/run-all.sh`: exit 0, all nine layers passed (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, `package`). Windows hook probes emitted their existing temporary-cwd warning only.
-- Post-review rerun after the NUL-path fix: aggregate 	ests/run-all.sh again exited 0 with all nine layers; packaged NUL config returned one invalid_config JSON object, empty stderr, and exit 2.
+- Post-review rerun after the NUL-path fix: aggregate `tests/run-all.sh` again exited 0 with all nine layers; packaged NUL config returned one `invalid_config` JSON object, empty stderr, and exit 2.
 - Fresh Redline over all 29 tracked/untracked paths: no boundary rule; `architecture-review` triggered by the red-zone schema/SPEC/governance surfaces and awaits PR-time satisfaction.
 
 ## Result review
 
 - Smart clean-context review `/root/astra_reviewer` requested one change: a YAML-decoded NUL in `taskPath` could make `Path.resolve()` escape the structured resolver result with traceback/exit 1.
 - Resolved in the shared boundary: taskPath rejects control characters during config loading, and residual filesystem resolution failures become `UnsafeWorkRecordPathError`. Source and packaged regressions assert the complete JSON/stderr/exit contract.
-- Follow-up reviewer confirmation pending.
+- First follow-up independently confirmed the NUL fix, then found Python 3.12 symlink-loop `RuntimeError` could escape `Path.resolve()`.
+- Resolved by translating `RuntimeError` at the same backend boundary. Source and dynamically loaded vendored-entrypoint regressions assert `unsafe_record_path`, one bounded JSON line, empty stderr, and exit 2 without requiring host symlink privileges.
+- Post-fix aggregate `tests/run-all.sh` exited 0 with all nine layers. Final reviewer confirmation pending.
