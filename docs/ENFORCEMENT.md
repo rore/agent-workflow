@@ -22,6 +22,8 @@ It runs every predicate against every Work Record the PR touched. With no record
 
 The checker reads files and is reproducible offline by default: `python scripts/agent-workflow-check.py --repo-root . --slug <slug>` produces the same JSON as CI. The optional `--check-default-branch-protection` gate is the exception: it calls GitHub through `gh repo view` and `gh api`; failed or ambiguous queries return unavailable.
 
+For pickup and handoff, --resolve-work-record [--work-record-ref agent-workflow:<slug>] performs lookup only and returns the configured repository-relative path plus parsed state. A supplied identity wins over branch derivation. Invoke the copy from a trusted harness installation, not a repository under inspection; see [SPEC §13.1](SPEC.md#131-canonical-work-record) for its bounded JSON contract and absence/error semantics.
+
 ## Documentation-only applicability
 
 CI passes one NUL-delimited, no-rename path list to both Redline and the checker. The exemption passes only when every path is human-approved, none is a governance/protected surface, and Redline accounts for the exact set as blue with no watch, checkpoint, boundary, API, schema, security, or runtime-config signal. Newline input remains supported but cannot grant the exemption. Any missing, malformed, duplicated, mixed, or risky evidence requires the normal workflow.

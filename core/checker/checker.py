@@ -53,15 +53,22 @@ import sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
-from core.config import approve_documentation_only, evaluate_applicability
+from core.config import ConfigError, approve_documentation_only, evaluate_applicability
 from core.config import load as load_config_yaml
 from core.work_record import WorkRecordParseError, parse_exceptions
-from core.work_record.local_backend import LocalBackend
+from core.work_record.local_backend import (
+    InvalidSlugError,
+    InvalidTaskPathError,
+    LocalBackend,
+    UnsafeWorkRecordPathError,
+    validate_slug,
+)
 
 from .predicates import (
     PREDICATE_SOURCE,
     PREDICATES,
     CheckerContext,
+    _ALLOWED_STATES,
 )
 from .predicates import _NON_WAIVABLE_PREDICATES  # noqa: F401  used by downgrade pass
 from .redline_verdict import RedlineVerdictError, load_redline_verdict
@@ -552,6 +559,163 @@ def _synthetic_verdict(
     )
     return aggregate([record])
 
+
+_WORK_RECORD_REF_PREFIX = "agent-workflow:"
+_RESOLVER_SLUG_PREFIXES = ("slice/", "feat/", "feature/", "fix/", "bug/", "chore/", "demo/")
+
+
+def _resolver_result(
+    status: str,
+    reason: str,
+    *,
+    work_record_ref: str | None = None,
+    slug: str | None = None,
+    record_path: str | None = None,
+    record_state: str | None = None,
+    message: str | None = None,
+) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "status": status,
+        "reason": reason,
+        "work_record_ref": work_record_ref,
+        "slug": slug,
+        "record_path": record_path,
+        "record_state": record_state,
+        "message": None if message is None else message[:512],
+    }
+
+
+def _resolver_error(reason: str, exc: object) -> dict[str, object]:
+    return _resolver_result("error", reason, message=str(exc) or reason)
+
+
+def _resolve_work_record(
+    repo_root: Path,
+    supplied_ref: str | None,
+) -> dict[str, object]:
+    slug: str | None = None
+    if supplied_ref is not None:
+        if not supplied_ref.startswith(_WORK_RECORD_REF_PREFIX):
+            return _resolver_error(
+                "invalid_work_record_ref",
+                f"reference must start with {_WORK_RECORD_REF_PREFIX!r}",
+            )
+        slug = supplied_ref[len(_WORK_RECORD_REF_PREFIX):]
+        try:
+            validate_slug(slug)
+        except InvalidSlugError as exc:
+            return _resolver_error("invalid_work_record_ref", exc)
+
+    config_path = repo_root / "agent-workflow.yaml"
+    try:
+        config_path.stat()
+    except FileNotFoundError:
+        return _resolver_result("absent", "workflow_not_configured")
+    except OSError as exc:
+        return _resolver_error("invalid_config", exc)
+    if not config_path.is_file():
+        return _resolver_error("invalid_config", "agent-workflow.yaml is not a file")
+
+    try:
+        cfg = load_config_yaml(config_path)
+    except (ConfigError, OSError, UnicodeError) as exc:
+        return _resolver_error("invalid_config", exc)
+    if cfg.work_record.backend != "local" or cfg.work_record.local is None:
+        return _resolver_error(
+            "unsupported_backend",
+            f"backend {cfg.work_record.backend!r} does not support local resolution",
+        )
+    try:
+        backend = LocalBackend(repo_root, cfg.work_record.local.task_path)
+    except InvalidTaskPathError as exc:
+        return _resolver_error("invalid_config", exc)
+
+    if slug is None:
+        try:
+            current = subprocess.run(
+                ["git", "branch", "--show-current"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=20,
+                check=False,
+                creationflags=_WINDOWS_NO_WINDOW,
+            )
+        except (OSError, UnicodeError, subprocess.TimeoutExpired) as exc:
+            return _resolver_error("git_unavailable", exc)
+        if current.returncode != 0:
+            return _resolver_error(
+                "git_unavailable",
+                current.stderr.strip() or f"git exited {current.returncode}",
+            )
+        branch = current.stdout.strip()
+        if not branch:
+            return _resolver_result("absent", "current_record_unavailable")
+        slug = branch
+        for prefix in _RESOLVER_SLUG_PREFIXES:
+            if slug.startswith(prefix):
+                slug = slug[len(prefix):]
+                break
+        slug = slug.replace("/", "-")
+        try:
+            validate_slug(slug)
+        except InvalidSlugError as exc:
+            return _resolver_error("invalid_work_record_ref", exc)
+
+    work_record_ref = f"{_WORK_RECORD_REF_PREFIX}{slug}"
+    try:
+        record_path = backend.resolve_location(slug)
+    except (InvalidSlugError, UnsafeWorkRecordPathError, OSError) as exc:
+        return _resolver_error("unsafe_record_path", exc)
+
+    try:
+        parsed = backend.read(slug)
+    except UnsafeWorkRecordPathError as exc:
+        return _resolver_error("unsafe_record_path", exc)
+    except WorkRecordParseError as exc:
+        return _resolver_error("malformed_record", exc)
+    except UnicodeError as exc:
+        return _resolver_error("malformed_record", exc)
+    except OSError as exc:
+        return _resolver_error("unreadable_record", exc)
+    if parsed is None:
+        return _resolver_result(
+            "absent",
+            "record_not_found",
+            work_record_ref=work_record_ref,
+            slug=slug,
+            record_path=record_path,
+        )
+
+    record_state = parsed.record["state"].strip()
+    if record_state.endswith("."):
+        record_state = record_state[:-1].rstrip()
+    if record_state not in _ALLOWED_STATES:
+        return _resolver_error(
+            "invalid_record_state",
+            f"unsupported Work Record state {record_state!r}",
+        )
+    return _resolver_result(
+        "found",
+        "record_found",
+        work_record_ref=work_record_ref,
+        slug=slug,
+        record_path=record_path,
+        record_state=record_state,
+    )
+
+
+def _emit_resolver_result(result: dict[str, object]) -> int:
+    payload = (json.dumps(result, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+    if len(payload) > 8192:
+        result = _resolver_error("unsafe_record_path", "resolver output exceeds 8192 bytes")
+        payload = (json.dumps(result, separators=(",", ":")) + "\n").encode("utf-8")
+    sys.stdout.buffer.write(payload)
+    return 2 if result["status"] == "error" else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="agent-workflow-check",
@@ -559,6 +723,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--repo-root", required=True, type=Path)
     parser.add_argument("--slug", default=None)
+    parser.add_argument("--resolve-work-record", action="store_true")
+    parser.add_argument("--work-record-ref")
     changed = parser.add_mutually_exclusive_group()
     changed.add_argument(
         "--changed-files",
@@ -590,6 +756,31 @@ def main(argv: list[str] | None = None) -> int:
         help="Query GitHub live before reporting direct-default-branch eligibility.",
     )
     args = parser.parse_args(argv)
+
+    if args.work_record_ref is not None and not args.resolve_work_record:
+        parser.error("--work-record-ref requires --resolve-work-record")
+    if args.resolve_work_record:
+        incompatible = any((
+            args.slug is not None,
+            args.changed_files is not None,
+            args.changed_files_z is not None,
+            args.redline_verdict is not None,
+            args.require_implementation_ready,
+            args.bootstrap_applicability_proposal_z is not None,
+            args.bootstrap_applicability_approved_z is not None,
+            args.bootstrap_direct_default_branch_approved,
+            args.bootstrap_protection_status is not None,
+            args.base_ref is not None,
+            args.head_ref is not None,
+            args.check_default_branch_protection,
+        ))
+        if incompatible:
+            parser.error(
+                "--resolve-work-record cannot be combined with validation or bootstrap options"
+            )
+        return _emit_resolver_result(
+            _resolve_work_record(args.repo_root.resolve(), args.work_record_ref)
+        )
 
     bootstrap_proposal = args.bootstrap_applicability_proposal_z
     if bootstrap_proposal is not None:

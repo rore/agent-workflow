@@ -8,6 +8,15 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-14 — Persisted Work Record identity outranks branch inference
+
+**Decision:** The packaged checker exposes a bounded, read-only local Work Record resolver. A supplied `agent-workflow:<slug>` identity is authoritative and never falls back to branch inference; otherwise the resolver uses the documented first-prefix branch rule. It returns only repository-relative paths and parsed workflow state. Local task paths contain exactly one placeholder and every backend read and write resolves inside the selected checkout.
+
+Automatic consumers may invoke only a trusted provider-owned checker path. Repository-provided executables, automatic Pallium hooks, readiness/applicability decisions, and merge/release claims are outside this resolver.
+
+**Alternatives considered:** Scan for the newest or only record; infer every pickup from the branch; add a registry/service or Pallium dependency; let consumers execute the inspected repository's checker; guard only resolver reads while leaving writes escapable.
+
+**Rationale:** Persisted identity makes pickup and handoff deterministic across branch changes and tools. A lookup-only CLI reuses the existing parser/backend and can be vendored without new infrastructure. Shared containment closes the underlying read/write defect once. Deferring automatic consumption avoids turning repository code into a trusted execution boundary.
 ## 2026-09-10 — Runtime parity is evidence-scoped
 
 **Decision:** This supersedes the prior entry's implication that installed native

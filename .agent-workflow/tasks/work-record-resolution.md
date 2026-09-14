@@ -29,7 +29,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -38,6 +38,9 @@
 - Pre-edit classification: RED contract surface, High risk, Moderate complexity; no boundary rule applies.
 - Discovery identified existing config/backend authority plus duplicated runtime/CI slug derivation; sent contract proposal through Relay as `relay-msg-ae157aa307d348b4bc5fcb42242f5209` and to both coordinating tasks.
 - Human approved the concrete reviewed plan at 2026-09-14T13:56:27+03:00 with the verbatim response "allways approve"; implementation gate opened.
+- Defined the resolver and identity/handoff contract in SPEC first; implemented the lookup-only checker mode and centralized taskPath validation through the existing config/backend path.
+- Closed the shared LocalBackend escape: one validated `{slug}`, bounded safe slugs/paths, link-aware containment before every read/write, and repository-relative locations only.
+- Updated operating/context/result-review guidance without adding a field or raising token ceilings; recorded the decision and active roadmap item; regenerated dist plus Claude/Codex dogfood installs.
 
 ## Contract proposal
 
@@ -76,7 +79,11 @@ Remaining risks: the existing mutation runtime and CI can still derive a differe
 
 ## Evidence
 
-- Pending.
+- Focused affected suites: schema/config 50 passing, Work Record/backend 67 passing, checker/resolver 154 passing.
+- Packaged consumer E2E: custom `.work/items/{slug}.record.md` found/absent/malformed matrix; exact exits, empty stderr, ≤8192-byte JSON, and unchanged record all passed without source-checkout imports.
+- Skill budget: all 19 files within existing ceilings; internal link check: all 180 Markdown files valid.
+- Required aggregate `tests/run-all.sh`: exit 0, all nine layers passed (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, `package`). Windows hook probes emitted their existing temporary-cwd warning only.
+- Fresh Redline over all 29 tracked/untracked paths: no boundary rule; `architecture-review` triggered by the red-zone schema/SPEC/governance surfaces and awaits PR-time satisfaction.
 
 ## Result review
 

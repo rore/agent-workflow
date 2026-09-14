@@ -389,4 +389,46 @@ PYEOF
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null
 
-echo "ok: e2e bootstrap simulation passed (install → probe → approved packaged applicability in two layouts; checker exit $PROBE_EXIT)."
+# The packaged resolver uses the configured non-default path, preserves a supplied
+# identity, and does not mutate the consumer record.
+mkdir -p .work/items
+cp .agent-workflow/tasks/_probe.md .work/items/persisted.record.md
+cp .work/items/persisted.record.md resolver-before.md
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:persisted > resolver-output.json 2> resolver-error.txt
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:missing > resolver-absent.json 2>> resolver-error.txt
+printf 'not a Work Record\n' > .work/items/malformed.record.md
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:malformed > resolver-malformed.json 2>> resolver-error.txt
+RESOLVER_MALFORMED_EXIT=$?
+set -e
+cmp -s .work/items/persisted.record.md resolver-before.md
+[[ ! -s resolver-error.txt ]]
+[[ "$RESOLVER_MALFORMED_EXIT" -eq 2 ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+found = json.loads(Path("resolver-output.json").read_text(encoding="utf-8"))
+assert found == {
+    "schema_version": 1,
+    "status": "found",
+    "reason": "record_found",
+    "work_record_ref": "agent-workflow:persisted",
+    "slug": "persisted",
+    "record_path": ".work/items/persisted.record.md",
+    "record_state": "Ready for review",
+    "message": None,
+}
+absent = json.loads(Path("resolver-absent.json").read_text(encoding="utf-8"))
+assert (absent["status"], absent["reason"], absent["record_path"]) == (
+    "absent", "record_not_found", ".work/items/missing.record.md"
+)
+malformed = json.loads(Path("resolver-malformed.json").read_text(encoding="utf-8"))
+assert (malformed["status"], malformed["reason"]) == ("error", "malformed_record")
+for name in ("resolver-output.json", "resolver-absent.json", "resolver-malformed.json"):
+    assert len(Path(name).read_bytes()) <= 8192
+PYEOF
+
+echo "ok: e2e bootstrap simulation passed (install → probe → approved applicability in two layouts → packaged read-only resolver; checker exit $PROBE_EXIT)."

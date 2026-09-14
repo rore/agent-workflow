@@ -523,6 +523,290 @@ def _make_wr(repo_root: Path, slug: str) -> Path:
     )
     return p
 
+_RESOLVER_FIELDS = {
+    "schema_version",
+    "status",
+    "reason",
+    "work_record_ref",
+    "slug",
+    "record_path",
+    "record_state",
+    "message",
+}
+
+
+def _run_resolver(
+    repo: Path,
+    capsys: pytest.CaptureFixture[str],
+    *extra: str,
+) -> tuple[int, dict[str, object], str]:
+    from core.checker.checker import main
+
+    code = main(["--repo-root", str(repo), "--resolve-work-record", *extra])
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    assert captured.out.endswith("\n") and captured.out.count("\n") == 1
+    assert len(captured.out.encode("utf-8")) <= 8192
+    result = json.loads(captured.out)
+    assert set(result) == _RESOLVER_FIELDS
+    assert result["schema_version"] == 1
+    return code, result, captured.out
+
+
+def test_resolver_supplied_reference_is_authoritative_and_read_only(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    checkout = tmp_path / "linked-worktree"
+    checkout.mkdir()
+    repo = _fixture_repo(checkout)
+    (repo / ".git").write_text("gitdir: ../common.git/worktrees/linked\n", encoding="utf-8")
+    record = _make_wr(repo, "persisted")
+    decoy = tmp_path / ".agent-workflow" / "tasks"
+    decoy.mkdir(parents=True)
+    (decoy / "persisted.md").write_text("wrong checkout\n", encoding="utf-8")
+    before = record.read_bytes()
+    monkeypatch.setattr(
+        "core.checker.checker.subprocess.run",
+        lambda *args, **kwargs: pytest.fail("supplied reference must not inspect Git"),
+    )
+
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:persisted"
+    )
+
+    assert code == 0
+    assert result == {
+        "schema_version": 1,
+        "status": "found",
+        "reason": "record_found",
+        "work_record_ref": "agent-workflow:persisted",
+        "slug": "persisted",
+        "record_path": ".agent-workflow/tasks/persisted.md",
+        "record_state": "Ready to implement",
+        "message": None,
+    }
+    assert record.read_bytes() == before
+
+
+def test_resolver_missing_supplied_reference_never_falls_back_to_branch(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    _make_wr(repo, "branch-record")
+    monkeypatch.setattr(
+        "core.checker.checker.subprocess.run",
+        lambda *args, **kwargs: pytest.fail("supplied reference must not inspect Git"),
+    )
+
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:missing"
+    )
+
+    assert code == 0
+    assert result["status"] == "absent"
+    assert result["reason"] == "record_not_found"
+    assert result["work_record_ref"] == "agent-workflow:missing"
+    assert result["record_state"] is None
+
+
+@pytest.mark.parametrize(
+    ("branch", "slug"),
+    [("feat/fix/example", "fix-example"), ("refactor/example", "refactor-example")],
+)
+def test_resolver_derives_documented_first_match_slug(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    branch: str,
+    slug: str,
+) -> None:
+    import subprocess
+
+    repo = _fixture_repo(tmp_path)
+    _make_wr(repo, slug)
+    monkeypatch.setattr(
+        "core.checker.checker.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, branch + "\n", ""),
+    )
+
+    code, result, _ = _run_resolver(repo, capsys)
+
+    assert code == 0
+    assert result["reason"] == "record_found"
+    assert result["work_record_ref"] == f"agent-workflow:{slug}"
+
+
+def test_resolver_missing_config_and_detached_checkout_are_absent(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import subprocess
+
+    code, result, _ = _run_resolver(tmp_path, capsys)
+    assert code == 0
+    assert result["reason"] == "workflow_not_configured"
+    null_fields = _RESOLVER_FIELDS - {"schema_version", "status", "reason"}
+    assert all(result[field] is None for field in null_fields)
+
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    repo = _fixture_repo(repo_path)
+    monkeypatch.setattr(
+        "core.checker.checker.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "", ""),
+    )
+    code, result, _ = _run_resolver(repo, capsys)
+    assert code == 0
+    assert result["reason"] == "current_record_unavailable"
+    assert result["work_record_ref"] is None
+
+
+@pytest.mark.parametrize(
+    "reference",
+    ["other:task", "agent-workflow:", "agent-workflow:../task", "agent-workflow:CON"],
+)
+def test_resolver_invalid_reference_is_bounded_structured_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    reference: str,
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    code, result, _ = _run_resolver(repo, capsys, "--work-record-ref", reference)
+    assert code == 2
+    assert result["status"] == "error"
+    assert result["reason"] == "invalid_work_record_ref"
+    assert result["message"] and len(str(result["message"])) <= 512
+    null_fields = ("work_record_ref", "slug", "record_path", "record_state")
+    assert all(result[field] is None for field in null_fields)
+
+
+def test_resolver_reports_git_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import subprocess
+
+    repo = _fixture_repo(tmp_path)
+    monkeypatch.setattr(
+        "core.checker.checker.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 1, "", "not a repo"),
+    )
+    code, result, _ = _run_resolver(repo, capsys)
+    assert code == 2
+    assert result["reason"] == "git_unavailable"
+
+
+@pytest.mark.parametrize(
+    ("method", "error", "reason"),
+    [
+        ("resolve_location", "unsafe", "unsafe_record_path"),
+        ("read", "unreadable", "unreadable_record"),
+    ],
+)
+def test_resolver_maps_backend_failures(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+    error: str,
+    reason: str,
+) -> None:
+    from core.work_record.local_backend import LocalBackend, UnsafeWorkRecordPathError
+
+    repo = _fixture_repo(tmp_path)
+    exception = (
+        UnsafeWorkRecordPathError(error)
+        if method == "resolve_location"
+        else PermissionError(error)
+    )
+
+    def fail(*args, **kwargs):
+        raise exception
+
+    monkeypatch.setattr(LocalBackend, method, fail)
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:task"
+    )
+    assert code == 2
+    assert result["reason"] == reason
+
+def test_resolver_reports_invalid_config_and_unsupported_backend(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    config = repo / "agent-workflow.yaml"
+    config.write_text(
+        config.read_text(encoding="utf-8").replace(
+            ".agent-workflow/tasks/{slug}.md", "../tasks/{slug}.md"
+        ),
+        encoding="utf-8",
+    )
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:task"
+    )
+    assert code == 2
+    assert result["reason"] == "invalid_config"
+
+    config.write_text(
+        "version: 1\nproject:\n  name: t\nworkRecord:\n  backend: jira\n  jira: {}\n",
+        encoding="utf-8",
+    )
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:task"
+    )
+    assert code == 2
+    assert result["reason"] == "unsupported_backend"
+
+
+
+def test_resolver_normalizes_one_terminal_state_period(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    record = _make_wr(repo, "task")
+    record.write_text(
+        record.read_text(encoding="utf-8").replace("Ready to implement", "Ready to implement."),
+        encoding="utf-8",
+    )
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:task"
+    )
+    assert code == 0
+    assert result["record_state"] == "Ready to implement"
+
+@pytest.mark.parametrize(
+    ("mutation", "reason"),
+    [
+        (lambda text: "not a Work Record\n", "malformed_record"),
+        (lambda text: text.replace("Ready to implement", "Done"), "invalid_record_state"),
+    ],
+)
+def test_resolver_rejects_malformed_record_or_state(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    mutation,
+    reason: str,
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    record = _make_wr(repo, "task")
+    record.write_text(mutation(record.read_text(encoding="utf-8")), encoding="utf-8")
+
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:task"
+    )
+
+    assert code == 2
+    assert result["reason"] == reason
+    assert result["work_record_ref"] is None
+
 
 def test_commit_order_wr_before_code_passes(tmp_path: Path) -> None:
     """The discipline-following case: WR committed in its own commit

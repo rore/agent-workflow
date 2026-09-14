@@ -13,6 +13,12 @@ from pathlib import Path
 
 import pytest
 
+from core.work_record.local_backend import (
+    InvalidSlugError,
+    InvalidTaskPathError,
+    UnsafeWorkRecordPathError,
+)
+
 from core.work_record import (
     ExpandedWorkRecord,
     LocalBackend,
@@ -87,8 +93,41 @@ def test_local_backend_satisfies_protocol(tmp_path: Path) -> None:
 
 
 def test_template_must_contain_slug_placeholder(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match=r"\{slug\}"):
+    with pytest.raises(InvalidTaskPathError, match=r"\{slug\}"):
         LocalBackend(tmp_path, ".agent-workflow/tasks/static.md")
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "tasks/{slug}/{slug}.md",
+        "../tasks/{slug}.md",
+        "./tasks/{slug}.md",
+        "/tasks/{slug}.md",
+        r"C:\tasks\{slug}.md",
+        r"\\server\share\{slug}.md",
+    ],
+)
+def test_template_must_be_one_repo_relative_path(tmp_path: Path, template: str) -> None:
+    with pytest.raises(InvalidTaskPathError):
+        LocalBackend(tmp_path, template)
+
+
+@pytest.mark.parametrize(
+    "slug",
+    ["", ".hidden", "trailing.", "has space", "two/parts", r"two\parts", "CON", "lpt1.txt"],
+)
+def test_slug_must_be_one_safe_filename_component(tmp_path: Path, slug: str) -> None:
+    backend = LocalBackend(tmp_path, ROUTINE_TEMPLATE)
+    with pytest.raises(InvalidSlugError):
+        backend.resolve_location(slug)
+
+def test_slug_and_template_byte_limits(tmp_path: Path) -> None:
+    with pytest.raises(InvalidTaskPathError):
+        LocalBackend(tmp_path, "a" * 4090 + "/{slug}.md")
+    backend = LocalBackend(tmp_path, ROUTINE_TEMPLATE)
+    with pytest.raises(InvalidSlugError):
+        backend.resolve_location("a" * 256)
 
 
 # ---------------------------------------------------------------------------
@@ -268,3 +307,26 @@ def test_resolve_location_uses_custom_template(tmp_path: Path) -> None:
     backend = LocalBackend(tmp_path, "docs/tasks/{slug}.md")
     rel = backend.resolve_location("foo")
     assert rel.replace("\\", "/") == "docs/tasks/foo.md"
+
+def _symlinked_backend(tmp_path: Path) -> LocalBackend:
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    task_parent = tmp_path / ".agent-workflow"
+    task_parent.mkdir()
+    try:
+        (task_parent / "tasks").symlink_to(outside, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"directory symlinks unavailable: {exc}")
+    return LocalBackend(tmp_path, ROUTINE_TEMPLATE)
+
+
+def test_read_rejects_symlink_escape(tmp_path: Path) -> None:
+    backend = _symlinked_backend(tmp_path)
+    with pytest.raises(UnsafeWorkRecordPathError):
+        backend.read("task")
+
+
+def test_write_rejects_symlink_escape(tmp_path: Path) -> None:
+    backend = _symlinked_backend(tmp_path)
+    with pytest.raises(UnsafeWorkRecordPathError):
+        backend.write("task", _sample_routine())

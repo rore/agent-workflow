@@ -137,6 +137,8 @@ Every engineering task to which the workflow applies **MUST** have one canonical
 
 The Work Record is an index and decision log. It stores workflow state and material decisions and links to authoritative evidence in Jira, source control, CI, or other engineering systems.
 
+When a task arrives with an authoritative source item or persisted Work Record identity, the agent **MUST** preserve and use that identity. It **MUST NOT** create a competing record from the current branch or duplicate the source item as a local specification. The Work Record may link to the source item and record only task-local decisions and evidence.
+
 The Work Record **MUST NOT** manually duplicate information that can be resolved reliably from an authoritative system.
 
 Chat history **MUST NOT** be the only source of required task state.
@@ -162,6 +164,8 @@ When an agent stops before completing a task, the Work Record **MUST** identify:
 - next required action
 
 For Moderate and Large tasks, the Work Record **MUST** be updated at checkpoint transitions, after material decisions or deviations, and before session end or handoff.
+
+A handoff **MUST** carry the exact source-item identity, Work Record identity, and resolved repository-relative location when known. `Ready for review` describes workflow readiness only; it **MUST NOT** be represented as merged, released, or otherwise delivered without evidence from the system that owns that state.
 
 A new engineer or agent **MUST** be able to resume the work from the Work Record and linked artifacts.
 
@@ -605,6 +609,37 @@ For work to which the workflow applies, the harness **MUST** maintain or update 
 The record may link to distributed authoritative artifacts.
 
 The harness **MUST** expose the effective rules and their core, group, repository, or exception source.
+
+A local-file harness **MUST** provide this read-only lookup command:
+
+```text
+python <trusted-install>/scripts/agent-workflow-check.py --repo-root <checkout> --resolve-work-record [--work-record-ref agent-workflow:<slug>]
+```
+
+The executable **MUST** come from a trusted harness installation, not from the repository being inspected. A valid lookup invocation **MUST** emit exactly one single-line UTF-8 JSON object followed by a newline, emit no stderr, and use exit `0` for `found` or `absent` and exit `2` for `error`. The complete output, including the newline, **MUST NOT** exceed 8192 bytes. Its fields are:
+
+```json
+{"schema_version":1,"status":"found|absent|error","reason":"<stable code>","work_record_ref":"agent-workflow:<slug>|null","slug":"<slug>|null","record_path":"<slash-normalized repo-relative path>|null","record_state":"Ready to implement|Blocked|Blocked or returned to planning|Ready for review|null","message":"<diagnostic>|null"}
+```
+
+The field combinations are normative:
+
+| Status | Reason | Required non-null fields | Required null fields | Exit |
+|---|---|---|---|---|
+| `found` | `record_found` | `work_record_ref`, `slug`, `record_path`, `record_state` | `message` | 0 |
+| `absent` | `record_not_found` | `work_record_ref`, `slug`, `record_path` | `record_state`, `message` | 0 |
+| `absent` | `workflow_not_configured`, `current_record_unavailable` | none | `work_record_ref`, `slug`, `record_path`, `record_state`, `message` | 0 |
+| `error` | error reason below | `message` | `work_record_ref`, `slug`, `record_path`, `record_state` | 2 |
+
+Error reasons are limited to `invalid_config`, `unsupported_backend`, `invalid_work_record_ref`, `git_unavailable`, `unsafe_record_path`, `unreadable_record`, `malformed_record`, and `invalid_record_state`. `message` **MUST NOT** exceed 512 Unicode scalar values. Invalid CLI flag combinations may remain command-line parser errors outside this result contract.
+
+A supplied reference is authoritative. It **MUST** use the literal prefix `agent-workflow:` followed by a non-empty slug of at most 255 UTF-8 bytes. The harness **MUST** preserve its spelling and **MUST NOT** inspect, compare, or fall back to the current branch. The slug **MUST NOT** contain control or whitespace characters, `/`, `\`, Windows-invalid filename characters (`< > : " | ? *`), a leading dot, or a trailing dot or space; it **MUST NOT** be `.` or `..` or a Windows device basename. A valid missing supplied record returns `absent/record_not_found`; a malformed supplied record returns `error` without fallback.
+
+Without a supplied reference, the harness derives the slug from `git branch --show-current`: strip the first matching prefix among `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, and `demo/`, then replace remaining `/` characters with `-`. A detached checkout returns `absent/current_record_unavailable`; a failed Git invocation returns `error/git_unavailable`.
+
+A local `taskPath` **MUST** contain exactly one `{slug}`, be repository-relative, and be at most 4096 UTF-8 bytes. Drive, UNC, absolute, `.`-component, and `..`-component paths are invalid. Before every read and write, the backend **MUST** resolve links and reparse points against the explicit checkout root and reject a result outside it. Returned `record_path` values **MUST** be slash-normalized repository-relative paths no longer than 4096 UTF-8 bytes. Resolution **MUST NOT** use the common Git directory, another worktree, or a newest/only-record scan.
+
+The lookup only selects and parses a Work Record. It **MUST NOT** decide readiness, Redline, applicability, consumer scope, merge or release state; create, update, or scan records; or change stored identity. Missing configuration and detached HEAD are absence, not workflow exemption. Automatic consumers **MUST NOT** execute a repository-provided resolver; without a trusted provider-owned locator they remain degraded or require explicit agent invocation.
 
 ### 13.2 Readiness Validation
 
