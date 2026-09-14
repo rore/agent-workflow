@@ -133,6 +133,9 @@ cp AGENTS.md AGENTS.before
 "$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
 cmp -s AGENTS.md AGENTS.before || exit 2
 cmp -s CLAUDE.md CLAUDE.before && cmp -s CODEX.md CODEX.before || exit 2
+grep -Fq 'Outcome-affecting subagents inherit this Work Record.' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'Exact target checkout; use explicit shell workdir or absolute write targets.' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'Relative `apply_patch` targets the session cwd' "$SKILL/operating-mode.md" || exit 2
 "$PY" - <<'PYEOF'
 from pathlib import Path
 t=Path("AGENTS.md").read_text()
@@ -140,6 +143,7 @@ assert "Root prose before." in t and "Root prose after." in t and "STALE BODY" n
 assert "verified requires a denied operation with unchanged target" in t
 assert "Record every other combination as degraded." in t
 assert "Evaluator failure returns deny; native prevention requires that evidence." in t
+assert "If `python` is unavailable, use repository/runtime-provided Python and record the complete invocation." in t
 PYEOF
 
 # bootstrap-mode would do conversationally. Each write uses a file the

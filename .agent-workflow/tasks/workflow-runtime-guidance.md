@@ -35,6 +35,7 @@
 ## Implementation
 
 - Established context and pre-edit Redline classification on `feat/workflow-runtime-guidance`; the Work Record preceded every guidance edit. Clean-context plan review approved the budget-corrected two-rule approach.
+- Implemented both rules by compressing nearby prose within unchanged token ceilings, added focused package assertions, and regenerated maintained mirrors. After the documented Windows `apply_patch` launch failure, used a deterministic replacement limited to the named source files.
 
 ## Plan review
 
