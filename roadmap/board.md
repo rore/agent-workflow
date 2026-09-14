@@ -7,3 +7,4 @@
 # Ideas
 
 # Done
+- work-record-resolution

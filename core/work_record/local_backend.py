@@ -18,7 +18,8 @@ renderer on write.
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
+import unicodedata
 
 from .parser import (
     ParsedRecord,
@@ -29,6 +30,71 @@ from .parser import (
 )
 
 _PLACEHOLDER = "{slug}"
+_MAX_SLUG_BYTES = 255
+_MAX_PATH_BYTES = 4096
+_WINDOWS_INVALID = frozenset('<>:"|?*')
+_WINDOWS_DEVICES = frozenset(
+    {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+    | {f"COM{number}" for number in range(1, 10)}
+    | {f"LPT{number}" for number in range(1, 10)}
+)
+
+
+class InvalidSlugError(ValueError):
+    """The supplied Work Record slug is unsafe or outside the contract."""
+
+
+class InvalidTaskPathError(ValueError):
+    """The configured local taskPath is invalid."""
+
+
+class UnsafeWorkRecordPathError(ValueError):
+    """A resolved Work Record path escapes the selected checkout."""
+
+
+def validate_slug(slug: str) -> str:
+    """Return *slug* when it is safe as one filename component."""
+    try:
+        encoded = slug.encode("utf-8")
+    except (AttributeError, UnicodeEncodeError) as exc:
+        raise InvalidSlugError("slug must be valid UTF-8 text") from exc
+    if not encoded or len(encoded) > _MAX_SLUG_BYTES:
+        raise InvalidSlugError("slug must contain 1 to 255 UTF-8 bytes")
+    if any(ch.isspace() or unicodedata.category(ch) == "Cc" for ch in slug):
+        raise InvalidSlugError("slug must not contain whitespace or control characters")
+    if any(ch in _WINDOWS_INVALID or ch in "/\\" for ch in slug):
+        raise InvalidSlugError("slug contains a path separator or invalid filename character")
+    if slug.startswith(".") or slug.endswith((".", " ")) or slug in {".", ".."}:
+        raise InvalidSlugError("slug has an unsafe leading or trailing character")
+    if slug.split(".", 1)[0].upper() in _WINDOWS_DEVICES:
+        raise InvalidSlugError("slug uses a reserved Windows device basename")
+    return slug
+
+
+def validate_task_path_template(template: str) -> str:
+    """Validate and slash-normalize a repository-relative taskPath."""
+    try:
+        encoded = template.encode("utf-8")
+    except (AttributeError, UnicodeEncodeError) as exc:
+        raise InvalidTaskPathError("taskPath must be valid UTF-8 text") from exc
+    if not encoded or len(encoded) > _MAX_PATH_BYTES:
+        raise InvalidTaskPathError("taskPath must contain 1 to 4096 UTF-8 bytes")
+    if any(unicodedata.category(ch) == "Cc" for ch in template):
+        raise InvalidTaskPathError("taskPath must not contain control characters")
+    if template.count(_PLACEHOLDER) != 1:
+        raise InvalidTaskPathError("taskPath must contain exactly one '{slug}' placeholder")
+
+    normalized = template.replace("\\", "/")
+    windows_path = PureWindowsPath(template)
+    if (
+        PurePosixPath(normalized).is_absolute()
+        or windows_path.is_absolute()
+        or windows_path.drive
+    ):
+        raise InvalidTaskPathError("taskPath must be repository-relative")
+    if any(part in {".", ".."} for part in normalized.split("/")):
+        raise InvalidTaskPathError("taskPath must not contain '.' or '..' components")
+    return normalized
 
 
 class LocalBackend:
@@ -46,14 +112,8 @@ class LocalBackend:
     """
 
     def __init__(self, repo_root: Path, task_path_template: str) -> None:
-        if _PLACEHOLDER not in task_path_template:
-            raise ValueError(
-                f"taskPath template {task_path_template!r} is missing the "
-                f"{_PLACEHOLDER!r} placeholder — every task would collide "
-                "on the same file"
-            )
         self._repo_root = Path(repo_root).resolve()
-        self._template = task_path_template
+        self._template = validate_task_path_template(task_path_template)
 
     # ------------------------------------------------------------------
     # WorkRecordBackend protocol
@@ -99,21 +159,28 @@ class LocalBackend:
         path.write_text(existing[:start] + new_block + suffix, encoding="utf-8")
 
     def resolve_location(self, slug: str) -> str:
-        try:
-            return str(self._resolve_path(slug).relative_to(self._repo_root))
-        except ValueError:
-            # Path is outside the repo root (only possible with absolute
-            # taskPath templates). Fall back to the raw path.
-            return str(self._resolve_path(slug))
+        return self._resolve_path(slug).relative_to(self._repo_root).as_posix()
 
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
 
     def _resolve_path(self, slug: str) -> Path:
-        relative = self._template.replace(_PLACEHOLDER, slug)
-        # Treat the template as repo-relative even when it starts with
-        # '/' on Windows-style configs — bootstrap will normalise this,
-        # but we accept either.
-        relative = relative.lstrip("/\\")
-        return (self._repo_root / relative).resolve()
+        relative = self._template.replace(_PLACEHOLDER, validate_slug(slug))
+        if len(relative.encode("utf-8")) > _MAX_PATH_BYTES:
+            raise UnsafeWorkRecordPathError("resolved taskPath exceeds 4096 UTF-8 bytes")
+        try:
+            path = (self._repo_root / relative).resolve()
+        except (OSError, RuntimeError, ValueError) as exc:
+            raise UnsafeWorkRecordPathError(
+                "could not safely resolve Work Record path"
+            ) from exc
+        try:
+            repo_relative = path.relative_to(self._repo_root)
+        except ValueError as exc:
+            raise UnsafeWorkRecordPathError(
+                "resolved Work Record path escapes the selected checkout"
+            ) from exc
+        if len(repo_relative.as_posix().encode("utf-8")) > _MAX_PATH_BYTES:
+            raise UnsafeWorkRecordPathError("resolved record path exceeds 4096 UTF-8 bytes")
+        return path

@@ -1,13 +1,13 @@
 # operating-mode
 
-Active when `agent-workflow.yaml` exists at the repo root. Walks one engineering task from pickup to handoff. Supports compact (routine fast path) and expanded shapes.
+Active when `agent-workflow.yaml` exists at the repo root. Walks one engineering task from pickup to handoff.
 
 ## Vocabulary
 
 | Term | Meaning |
 |---|---|
 | **Work Record** | One file per task, marker-bounded, holding structured state. Location configured by `agent-workflow.yaml`'s `workRecord.local.taskPath` (e.g. `.agent-workflow/tasks/{slug}.md`). |
-| **Slug** | Task identifier substituted into the taskPath template. Derived from the branch name. |
+| **Slug** | Persisted task identifier, or the branch-derived fallback. |
 | **Compact shape** | Fast-path Work Record for `(Routine, Simple)` tasks. SPEC §7. |
 | **Expanded shape** | Full §9.4 Work Record. Required for any classification other than `(Routine, Simple)`. |
 | **Risk** | `Routine`, `Elevated`, `High`. Determines approvals, reviews, verification. |
@@ -18,7 +18,7 @@ Active when `agent-workflow.yaml` exists at the repo root. Walks one engineering
 
 ```
 1. Read agent-workflow.yaml.
-2. Derive the slug from the current branch.
+2. Use the supplied Work Record identity, or derive the slug from the branch.
 3. Classify (Risk + Complexity) and read or initialise the Work Record.
 4. For each checkpoint: write the field, then act.
 5. Update the State at every transition.
@@ -34,15 +34,11 @@ Open `agent-workflow.yaml` and read:
 - `workRecord.local.taskPath` — the per-task path template.
 - `applicability.documentationOnly`, when present — load [`applicability.md`](templates/checkpoints/applicability.md) and evaluate it before deriving a slug. If exempt, follow that file's branch decision and return without a Work Record.
 
-## Step 2 — Derive the slug
+## Step 2 — Resolve the identity
 
-```bash
-git rev-parse --abbrev-ref HEAD
-```
+When given `agent-workflow:<slug>`, invoke `python <trusted-install>/scripts/agent-workflow-check.py --repo-root <checkout> --resolve-work-record --work-record-ref agent-workflow:<slug>`. Use the supplied identity verbatim; never compare or fall back to the branch, and never create a competing record.
 
-Strip the first matching prefix from `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, `demo/`. Replace any remaining `/` with `-`. Result is the slug.
-
-On a long-lived branch, stop unless it is the default and the applicability gate passed.
+Otherwise run `git rev-parse --abbrev-ref HEAD`, strip the first matching prefix from `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, `demo/`, then replace remaining `/` with `-`. On a long-lived branch, stop unless it is the default and applicability passed.
 
 ## Step 3 — Classify, then read or initialise the Work Record
 
@@ -88,7 +84,7 @@ Update as soon as the transition happens; don't batch at the end. A killed sessi
 
 ## Step 6 — Update Implementation prose at every checkpoint transition
 
-The State field is one signal. The **Implementation prose** under the marker block is the other — and the more important one for recovery. The next agent reads the prose to understand what happened between Plan and Verify.
+The next agent reads **Implementation prose** to recover what happened between Plan and Verify.
 
 Update at every phase boundary:
 
@@ -137,6 +133,7 @@ Before ending a session, even if the task is not done:
 
 - Update State to the correct value (most often `Blocked` with one-line reason, or leave `Ready to implement` if you haven't started).
 - In surrounding prose, note: current branch, last good revision (`git rev-parse HEAD` when working tree is clean), what's unfinished, what the next agent should do first.
+- Carry the exact source-item identity, Work Record identity, and resolved repository-relative path when known.
 - Commit the Work Record update. Uncommitted state buys nothing if the session crashes.
 
 ## CI predicates surfaced at PR time

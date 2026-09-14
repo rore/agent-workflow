@@ -246,6 +246,22 @@ if [[ ! -s probe-output.txt ]]; then
   exit 2
 fi
 
+# Invalid slugs remain structured in the packaged normal checker path.
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --slug "my task" \
+  > invalid-slug.json 2> invalid-slug-error.txt
+INVALID_SLUG_EXIT=$?
+set -e
+[[ "$INVALID_SLUG_EXIT" -eq 2 ]]
+[[ ! -s invalid-slug-error.txt ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+verdict = json.loads(Path("invalid-slug.json").read_text(encoding="utf-8"))
+assert verdict["status"] == "blocking"
+assert verdict["records"][0]["slug"] == "my task"
+assert verdict["records"][0]["predicates"][0]["name"] == "workrecord.exists"
+PYEOF
 # --- Step 4: packaged applicability approval and first layout. Drive the
 # documented CLI, prove partial/rejected/injected approval, then run both
 # shipped callers on the resulting config.
@@ -389,4 +405,120 @@ PYEOF
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null
 
-echo "ok: e2e bootstrap simulation passed (install → probe → approved packaged applicability in two layouts; checker exit $PROBE_EXIT)."
+# The packaged resolver uses the configured non-default path, preserves a supplied
+# identity, and does not mutate the consumer record.
+mkdir -p .work/items
+cp .agent-workflow/tasks/_probe.md .work/items/persisted.record.md
+cp .work/items/persisted.record.md resolver-before.md
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:persisted > resolver-output.json 2> resolver-error.txt
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:missing > resolver-absent.json 2>> resolver-error.txt
+printf 'not a Work Record\n' > .work/items/malformed.record.md
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:malformed > resolver-malformed.json 2>> resolver-error.txt
+RESOLVER_MALFORMED_EXIT=$?
+set -e
+"$PY" - <<'PYEOF'
+from pathlib import Path
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: bad-path}\nworkRecord:\n  backend: local\n  local:\n"
+    '    taskPath: "tasks/\\0{slug}.md"\n',
+    encoding="utf-8",
+)
+PYEOF
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:probe > resolver-nul.json 2>> resolver-error.txt
+RESOLVER_NUL_EXIT=$?
+set -e
+cmp -s .work/items/persisted.record.md resolver-before.md
+[[ ! -s resolver-error.txt ]]
+[[ "$RESOLVER_MALFORMED_EXIT" -eq 2 ]]
+[[ "$RESOLVER_NUL_EXIT" -eq 2 ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+found = json.loads(Path("resolver-output.json").read_text(encoding="utf-8"))
+assert found == {
+    "schema_version": 1,
+    "status": "found",
+    "reason": "record_found",
+    "work_record_ref": "agent-workflow:persisted",
+    "slug": "persisted",
+    "record_path": ".work/items/persisted.record.md",
+    "record_state": "Ready for review",
+    "message": None,
+}
+absent = json.loads(Path("resolver-absent.json").read_text(encoding="utf-8"))
+assert (absent["status"], absent["reason"], absent["record_path"]) == (
+    "absent", "record_not_found", ".work/items/missing.record.md"
+)
+malformed = json.loads(Path("resolver-malformed.json").read_text(encoding="utf-8"))
+assert (malformed["status"], malformed["reason"]) == ("error", "malformed_record")
+nul_path = json.loads(Path("resolver-nul.json").read_text(encoding="utf-8"))
+assert (nul_path["status"], nul_path["reason"]) == ("error", "invalid_config")
+assert "control characters" in nul_path["message"]
+for name in (
+    "resolver-output.json",
+    "resolver-absent.json",
+    "resolver-malformed.json",
+    "resolver-nul.json",
+):
+    assert len(Path(name).read_bytes()) <= 8192
+PYEOF
+
+# Exercise the vendored entrypoint's Python-3.12 symlink-loop shape without
+# depending on host symlink privileges.
+"$PY" - <<'PYEOF'
+import importlib.util
+import io
+import json
+import sys
+from pathlib import Path
+
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: loop-path}\nworkRecord:\n  backend: local\n  local:\n"
+    '    taskPath: ".work/items/{slug}.record.md"\n',
+    encoding="utf-8",
+)
+spec = importlib.util.spec_from_file_location(
+    "packaged_workflow_checker", "scripts/agent-workflow-check.py"
+)
+checker = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = checker
+assert spec.loader is not None
+spec.loader.exec_module(checker)
+original_resolve = checker.Path.resolve
+
+def resolve(path, *args, **kwargs):
+    if path.name == "loop.record.md":
+        raise RuntimeError("Symlink loop from synthetic filesystem")
+    return original_resolve(path, *args, **kwargs)
+
+stdout_bytes, stderr_bytes = io.BytesIO(), io.BytesIO()
+stdout = io.TextIOWrapper(stdout_bytes, encoding="utf-8")
+stderr = io.TextIOWrapper(stderr_bytes, encoding="utf-8")
+old_stdout, old_stderr = sys.stdout, sys.stderr
+checker.Path.resolve = resolve
+try:
+    sys.stdout, sys.stderr = stdout, stderr
+    code = checker.main([
+        "--repo-root", ".", "--resolve-work-record",
+        "--work-record-ref", "agent-workflow:loop",
+    ])
+    stdout.flush()
+    stderr.flush()
+finally:
+    checker.Path.resolve = original_resolve
+    sys.stdout, sys.stderr = old_stdout, old_stderr
+payload = stdout_bytes.getvalue()
+assert code == 2
+assert stderr_bytes.getvalue() == b""
+assert payload.count(b"\n") == 1 and len(payload) <= 8192
+result = json.loads(payload)
+assert (result["status"], result["reason"]) == ("error", "unsafe_record_path")
+PYEOF
+
+echo "ok: e2e bootstrap simulation passed (install → probe → approved applicability in two layouts → packaged read-only resolver; checker exit $PROBE_EXIT)."

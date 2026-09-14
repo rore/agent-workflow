@@ -17,6 +17,8 @@ from typing import Any
 import jsonschema
 import yaml
 
+from core.work_record.local_backend import InvalidTaskPathError, validate_task_path_template
+
 from .applicability import ApplicabilityConfig, DocumentationOnlyConfig
 
 # ---------------------------------------------------------------------------
@@ -183,7 +185,11 @@ def _to_config(data: dict[str, Any]) -> Config:
     local: LocalBackendConfig | None
     if backend == "local":
         local_block = work_record["local"]
-        local = LocalBackendConfig(task_path=local_block["taskPath"])
+        try:
+            task_path = validate_task_path_template(local_block["taskPath"])
+        except InvalidTaskPathError as exc:
+            raise ConfigError(f"config invalid at workRecord/local/taskPath: {exc}") from exc
+        local = LocalBackendConfig(task_path=task_path)
     else:
         # backend == "jira" — full options land with W18. Surface as
         # None so callers that try to use it before then see an

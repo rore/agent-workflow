@@ -159,6 +159,22 @@ hooks:
         load(p)
 
 
+@pytest.mark.parametrize(
+    "task_path",
+    ["../tasks/{slug}.md", "tasks/{slug}/{slug}.md", r"C:\tasks\{slug}.md"],
+)
+def test_local_task_path_must_be_one_repo_relative_template(
+    tmp_path: Path, task_path: str
+) -> None:
+    config = tmp_path / "config.yaml"
+    config.write_text(
+        "version: 1\nproject: {name: x}\nworkRecord:\n  backend: local\n  local:\n"
+        f"    taskPath: '{task_path}'\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigError, match="config invalid at workRecord/local/taskPath"):
+        load(config)
+
 def test_config_without_hooks_still_loads(tmp_path: Path) -> None:
     """Legacy configs (no hooks key) validate unchanged — backward compatible."""
     cfg_text = """
