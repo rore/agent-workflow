@@ -98,12 +98,13 @@ The `workrecord.commit_order` advisory predicate fires when the Work Record's fi
 
 ## Delegating to subagents
 
-When you spin off a subagent that affects the Work Record's outcome (writing code, running tests that decide pass/fail), the **subagent inherits this task's Work Record**. In the subagent's prompt include:
+Outcome-affecting subagents inherit this Work Record. Prompt them with:
 
 1. Path to the Work Record (don't paraphrase; point at the file).
 2. What the subagent should update on completion (Implementation prose, Evidence, State).
 3. The scope boundary (parts of Scope it may touch; parts it may not).
 4. Read-only vs material (read-only subagents report and don't update the record; material subagents update it).
+5. Exact target checkout; use explicit shell workdir or absolute write targets. Relative `apply_patch` targets the session cwd, not a prose-assigned checkout.
 
 When the subagent finishes, sanity-check the Work Record. If the subagent updated it, the record reflects the work done; if not, you update before declaring the step done.
 
