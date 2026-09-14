@@ -79,12 +79,12 @@ Remaining risks: the existing mutation runtime and CI can still derive a differe
 
 ## Evidence
 
-- Focused affected suites: schema/config 50 passing, Work Record/backend 68 passing, checker/resolver 156 passing.
+- Focused affected suites: schema/config 50 passing, Work Record/backend 68 passing, checker/resolver 158 passing.
 - Packaged consumer E2E: custom `.work/items/{slug}.record.md` found/absent/malformed/NUL/symlink-loop matrix; exact exits, empty stderr, ≤8192-byte JSON, and unchanged record all passed without source-checkout imports.
 - Skill budget: all 19 files within existing ceilings; internal link check: all 180 Markdown files valid.
 - Required aggregate `tests/run-all.sh`: exit 0, all nine layers passed (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, `package`). Windows hook probes emitted their existing temporary-cwd warning only.
 - Post-review rerun after the NUL-path fix: aggregate `tests/run-all.sh` again exited 0 with all nine layers; packaged NUL config returned one `invalid_config` JSON object, empty stderr, and exit 2.
-- Fresh Redline over all 29 tracked/untracked paths: no boundary rule; `architecture-review` triggered by the red-zone schema/SPEC/governance surfaces and awaits PR-time satisfaction.
+- Fresh Redline over all changed paths: no boundary violation; RED classification; `architecture-review` satisfied by the PR label. The workflow checker consumed that verdict and returned clean/exit 0.
 
 ## Result review
 
@@ -92,4 +92,7 @@ Remaining risks: the existing mutation runtime and CI can still derive a differe
 - Resolved in the shared boundary: taskPath rejects control characters during config loading, and residual filesystem resolution failures become `UnsafeWorkRecordPathError`. Source and packaged regressions assert the complete JSON/stderr/exit contract.
 - First follow-up independently confirmed the NUL fix, then found Python 3.12 symlink-loop `RuntimeError` could escape `Path.resolve()`.
 - Resolved by translating `RuntimeError` at the same backend boundary. Source and dynamically loaded vendored-entrypoint regressions assert `unsafe_record_path`, one bounded JSON line, empty stderr, and exit 2 without requiring host symlink privileges.
-- Post-fix aggregate `tests/run-all.sh` exited 0 with all nine layers. Final clean-context confirmation approved commit `d08d85e`: source and packaged entrypoints produced identical 196-byte `unsafe_record_path` JSON, empty stderr, and exit 2 under injected Python 3.12 `ELOOP`; no remaining blocker.
+- Post-fix aggregate `tests/run-all.sh` exited 0 with all nine layers. Final clean-context confirmation approved commit `d08d85e`: source and packaged entrypoints produced identical 196-byte `unsafe_record_path` JSON, empty stderr, and exit 2 under injected Python 3.12 `ELOOP`; no remaining resolver-specific blocker.
+- Final PR-thread audit found one valid normal-checker regression from the shared slug hardening: an invalid explicit or changed-file-discovered slug escaped `_run_one` as a traceback with exit 1.
+- Resolved at the shared per-record boundary: invalid/unsafe Work Record resolution now produces the normal blocking `workrecord.exists` verdict. Focused checker tests passed (72), and the packaged consumer E2E passed with exit 2 and empty stderr for an invalid slug.
+- Final Astra follow-up approved the fix after independently verifying source/package JSON, empty stderr, exit 2, and multi-record continuation; source and tracked packaged checkers match. The required aggregate `tests/run-all.sh` then exited 0 with all nine layers green.

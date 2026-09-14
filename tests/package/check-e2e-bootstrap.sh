@@ -246,6 +246,22 @@ if [[ ! -s probe-output.txt ]]; then
   exit 2
 fi
 
+# Invalid slugs remain structured in the packaged normal checker path.
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --slug "my task" \
+  > invalid-slug.json 2> invalid-slug-error.txt
+INVALID_SLUG_EXIT=$?
+set -e
+[[ "$INVALID_SLUG_EXIT" -eq 2 ]]
+[[ ! -s invalid-slug-error.txt ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+verdict = json.loads(Path("invalid-slug.json").read_text(encoding="utf-8"))
+assert verdict["status"] == "blocking"
+assert verdict["records"][0]["slug"] == "my task"
+assert verdict["records"][0]["predicates"][0]["name"] == "workrecord.exists"
+PYEOF
 # --- Step 4: packaged applicability approval and first layout. Drive the
 # documented CLI, prove partial/rejected/injected approval, then run both
 # shipped callers on the resulting config.

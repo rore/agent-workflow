@@ -271,7 +271,19 @@ def _run_one(
     exception become advisory. Then aggregates per-record status and
     attaches the effective-rules list.
     """
-    ctx = _build_context(repo_root, slug, redline_verdict_path, base_ref=base_ref, head_ref=head_ref)
+    try:
+        ctx = _build_context(
+            repo_root, slug, redline_verdict_path, base_ref=base_ref, head_ref=head_ref
+        )
+    except (InvalidSlugError, UnsafeWorkRecordPathError) as exc:
+        results = [PredicateResult(
+            name="workrecord.exists",
+            passed=False,
+            detail=f"Work Record could not be resolved: {exc}",
+            blocking=True,
+        )]
+        record = aggregate_record(slug, results)
+        return dataclasses.replace(record, effective_rules=_effective_rules(results))
     results = [predicate(ctx) for predicate in PREDICATES]
     if require_implementation_ready:
         state = (

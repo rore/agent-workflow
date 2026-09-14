@@ -431,6 +431,49 @@ def test_cli_falls_back_when_changed_files_path_missing(
     assert "--changed-files" in err and "could not be read" in err
 
 
+def test_cli_invalid_slug_returns_blocking_verdict(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from core.checker.checker import main
+
+    repo = _fixture_repo(tmp_path)
+    code = main(["--repo-root", str(repo), "--slug", "my task"])
+
+    captured = capsys.readouterr()
+    verdict = json.loads(captured.out)
+    assert code == 2
+    assert captured.err == ""
+    assert verdict["status"] == "blocking"
+    assert verdict["records"][0]["slug"] == "my task"
+    assert verdict["records"][0]["predicates"] == [{
+        "name": "workrecord.exists",
+        "passed": False,
+        "detail": "Work Record could not be resolved: slug must not contain whitespace or control characters",
+        "blocking": True,
+    }]
+
+
+def test_cli_changed_file_with_invalid_slug_returns_blocking_verdict(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from core.checker.checker import main
+
+    repo = _fixture_repo(tmp_path)
+    record = repo / ".agent-workflow" / "tasks" / "my task.md"
+    record.write_text("invalid slug path\n", encoding="utf-8")
+    changed = tmp_path / "changed-files.txt"
+    changed.write_text(".agent-workflow/tasks/my task.md\n", encoding="utf-8")
+
+    code = main(["--repo-root", str(repo), "--changed-files", str(changed)])
+
+    captured = capsys.readouterr()
+    verdict = json.loads(captured.out)
+    assert code == 2
+    assert captured.err == ""
+    assert verdict["status"] == "blocking"
+    assert verdict["records"][0]["slug"] == "my task"
+    assert verdict["records"][0]["predicates"][0]["name"] == "workrecord.exists"
+
 def test_cli_slug_only_validates_one_record(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
