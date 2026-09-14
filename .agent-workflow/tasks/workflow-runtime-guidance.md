@@ -23,20 +23,20 @@
 
 **Verification plan:** When delegation targets another checkout, guidance shall require exact checkout plus explicit workdir/absolute writes and warn that relative `apply_patch` uses session cwd; when bare `python` is absent, generated guidance shall select an available repository/runtime interpreter and record the invocation → focused source/package assertions, budget/reference checks, package regeneration consistency, and `tests/run-all.sh`.
 
-**Plan review:** Clean-context review `/root/runtime_guidance_plan_review`; budget finding addressed, follow-up pending.
+**Plan review:** Approved by clean-context reviewer `/root/runtime_guidance_plan_review` after the budget correction.
 
 **Approvals:** Not required at this risk level.
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-- Established context and pre-edit Redline classification on `feat/workflow-runtime-guidance`; implementation is blocked pending the required Elevated clean-context plan review.
+- Established context and pre-edit Redline classification on `feat/workflow-runtime-guidance`; the Work Record preceded every guidance edit. Clean-context plan review approved the budget-corrected two-rule approach.
 
 ## Plan review
 
-Clean-context reviewer /root/runtime_guidance_plan_review approved ownership, portability boundaries, and verification, but required the plan to handle the existing 1,898/1,900 and 396/400 token pressure. The revised plan requires replacing/compressing nearby wording within both ceilings, preserving every rule, and stopping rather than raising budgets.
+Clean-context reviewer `/root/runtime_guidance_plan_review` approved ownership, portability boundaries, and verification, but required the plan to handle the existing 1,898/1,900 and 396/400 token pressure. The revised plan requires replacing/compressing nearby wording within both ceilings, preserving every rule, and stopping rather than raising budgets. Follow-up review approved the correction with no remaining blocker.
 
