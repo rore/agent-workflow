@@ -92,4 +92,4 @@ Remaining risks: the existing mutation runtime and CI can still derive a differe
 - Resolved in the shared boundary: taskPath rejects control characters during config loading, and residual filesystem resolution failures become `UnsafeWorkRecordPathError`. Source and packaged regressions assert the complete JSON/stderr/exit contract.
 - First follow-up independently confirmed the NUL fix, then found Python 3.12 symlink-loop `RuntimeError` could escape `Path.resolve()`.
 - Resolved by translating `RuntimeError` at the same backend boundary. Source and dynamically loaded vendored-entrypoint regressions assert `unsafe_record_path`, one bounded JSON line, empty stderr, and exit 2 without requiring host symlink privileges.
-- Post-fix aggregate `tests/run-all.sh` exited 0 with all nine layers. Final reviewer confirmation pending.
+- Post-fix aggregate `tests/run-all.sh` exited 0 with all nine layers. Final clean-context confirmation approved commit `d08d85e`: source and packaged entrypoints produced identical 196-byte `unsafe_record_path` JSON, empty stderr, and exit 2 under injected Python 3.12 `ELOOP`; no remaining blocker.

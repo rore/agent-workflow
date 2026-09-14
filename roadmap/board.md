@@ -1,5 +1,4 @@
 # Now
-- work-record-resolution
 
 # Next
 - local-doctor
@@ -8,3 +7,4 @@
 # Ideas
 
 # Done
+- work-record-resolution

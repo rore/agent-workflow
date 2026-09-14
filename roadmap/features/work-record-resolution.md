@@ -1,7 +1,7 @@
 ---
 id: work-record-resolution
 title: 'Deterministic Work Record pickup and handoff'
-status: active
+status: shipped
 priority: high
 commitment: committed
 ---
