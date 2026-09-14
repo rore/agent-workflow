@@ -17,13 +17,13 @@
 
 **Discovery:** Config loading and `LocalBackend` own taskPath/path/record parsing, but the backend accepts outside-root locations and only checks that `{slug}` exists. Slug derivation is duplicated: operating guidance and runtime strip one of seven prefixes, while current and templated CI also strip `refactor/` and may strip successive prefixes. Pallium confirmed the existing `agent-workflow:<slug>` identity, requires repo-relative path plus parsed record state, and keeps scope consumer-owned. No trusted provider-owned resolver path is exposed to automatic hooks today.
 
-**Material assumptions:** The existing `agent-workflow:<slug>` identity remains authoritative and needs no migration; a supplied valid identity wins without branch comparison and is scoped by the caller’s explicit checkout. Resolver use is event-scoped. Automatic Pallium hook consumption is out of scope until trusted setup supplies and verifies an absolute provider-owned executable path; any requirement to execute repo-local code or add a hot-path lookup returns to planning.
+**Material assumptions:** The existing `agent-workflow:<slug>` identity remains authoritative and needs no migration; a supplied valid identity wins without branch comparison and is scoped by the caller’s explicit checkout. The skill invokes resolution during pickup/resume/handoff guidance; current hooks expose no such automatic event. Automatic Pallium consumption is out of scope until trusted setup supplies and verifies an absolute provider-owned executable path; any repo-local execution or cache framework returns to planning.
 
 **Plan:** Revised proposal: (1) SPEC-first define resolver lookup semantics and source/identity handoff rules. (2) Tighten the shared LocalBackend boundary to require exactly one `{slug}` and keep resolved files inside the selected checkout. (3) Add a separate read-only checker mode that validates a supplied existing reference or, only when absent, derives the documented seven-prefix/first-match slug; do not claim it unifies the pre-existing runtime/CI algorithms. (4) Update operating/checkpoint guidance once, with cross-references and no new Work Record field. (5) Add focused source and packaged CLI tests with read-only assertions, then record the decision and regenerate dist/local installs. Stop on persisted-reference incompatibility, required repo-code execution, or any expansion into automatic consumer integration. Runtime implementation is blocked pending resolution of review findings and human approval.
 
 **Verification plan:** Supplied ref on a differently named branch returns that exact ref/path/state and never inspects/falls back to the branch; custom taskPath/current branch returns found; missing record/config and detached HEAD return the specified absent reasons; malformed config/record/state, invalid ref, Git failure, unsupported backend, Windows/UNC/traversal/symlink escape return specified errors; `feat/fix/example` resolves `fix-example` and `refactor/example` resolves `refactor-example` → focused source CLI tests asserting JSON, exit code, empty stderr, and no filesystem mutation. Packaged checker runs the custom-path/supplied-ref/absent/malformed matrix without checkout-source imports. Guidance semantics → budget/reference checks plus clean-context review. Package/install parity → package checks and local reinstall. Whole change → fresh Redline, local checker, and `bash tests/run-all.sh`.
 
-**Plan review:** Clean-context review `/root/work_record_contract_review`; blocking findings and responses recorded under `## Plan review`.
+**Plan review:** Clean-context reviews `/root/work_record_contract_review` and `/root/resolver_plan_review`; findings and responses recorded under `## Plan review`; revised producer plan approved for High-risk human approval.
 
 **Approvals:** Pending human approval.
 
@@ -36,26 +36,32 @@
 
 - Established isolated branch `feat/work-record-resolution`; applicability did not exempt contract and skill changes.
 - Pre-edit classification: RED contract surface, High risk, Moderate complexity; no boundary rule applies.
-- Discovery identified existing config/backend authority and no executable branch-to-slug resolver; sent contract proposal through Relay as `relay-msg-ae157aa307d348b4bc5fcb42242f5209` and to both coordinating tasks.
+- Discovery identified existing config/backend authority plus duplicated runtime/CI slug derivation; sent contract proposal through Relay as `relay-msg-ae157aa307d348b4bc5fcb42242f5209` and to both coordinating tasks.
 
 ## Contract proposal
 
-`python <install-root>/scripts/agent-workflow-check.py --repo-root <repo> --resolve-work-record [--work-record-ref agent-workflow:<slug>]`
+`python <trusted-install>/scripts/agent-workflow-check.py --repo-root <checkout> --resolve-work-record [--work-record-ref agent-workflow:<slug>]`
+
+Valid resolver invocations emit exactly one single-line UTF-8 JSON object, at most 8192 bytes including the final newline, and leave stderr empty:
 
 ```json
-{
-  "schema_version": 1,
-  "status": "found|absent|error",
-  "reason": "<stable code>",
-  "work_record_ref": "agent-workflow:<slug>|null",
-  "slug": "<slug>|null",
-  "record_path": "<UTF-8 slash-normalized repo-relative path>|null",
-  "record_state": "Ready to implement|Blocked|Blocked or returned to planning|Ready for review|null",
-  "message": "<diagnostic>|null"
-}
+{"schema_version":1,"status":"found|absent|error","reason":"<stable code>","work_record_ref":"agent-workflow:<slug>|null","slug":"<slug>|null","record_path":"<slash-normalized repo-relative path>|null","record_state":"Ready to implement|Blocked|Blocked or returned to planning|Ready for review|null","message":"<diagnostic>|null"}
 ```
 
-Exit `0` for `found` and `absent`; exit `2` for `error`; valid resolver outcomes write only JSON to stdout and leave stderr empty. A supplied valid reference is authoritative and bypasses branch inspection. Without one, derive the slug by stripping the first matching `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, or `demo/` prefix and replacing remaining `/` with `-`. Stable reasons are `record_found`; `workflow_not_configured`, `record_not_found`, `current_record_unavailable`; and `invalid_config`, `unsupported_backend`, `invalid_work_record_ref`, `git_unavailable`, `unsafe_record_path`, `unreadable_record`, `malformed_record`, `invalid_record_state`. The resolver never decides applicability, creates a record, emits consumer scope, returns an absolute path, scans other Work Records, falls back from a supplied identity, or changes stored identity. Incompatible resolver/checker flags are CLI errors.
+| Status / reason | `work_record_ref`, `slug`, `record_path` | `record_state` | `message` | Exit |
+|---|---|---|---|---|
+| `found` / `record_found` | required | required | null | 0 |
+| `absent` / `record_not_found` | required | null | null | 0 |
+| `absent` / `workflow_not_configured`, `current_record_unavailable` | null | null | null | 0 |
+| `error` / any error reason | null | null | required, ≤512 Unicode scalar values | 2 |
+
+Error reasons are exhaustive: `invalid_config`, `unsupported_backend`, `invalid_work_record_ref`, `git_unavailable`, `unsafe_record_path`, `unreadable_record`, `malformed_record`, `invalid_record_state`. Invalid CLI flag combinations remain argparse errors outside the resolver result contract.
+
+A valid supplied reference uses the literal `agent-workflow:` prefix plus a nonempty Unicode slug of at most 255 UTF-8 bytes. Preserve spelling. Reject control or whitespace characters, `/`, `\`, Windows-invalid `< > : " | ? *`, leading dot, trailing dot/space, `.`/`..`, and case-insensitive Windows device basenames. A supplied valid reference is authoritative: resolve only it; missing/malformed never falls back to the branch. Without one, strip the first matching `slice/`, `feat/`, `feature/`, `fix/`, `bug/`, `chore/`, or `demo/` prefix from the current branch and replace remaining `/` with `-`.
+
+Validated local `taskPath` must contain exactly one `{slug}`, be at most 4096 UTF-8 bytes, and be repo-relative with no drive, UNC, absolute form, or `.`/`..` segment. The backend resolves the substituted path before every read and write, follows symlinks/reparse points, and rejects anything outside the explicit checkout. `record_path` is the resolved repo-relative path and is at most 4096 UTF-8 bytes.
+
+The resolver only selects and parses a record. It never evaluates readiness/Redline/applicability, creates or scans records, emits consumer scope, returns an absolute path, claims merge/release state, or changes stored identity. Missing config and detached HEAD are absence, not proof of exemption. Current automatic hooks have no pickup/resume/handoff trigger or trusted provider locator; automatic consumer execution is excluded.
 
 ## Cross-repo contract review
 
@@ -63,9 +69,9 @@ Pallium review accepted the additive installed-checker mode with four correction
 
 ## Plan review
 
-Clean-context reviewer `/root/work_record_contract_review` confirmed High/Moderate plus architecture-review and raised six findings: correct the executable slug-discovery claim and algorithm drift; define supplied-reference precedence; enforce slug/template/path containment at the shared backend boundary; make lookup semantics independent of readiness/Redline; keep applicability separate; and assert packaged/read-only behavior. The revised plan incorporates all six. One deliberate consumer-reviewed deviation remains: missing config and detached HEAD are `absent`, not `error`, because the resolver is optional and no implicit current record exists; neither result asserts applicability.
+Clean-context reviewer `/root/work_record_contract_review` confirmed High/Moderate plus architecture-review and raised six findings: correct slug-discovery drift; define supplied-reference precedence; enforce path safety; separate lookup from readiness/Redline and applicability; and assert packaged/read-only behavior. The revised plan incorporates all six. Independent producer reviewer `/root/resolver_plan_review` then approved the plan for human approval with automatic Pallium consumption excluded, requiring the exact grammar, field matrix, bounded JSON, and pre-read containment now specified above. Missing config and detached HEAD deliberately remain `absent` because no implicit current record exists; neither result asserts applicability.
 
-Remaining risks: the existing mutation runtime and CI can still derive a different slug after branch rename; this resolver does not claim to unify them. No automatic consumer may invoke it until a trusted provider-owned executable path is configured outside repository control. Concurrent checkout/config changes require re-resolution at the next pickup/resume/handoff event.
+Remaining risks: the existing mutation runtime and CI can still derive a different slug after branch rename; this resolver does not claim to unify them. The general LocalBackend containment defect is fixed here because one shared read/write boundary is safer and smaller than a resolver-only guard; record the compatibility tightening in the decision log and roadmap. No automatic consumer may invoke the resolver until a trusted provider-owned executable path is configured outside repository control. Concurrent checkout/config changes require a fresh agent-invoked resolution.
 
 ## Evidence
 
