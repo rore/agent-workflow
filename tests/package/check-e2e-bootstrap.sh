@@ -404,9 +404,23 @@ set +e
   --work-record-ref agent-workflow:malformed > resolver-malformed.json 2>> resolver-error.txt
 RESOLVER_MALFORMED_EXIT=$?
 set -e
+"$PY" - <<'PYEOF'
+from pathlib import Path
+Path("agent-workflow.yaml").write_text(
+    "version: 1\nproject: {name: bad-path}\nworkRecord:\n  backend: local\n  local:\n"
+    '    taskPath: "tasks/\\0{slug}.md"\n',
+    encoding="utf-8",
+)
+PYEOF
+set +e
+"$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
+  --work-record-ref agent-workflow:probe > resolver-nul.json 2>> resolver-error.txt
+RESOLVER_NUL_EXIT=$?
+set -e
 cmp -s .work/items/persisted.record.md resolver-before.md
 [[ ! -s resolver-error.txt ]]
 [[ "$RESOLVER_MALFORMED_EXIT" -eq 2 ]]
+[[ "$RESOLVER_NUL_EXIT" -eq 2 ]]
 "$PY" - <<'PYEOF'
 import json
 from pathlib import Path
@@ -427,7 +441,15 @@ assert (absent["status"], absent["reason"], absent["record_path"]) == (
 )
 malformed = json.loads(Path("resolver-malformed.json").read_text(encoding="utf-8"))
 assert (malformed["status"], malformed["reason"]) == ("error", "malformed_record")
-for name in ("resolver-output.json", "resolver-absent.json", "resolver-malformed.json"):
+nul_path = json.loads(Path("resolver-nul.json").read_text(encoding="utf-8"))
+assert (nul_path["status"], nul_path["reason"]) == ("error", "invalid_config")
+assert "control characters" in nul_path["message"]
+for name in (
+    "resolver-output.json",
+    "resolver-absent.json",
+    "resolver-malformed.json",
+    "resolver-nul.json",
+):
     assert len(Path(name).read_bytes()) <= 8192
 PYEOF
 

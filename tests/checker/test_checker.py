@@ -736,6 +736,29 @@ def test_resolver_maps_backend_failures(
     assert code == 2
     assert result["reason"] == reason
 
+
+def test_resolver_rejects_nul_task_path_as_structured_invalid_config(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = _fixture_repo(tmp_path)
+    (repo / "agent-workflow.yaml").write_text(
+        "version: 1\nproject: {name: t}\nworkRecord:\n  backend: local\n  local:\n"
+        '    taskPath: "tasks/\\0{slug}.md"\n',
+        encoding="utf-8",
+    )
+    code, result, _ = _run_resolver(
+        repo, capsys, "--work-record-ref", "agent-workflow:probe"
+    )
+    assert code == 2
+    assert result["status"] == "error"
+    assert result["reason"] == "invalid_config"
+    assert result["message"] == (
+        "config invalid at workRecord/local/taskPath: "
+        "taskPath must not contain control characters"
+    )
+
+
 def test_resolver_reports_invalid_config_and_unsupported_backend(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

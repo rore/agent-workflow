@@ -106,6 +106,7 @@ def test_template_must_contain_slug_placeholder(tmp_path: Path) -> None:
         "/tasks/{slug}.md",
         r"C:\tasks\{slug}.md",
         r"\\server\share\{slug}.md",
+        "tasks/\0{slug}.md",
     ],
 )
 def test_template_must_be_one_repo_relative_path(tmp_path: Path, template: str) -> None:
@@ -121,6 +122,7 @@ def test_slug_must_be_one_safe_filename_component(tmp_path: Path, slug: str) -> 
     backend = LocalBackend(tmp_path, ROUTINE_TEMPLATE)
     with pytest.raises(InvalidSlugError):
         backend.resolve_location(slug)
+
 
 def test_slug_and_template_byte_limits(tmp_path: Path) -> None:
     with pytest.raises(InvalidTaskPathError):

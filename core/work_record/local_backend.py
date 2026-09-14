@@ -79,12 +79,18 @@ def validate_task_path_template(template: str) -> str:
         raise InvalidTaskPathError("taskPath must be valid UTF-8 text") from exc
     if not encoded or len(encoded) > _MAX_PATH_BYTES:
         raise InvalidTaskPathError("taskPath must contain 1 to 4096 UTF-8 bytes")
+    if any(unicodedata.category(ch) == "Cc" for ch in template):
+        raise InvalidTaskPathError("taskPath must not contain control characters")
     if template.count(_PLACEHOLDER) != 1:
         raise InvalidTaskPathError("taskPath must contain exactly one '{slug}' placeholder")
 
     normalized = template.replace("\\", "/")
     windows_path = PureWindowsPath(template)
-    if PurePosixPath(normalized).is_absolute() or windows_path.is_absolute() or windows_path.drive:
+    if (
+        PurePosixPath(normalized).is_absolute()
+        or windows_path.is_absolute()
+        or windows_path.drive
+    ):
         raise InvalidTaskPathError("taskPath must be repository-relative")
     if any(part in {".", ".."} for part in normalized.split("/")):
         raise InvalidTaskPathError("taskPath must not contain '.' or '..' components")
@@ -163,7 +169,12 @@ class LocalBackend:
         relative = self._template.replace(_PLACEHOLDER, validate_slug(slug))
         if len(relative.encode("utf-8")) > _MAX_PATH_BYTES:
             raise UnsafeWorkRecordPathError("resolved taskPath exceeds 4096 UTF-8 bytes")
-        path = (self._repo_root / relative).resolve()
+        try:
+            path = (self._repo_root / relative).resolve()
+        except (OSError, ValueError) as exc:
+            raise UnsafeWorkRecordPathError(
+                "could not safely resolve Work Record path"
+            ) from exc
         try:
             repo_relative = path.relative_to(self._repo_root)
         except ValueError as exc:
