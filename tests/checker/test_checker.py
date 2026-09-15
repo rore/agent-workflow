@@ -854,21 +854,38 @@ def test_resolver_reports_invalid_config_and_unsupported_backend(
 
 
 
-def test_resolver_normalizes_one_terminal_state_period(
+@pytest.mark.parametrize(
+    ("state", "canonical"),
+    [
+        ("Ready to implement.", "Ready to implement"),
+        ("Ready for review..", "Ready for review"),
+        ("  Ready to implement...   ", "Ready to implement"),
+    ],
+)
+def test_resolver_normalizes_terminal_state_periods(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    state: str,
+    canonical: str,
 ) -> None:
     repo = _fixture_repo(tmp_path)
     record = _make_wr(repo, "task")
     record.write_text(
-        record.read_text(encoding="utf-8").replace("Ready to implement", "Ready to implement."),
+        record.read_text(encoding="utf-8").replace("Ready to implement", state),
         encoding="utf-8",
     )
+    validation = run_checker(repo, "task")
+    state_check = next(
+        p for p in validation.records[0].predicates
+        if p.name == "workrecord.state_valid"
+    )
+    assert state_check.passed
+
     code, result, _ = _run_resolver(
         repo, capsys, "--work-record-ref", "agent-workflow:task"
     )
     assert code == 0
-    assert result["record_state"] == "Ready to implement"
+    assert result["record_state"] == canonical
 
 @pytest.mark.parametrize(
     ("mutation", "reason"),
