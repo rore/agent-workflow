@@ -42,7 +42,7 @@ hooks/reinforce-workflow.sh	565
 hooks/seed-workflow.sh	1591
 opencode/agent-workflow.mjs	3853
 operating-mode.md	10286
-scripts/agent-workflow-check.py	195694
+scripts/agent-workflow-check.py	195621
 scripts/agent-workflow-runtime.ps1	1630
 scripts/agent-workflow-runtime.py	15951
 scripts/agent-workflow-runtime.sh	1207

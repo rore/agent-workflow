@@ -701,9 +701,7 @@ def _resolve_work_record(
             record_path=record_path,
         )
 
-    record_state = parsed.record["state"].strip()
-    if record_state.endswith("."):
-        record_state = record_state[:-1].rstrip()
+    record_state = parsed.record["state"].rstrip(".").strip()
     if record_state not in _ALLOWED_STATES:
         return _resolver_error(
             "invalid_record_state",
