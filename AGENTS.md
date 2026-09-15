@@ -1,6 +1,6 @@
 # AGENTS.md — orientation for agents working on agent-workflow
 
-You're working on `agent-workflow` itself — the harness skill other repos install. We dogfood: this repo carries `agent-workflow.yaml`, every task has a Work Record under `.agent-workflow/tasks/`, and the skill is installed locally for this session.
+You're working on `agent-workflow` itself — the harness skill other repos install. We dogfood: this repo carries `agent-workflow.yaml`, every in-scope change task has a Work Record under `.agent-workflow/tasks/`, and the skill is installed locally for this session.
 
 ## Setup
 
@@ -14,7 +14,9 @@ Same script regenerates `dist/agent-workflow/`. Before pushing: `bash scripts/pa
 
 ## Workflow
 
-Every task uses `/agent-workflow`. Run the local checker after each State change:
+Use `/agent-workflow` for implementation planning or repository changes, explicit workflow requests, and actions that start, advance, pause, or resume a workflow task. Standalone read-only review, explanation, diagnosis, comparison, or inspection does not start the workflow or get a Work Record. If such a request expands to implementation planning or repository changes, invoke the workflow before that work.
+
+Run the local checker after each State change:
 
 ```bash
 python -m core.checker --repo-root . --slug <slug>

@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-15 — Workflow begins with change intent, not read-only analysis
+
+**Decision:** Agent Workflow classifies request scope before changed-path applicability. Standalone read-only review, explanation, diagnosis, comparison, or inspection is outside the workflow when the request as a whole asks for neither an implementation plan nor a repository change. Explicit workflow requests and actions that start, advance, pause, or resume a workflow task remain in scope. If read-only work later expands to planning or mutation, the workflow begins before that work.
+
+**Alternatives considered:** Treat every engineering conversation as a task; model read-only work as a documentation-only applicability exemption; add a natural-language request classifier or new configuration flag; weaken checker or mutation-guard enforcement.
+
+**Rationale:** A changed-path policy cannot classify a request that authorizes no change, and creating a Work Record for that decision is itself an unnecessary repository mutation. An early textual scope gate fixes the observed cost problem without weakening fail-closed controls once change work is intended. A classifier that production does not otherwise need would add policy drift rather than enforce the agent's interpretation.
+
 ## 2026-09-14 — Persisted Work Record identity outranks branch inference
 
 **Decision:** The packaged checker exposes a bounded, read-only local Work Record resolver. A supplied `agent-workflow:<slug>` identity is authoritative and never falls back to branch inference; otherwise the resolver uses the documented first-prefix branch rule. It returns only repository-relative paths and parsed workflow state. Local task paths contain exactly one placeholder and every backend read and write resolves inside the selected checkout.

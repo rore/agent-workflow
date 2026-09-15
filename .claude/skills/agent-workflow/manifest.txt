@@ -1,4 +1,4 @@
-SKILL.md	2658
+SKILL.md	2789
 agent-redline/SKILL.md	3101
 agent-redline/assets/schema/agent-policy.schema.json	12645
 agent-redline/assets/schema/boundary-violations.schema.json	2260
@@ -39,12 +39,12 @@ hooks/check-plan.sh	888
 hooks/install-settings.py	7942
 hooks/merge-agents-section.py	5041
 hooks/reinforce-workflow.sh	565
-hooks/seed-workflow.sh	1316
-opencode/agent-workflow.mjs	3578
-operating-mode.md	10296
+hooks/seed-workflow.sh	1591
+opencode/agent-workflow.mjs	3853
+operating-mode.md	10286
 scripts/agent-workflow-check.py	195694
 scripts/agent-workflow-runtime.ps1	1630
-scripts/agent-workflow-runtime.py	15655
+scripts/agent-workflow-runtime.py	15951
 scripts/agent-workflow-runtime.sh	1207
 scripts/agent-workflow-tune.py	25253
 scripts/format-verdict-comment.py	38255

@@ -19,6 +19,8 @@ Product discovery, prioritization, feature ownership, environment provisioning, 
 
 The workflow begins with an approved epic, story, or equivalent requirement and ends with a reviewed engineering change that has the required pre-merge evidence and approvals.
 
+Standalone read-only analysis — such as review, explanation, diagnosis, comparison, or inspection — is outside this workflow when the request as a whole asks for neither an implementation plan nor a repository change. If the request later expands to either, the workflow begins before that work. An explicit request to use the workflow remains in scope, as does starting, advancing, pausing, or resuming a workflow task.
+
 The workflow is:
 
 **Establish Task Context → Discover → Assess Risk and Complexity → Plan and Review → Implement Within Approved Scope → Verify → Review**

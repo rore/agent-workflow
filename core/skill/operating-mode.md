@@ -1,6 +1,6 @@
 # operating-mode
 
-Active when `agent-workflow.yaml` exists at the repo root. Walks one engineering task from pickup to handoff.
+For an in-scope change task when `agent-workflow.yaml` exists.
 
 ## Vocabulary
 
@@ -17,12 +17,13 @@ Active when `agent-workflow.yaml` exists at the repo root. Walks one engineering
 ## The loop
 
 ```
+0. Apply request scope before config; return for standalone read-only analysis.
 1. Read agent-workflow.yaml.
 2. Use the supplied Work Record identity, or derive the slug from the branch.
-3. Classify (Risk + Complexity) and read or initialise the Work Record.
-4. For each checkpoint: write the field, then act.
-5. Update the State at every transition.
-6. Update Implementation prose at every checkpoint boundary.
+3. Classify, then read or initialise the Work Record.
+4. At each checkpoint, write then act.
+5. Update State at transitions.
+6. Update Implementation prose at checkpoint boundaries.
 7. On stop or handoff: leave recovery state explicit.
 ```
 

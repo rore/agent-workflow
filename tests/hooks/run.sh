@@ -82,6 +82,33 @@ if [[ -f "$OCP" ]]; then
   if [[ -n "$ctx" && -n "$seed" && "$seed" == "$ctx" ]]; then echo "  ok: plugin SEED matches seed-workflow.sh CTX"; else echo "  FAIL: SEED/CTX parity drift"; fail=1; fi
   pyseed="$("$PY" scripts/agent-workflow-runtime.py --runtime codex --seed </dev/null | "$PY" -c "import json,sys; print(json.load(sys.stdin)['hookSpecificOutput']['additionalContext'])")"
   if [[ "$pyseed" == "$ctx" ]]; then echo "  ok: shared runtime SEED matches Claude/OpenCode"; else echo "  FAIL: shared runtime SEED drift"; fail=1; fi
+  if "$PY" - "$ctx" <<'PY'
+import sys
+from pathlib import Path
+
+seed = sys.argv[1]
+skill = Path("core/skill/agent-workflow.md").read_text(encoding="utf-8")
+operating = Path("core/skill/operating-mode.md").read_text(encoding="utf-8")
+required_seed = (
+    "standalone read-only review, explanation, diagnosis, comparison, or inspection is outside",
+    "neither an implementation plan nor repository mutation",
+    "do not create or update a Work Record",
+    "If it later expands to either",
+    "Explicit Agent Workflow requests",
+    "resume, advance, or pause an existing workflow task",
+    "evaluate configured applicability first",
+    "Only an explicit whole-change exemption may skip the Work Record",
+    "Any non-exempt implementation plan must start",
+)
+required_skill = (
+    "Standalone read-only analysis stays out",
+    "implementation plans, repository changes, explicit use, and existing-task actions enter",
+)
+assert all(fragment in seed for fragment in required_seed)
+assert all(fragment in skill for fragment in required_skill)
+assert "Apply request scope before config; return for standalone read-only analysis" in operating
+PY
+  then echo "  ok: engagement scope keeps read-only exclusion and positive triggers"; else echo "  FAIL: engagement scope contract drift"; fail=1; fi
   grep -q 'experimental.chat.system.transform' "$OCP" && echo "  ok: injects via experimental.chat.system.transform" || { echo "  FAIL: missing system.transform hook"; fail=1; }
   grep -q '"tool.execute.before"' "$OCP" && echo "  ok: OpenCode structured mutation guard registered" || { echo "  FAIL: missing OpenCode mutation guard"; fail=1; }
   if grep -q 'try {' "$OCP" && grep -q 'catch' "$OCP"; then echo "  ok: fail-open (try/catch present)"; else echo "  FAIL: no try/catch fail-open guard"; fail=1; fi
@@ -164,6 +191,12 @@ if [[ -d "$DIST" ]]; then
   printf '%s' "$d_allow" | PYTHON="$PY" bash "$DIST/check-plan.sh" >/dev/null 2>&1
   [[ $? == 0 ]] && echo "  ok: packaged gate ALLOW" || { echo "  FAIL: packaged gate ALLOW"; fail=1; }
   echo '{}' | bash "$DIST/seed-workflow.sh" | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: packaged seed valid JSON" || { echo "  FAIL: packaged seed JSON"; fail=1; }
+  dist_ctx="$(sed -n 's/^CTX="\(.*\)"$/\1/p' "$DIST/seed-workflow.sh")"
+  dist_seed="$(sed -n 's/^const SEED = "\(.*\)";$/\1/p' dist/agent-workflow/opencode/agent-workflow.mjs)"
+  dist_pyseed="$("$PY" dist/agent-workflow/scripts/agent-workflow-runtime.py --runtime codex --seed </dev/null | "$PY" -c "import json,sys; print(json.load(sys.stdin)['hookSpecificOutput']['additionalContext'])")"
+  if [[ "$dist_ctx" == "$ctx" && "$dist_seed" == "$ctx" && "$dist_pyseed" == "$ctx" ]]; then
+    echo "  ok: packaged seed copies match the reviewed engagement scope"
+  else echo "  FAIL: packaged engagement scope drift"; fail=1; fi
   bash scripts/agent-workflow-runtime.sh claude seed | "$PY" -c "import json,sys;json.load(sys.stdin)" 2>/dev/null     && echo "  ok: Windows Bash runtime wrapper resolves Python path" || { echo "  FAIL: Windows Bash runtime wrapper"; fail=1; }
   grep -q '$OutputEncoding = $utf8' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper forces UTF-8 native-pipeline encoding" || { echo "  FAIL: PowerShell wrapper UTF-8 encoding"; fail=1; }
   grep -q 'runtime adapter failed with exit' scripts/agent-workflow-runtime.ps1 && echo "  ok: PowerShell wrapper fails closed on evaluator errors" || { echo "  FAIL: PowerShell wrapper evaluator failure"; fail=1; }
