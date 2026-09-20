@@ -24,8 +24,9 @@
 #     seam and packaged reporter/checker journeys in two consumer layouts.
 #
 # What this does NOT cover:
-#   - LLM judgment used to identify candidate documentation paths; the test
-#     covers validation, partial/rejected approval, and persistence mechanically.
+#   - LLM judgment used to identify documentation or behavior-contract candidates,
+#     evaluate required-CI/authority evidence, and apply human selection. The test
+#     covers shipped guidance and deterministic config/checker paths, not those judgments.
 #   - Actual CI runs in a consumer repo's GitHub Actions.
 #
 # Exit codes:
@@ -76,6 +77,20 @@ manifest = dict(line.split("\t", 1) for line in (left/"manifest.txt").read_text(
 for rel in files(left):
     assert (left/rel).read_bytes() == (right/rel).read_bytes(), rel
     if rel != "manifest.txt": assert int(manifest[rel]) == (left/rel).stat().st_size, rel
+bootstrap = (left/"bootstrap-mode.md").read_text(encoding="utf-8")
+for fragment in (
+    "Behavior-contract candidates",
+    "Report none when absent and unresolved when evidence is missing.",
+    "live required-status evidence",
+    "repository-authority evidence covering the path",
+    "select or reject each",
+    "Selection is not authority approval.",
+    "one existing required-CI identifier and one covering repository authority",
+    "split/defer or omit incompatible or unresolved candidates",
+    "Missing or unavailable required-CI/authority evidence leaves the block out",
+    "never protect automatically",
+):
+    assert fragment in bootstrap, fragment
 PYEOF
 
 cd "$CONSUMER"

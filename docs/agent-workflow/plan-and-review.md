@@ -11,8 +11,10 @@ Write the plan, then a reviewer (self / clean-context agent / human) signs off b
 Self-review is sufficient; no Plan review field on compact.
 
 **Expanded shape — four fields:**
-- **Plan** — approach + sequence + deviations + stop conditions.
-- **Verification plan** — each completion criterion → check (one line per criterion).
+- **Plan** — approach + sequence + deviations + stop conditions. For expanded tasks, also include:
+  - *Key conventions:* naming patterns, existing utilities, or architectural rules this implementation must follow (surfaced during discovery).
+  - *Target files or classes:* specific locations in scope, derived from the repository's conventions. Listing these before implementation starts makes scope drift visible.
+- **Verification plan** — each completion criterion → check (one line per criterion). Use the same observable-outcome form as the criterion itself: *`When <trigger>, the <system> shall <outcome> → <method>`*. Example: `When concurrent retries arrive, the system shall produce one wallet → concurrency integration test`.
 - **Plan review** — reference to the review that happened. Format depends on Risk; see below.
 - **Approvals** — required at High Risk; "Not required at this risk level" otherwise.
 
@@ -21,7 +23,7 @@ Self-review is sufficient; no Plan review field on compact.
 | Risk | Review requirement |
 |---|---|
 | **Routine** | Self-review. No Plan review field on compact. |
-| **Elevated** | **Clean-context agent review required.** Spawn a fresh subagent per the canonical mechanism in [`../../skill/operating-mode.md`](../../skill/operating-mode.md) §"Clean-context delegation" (Task/Agent tool with a read-only agent type, or a fresh session when the harness has no subagent primitive). Subagent reads only the Work Record + SPEC + relevant source files. Review prose lands under `## Plan review` in the same Work Record; the marker-block field references it. |
+| **Elevated** | **Clean-context agent review required.** Spawn a fresh subagent per the canonical mechanism in [`../../core/skill/operating-mode.md`](../../core/skill/operating-mode.md) §"Clean-context delegation" (Task/Agent tool with a read-only agent type, or a fresh session when the harness has no subagent primitive). Subagent reads only the Work Record + SPEC + relevant source files. Review prose lands under `## Plan review` in the same Work Record; the marker-block field references it. The reviewer SHOULD probe one assumption or decision at a time rather than producing a holistic summary — serial questioning surfaces weaknesses that a single-pass read glosses over. |
 | **High** | Clean-context review **plus** human approval. Stop, present the plan + clean-context summary to the human, refuse to advance until approved. Record the approval **verbatim** in Approvals (see below). |
 
 **Predicates:**

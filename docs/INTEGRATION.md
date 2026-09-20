@@ -21,14 +21,30 @@ Bootstrap is a six-phase conversation. You stay in the loop the whole time.
 
 | Phase | What happens | Your decision |
 |---|---|---|
-| 1. Inspect | The agent reads the repo, discovers actual documentation/roadmap/root-README candidates, and checks live default-branch protection. Reports a structured finding. | Confirm or correct the finding. |
-| 2. Propose | The agent drafts `agent-workflow.yaml` and `agent-redline-policy.yaml` — both inert. Any applicability block lists discovered paths, never assumed canonical names. | Read both drafts. |
-| 3. Adapt | The agent walks the **zone-utility check**, optionally runs the tuner, and asks unresolved questions. Applicability paths and direct-default permission require separate explicit approval. | Sign off explicitly to advance. |
+| 1. Inspect | The agent discovers documentation/applicability paths and behavior-contract candidates, then records each candidate's required-CI and path-authority evidence or marks it unresolved. | Confirm or correct the finding. |
+| 2. Propose | The agent drafts both configs — inert. Applicability paths are discovered, not assumed; unresolved behavior contracts stay out. | Read both drafts. |
+| 3. Adapt | The agent calibrates zones and asks you to select or reject each behavior-contract candidate. Selection is not authority approval; incompatible checks or authorities are split, deferred, or omitted. | Sign off explicitly to advance. |
 | 4. Write | The agent writes identical dual skill installs, runtime adapters/settings, configs, vendored scripts, the owned root `AGENTS.md` marker, docs, and task skeleton. | None — but review the diff afterwards. |
 | 5. Confirm CI | The agent always writes `docs/agent-workflow-ci-proposal.md`. It then asks whether to install the workflow file at `.github/workflows/agent-workflow.yml` directly or leave it in the proposal doc only. | **Decide.** This is the integration point that gates every future PR. |
 | 6. Self-summary | The agent writes `docs/agent-workflow-bootstrap-summary.md`, runs a local probe of the checker, and reports what's installed, what's proposed, and what still needs human action. | Read it. Branch protection and CODEOWNERS additions need you. |
 
 After Phase 4, you have a normal-looking PR with new committed files. Review and merge it as you would any PR.
+
+### Optional behavior contracts
+
+Bootstrap may propose exact repository-relative paths or boundary-safe `dir/**` patterns for acceptance, E2E, contract, or regression assets. Each candidate must have evidence that one named CI identifier is currently required and that one repository authority covers the path. You explicitly select or reject every candidate; bootstrap never protects one automatically.
+
+One `behaviorContracts` block represents one compatible path set:
+
+```yaml
+behaviorContracts:
+  paths:
+    - "tests/contracts/**"
+  verification: behavior-contracts
+  approvalAuthority: "@product-owners"
+```
+
+All paths in the block share that verification identifier and authority. Missing, unavailable, or conflicting evidence leaves candidates unresolved and out of the block. Path protection provides mutation integrity; the required CI surface provides regression enforcement. The checker validates the reference, not whether that external check is required or passed.
 
 ### B. Manual install
 
@@ -135,6 +151,8 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 | Two new sticky PR comments | Risk-classifier + agent-workflow verdicts. They refresh on every push. |
 | A required field for every non-exempt task | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
 | `Risk` and `Complexity` in the Work Record | Mandatory. Determine the record's shape and the controls applied. |
+| `Requirement baseline` in the Work Record | Preserves the Task Context implementation started with; later behavioral edits use ordered `Behavior changes`. |
+| Optional `behaviorContracts` in `agent-workflow.yaml` | Protects explicitly selected repository contracts; its named required CI check still owns regression execution. |
 | `shadow` in `agent-redline-policy.yaml` | Zone classification is advisory until you flip it. Boundary violations still block. |
 | `redline: required` in `agent-workflow.yaml` | The checker treats a missing classifier verdict as a CI configuration error. Default; leave it. |
 
@@ -178,6 +196,7 @@ If your repo has no source code, no architecture to classify, or PRs aren't the 
 | Checker exits 2 with `workrecord.markers_present` failing | The marker block (`<!-- agent-workflow:start --> … <!-- agent-workflow:end -->`) is missing, malformed, or duplicated. Use `core/templates/work-record-routine.md` or `work-record-expanded.md` as the reference. |
 | Checker exits 2 with `risk.declared_not_below_detected` | The classifier detected risk above what the Work Record declares. Either re-classify upward in the Work Record (and migrate to the expanded shape if needed) or remove the offending changes. |
 | `risk.redline_findings_available` blocks under `redline: required` | The classifier job didn't produce a verdict artifact. Check the `redline` job's logs in the same CI run. |
+| A `requirements.*` or `behavior_contracts.*` predicate blocks | Restore the baseline-to-current change chain, classify every changed protected path, use the configured authority for requirement changes, and reference the configured verification identifier. |
 | Architecture-review checkpoint fires on every PR | Over-classification. Walk recent PRs that triggered it; if the changes are routine, demote the red zone or split the path. See [§Risk classification](#risk-classification-and-how-to-keep-it-useful). |
 | Sticky comment doesn't refresh | The PR's `agent-workflow` job is failing before the `Post sticky PR comment` step. Open the CI run and check the earlier steps. |
 

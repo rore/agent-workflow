@@ -1,11 +1,11 @@
 # Now
-- behavioral-requirement-integrity
+- local-doctor
 
 # Next
-- local-doctor
 
 # Ideas
 
 # Done
+- behavioral-requirement-integrity
 - workflow-applicability
 - work-record-resolution
