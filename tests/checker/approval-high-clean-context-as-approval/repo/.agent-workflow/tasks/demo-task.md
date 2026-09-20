@@ -9,6 +9,8 @@
 
 **Completion criteria:** All tenants migrated.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Migrate the tenant-isolation column to the new schema.","scope":"Flyway migration plus repository tests.","constraints":"Zero downtime.","completion_criteria":"All tenants migrated."}
+
 **Risk:** High
 
 **Complexity:** Moderate

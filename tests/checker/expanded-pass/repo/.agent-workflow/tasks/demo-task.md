@@ -9,6 +9,8 @@
 
 **Completion criteria:** Concurrent retries produce a single wallet, asserted by a regression test. The new table's row count matches the count of distinct tenant-scoped request identifiers. A service restart between two retries still produces a single wallet.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Concurrent wallet-creation requests across multiple service instances produce at most one wallet per tenant-scoped request identifier, with state surviving restarts.","scope":"Wallet creation flow + new tenant-scoped idempotency table + the regression tests covering concurrency and restart.","constraints":"Public API unchanged. Tenant isolation MUST remain intact. No breaking schema migration; the new table is additive.","completion_criteria":"Concurrent retries produce a single wallet, asserted by a regression test. The new table's row count matches the count of distinct tenant-scoped request identifiers. A service restart between two retries still produces a single wallet."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate

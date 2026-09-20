@@ -9,6 +9,8 @@
 
 **Completion criteria:** Existing OpenAPI conformance tests stay green; new field appears in the response.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Refactor of the public API contract response shape.","scope":"PublicApiV1 controller plus its tests.","constraints":"Backwards-compatible field addition only.","completion_criteria":"Existing OpenAPI conformance tests stay green; new field appears in the response."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate

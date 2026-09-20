@@ -8,6 +8,30 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-20 — Baseline task intent and configured behavior contracts
+
+**Decision:** Capture Outcome, Scope, Constraints, and Completion criteria before
+discovery as canonical JSON in each new Work Record. Later Task Context edits use
+an optional ordered change log with equivalent, coverage-only, or
+requirement-change; exact chain and approval structure are deterministic, while
+semantic classification, authorship, and historical baseline immutability remain
+review judgments. Repositories may protect exact paths or dir/** descendants
+with an existing required-CI identifier and distinct repository approval
+authority. Contract mutation is checked globally from the trusted NUL path set.
+
+**Alternatives considered:** Use Git history as the baseline; protect only
+individual Completion criteria; treat stricter guarantees as harmless; infer
+semantic equivalence; make every test immutable; reuse plan/Redline approval;
+query GitHub required checks at checker time; add a workflow checkpoint, service,
+or universal requirement-ID format.
+
+**Rationale:** Pallium PR #167 showed that an internally consistent Work Record
+and test suite can still erase the behavior a task entered with. A frozen local
+baseline plus explicit authority-bound changes closes the task-local gap.
+Configured contracts cover inherited product behavior. Keeping structural
+mutation checks separate from CI execution and human judgment avoids false
+enforcement claims and recurring ceremony when behavior is unchanged.
+
 ## 2026-09-15 — Workflow begins with change intent, not read-only analysis
 
 **Decision:** Agent Workflow classifies request scope before changed-path applicability. Standalone read-only review, explanation, diagnosis, comparison, or inspection is outside the workflow when the request as a whole asks for neither an implementation plan nor a repository change. Explicit workflow requests and actions that start, advance, pause, or resume a workflow task remain in scope. If read-only work later expands to planning or mutation, the workflow begins before that work.

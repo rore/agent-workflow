@@ -9,6 +9,8 @@
 
 **Completion criteria:** Unit tests stay green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Trivial change validates the routine fast path.","scope":"Internal logging.","constraints":"—","completion_criteria":"Unit tests stay green."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

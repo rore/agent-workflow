@@ -49,6 +49,15 @@ redlineVerdictPath: build/redline-verdict.json
 #       - "README.md"
 #     workflowRequired: false
 #     directDefaultBranchAllowed: false
+# Optional repository behavior contracts. Bootstrap emits this only after
+# the human selects exact paths already run by a required CI check and names
+# the repository authority allowed to approve requirement changes.
+# behaviorContracts:
+#   paths:
+#     - "tests/contracts/**"
+#   verification: behavior-contracts
+#   approvalAuthority: "@product-owners"
+
 # Claude Code accelerator hooks (optional; a turn-time nudge, not the
 # enforcement floor — CI stays that). The plan-mode gate requires a plan
 # to include the Work Record step when it touches guarded code. Bootstrap
@@ -58,15 +67,3 @@ redlineVerdictPath: build/redline-verdict.json
 hooks:
   guardedPaths:
     - "src/"
-
-# Additional fields are optional and only act when their consuming
-# work item lands. Examples (commented out — uncomment what applies):
-#
-# verification:
-#   commands:
-#     - ./gradlew test
-#     - ./gradlew spotlessApply
-#
-# reviewers:
-#   high:
-#     - "@team-architects"

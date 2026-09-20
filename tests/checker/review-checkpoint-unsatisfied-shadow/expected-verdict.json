@@ -63,6 +63,26 @@
           "blocking": false
         },
         {
+          "name": "requirements.baseline_present",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "requirements.behavior_changes_well_formed",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "requirements.task_context_traceable",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "requirements.requirement_changes_authorized",
+          "passed": true,
+          "blocking": true
+        },
+        {
           "name": "exceptions.well_formed",
           "passed": true,
           "blocking": true

@@ -39,7 +39,7 @@ class ApplicabilityDecision:
     reason_codes: tuple[str, ...]
 
 
-def _valid_repo_path(path: object, *, allow_prefix: bool) -> bool:
+def valid_repository_path(path: object, *, allow_prefix: bool = False) -> bool:
     if not isinstance(path, str) or not path or "\x00" in path:
         return False
     if path.startswith("/") or re.match(r"^[A-Za-z]:", path):
@@ -84,7 +84,7 @@ def approve_documentation_only(
         not discovered_valid
         or not approved_valid
         or not discovered
-        or any(not _valid_repo_path(path, allow_prefix=True) for path in discovered + approved)
+        or any(not valid_repository_path(path, allow_prefix=True) for path in discovered + approved)
         or not isinstance(direct_default_branch_approved, bool)
         or protection_status not in {"unprotected", "protected", "unavailable"}
     ):
@@ -121,7 +121,7 @@ def evaluate_applicability(
         and isinstance(config.paths, tuple)
         and bool(config.paths)
         and len(set(config.paths)) == len(config.paths)
-        and all(_valid_repo_path(path, allow_prefix=True) for path in config.paths)
+        and all(valid_repository_path(path, allow_prefix=True) for path in config.paths)
     )
     if config is None:
         reasons.append("no_applicability_config")
@@ -131,11 +131,11 @@ def evaluate_applicability(
     if not paths:
         reasons.append("empty_changed_paths")
     if not paths_shape_valid or any(
-        not _valid_repo_path(path, allow_prefix=False) for path in paths
+        not valid_repository_path(path, allow_prefix=False) for path in paths
     ):
         reasons.append("invalid_changed_path")
     if not protected_shape_valid or any(
-        not _valid_repo_path(path, allow_prefix=True) for path in protected
+        not valid_repository_path(path, allow_prefix=True) for path in protected
     ):
         reasons.append("invalid_protected_path")
 
@@ -178,3 +178,24 @@ def evaluate_applicability(
         paths=paths,
         reason_codes=tuple(dict.fromkeys(reasons)),
     )
+
+def valid_behavior_contract_pattern(pattern: object) -> bool:
+    """True for one safe exact path or boundary-safe dir/** pattern."""
+    if not isinstance(pattern, str) or not pattern or "\x00" in pattern:
+        return False
+    if any(ord(char) < 32 for char in pattern):
+        return False
+    exact = pattern[:-3] if pattern.endswith("/**") else pattern
+    if not exact or any(char in exact for char in _GLOB_CHARS):
+        return False
+    return valid_repository_path(exact, allow_prefix=False)
+
+
+def behavior_contract_matches(path: str, pattern: str) -> bool:
+    """Match one validated exact path or all descendants of dir/**."""
+    if not valid_repository_path(path, allow_prefix=False):
+        return False
+    if pattern.endswith("/**"):
+        prefix = pattern[:-2]
+        return path.startswith(prefix) and len(path) > len(prefix)
+    return path == pattern

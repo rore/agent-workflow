@@ -66,7 +66,10 @@ ceilings:
     why: loaded only when bootstrap proposes or a configured repo evaluates the documentation-only exception; carries deny-overrides priority, approval, live protection, and CI limits.
   - path: core/templates/checkpoints/establish-context.md
     max_tokens: 700
-    why: loaded when starting a task. Five-field reference with examples.
+    why: loaded when starting a task. Five-field reference with examples and the baseline handoff.
+  - path: core/templates/checkpoints/behavioral-integrity.md
+    max_tokens: 850
+    why: loaded only when Task Context changes or behaviorContracts is configured; carries baseline/change JSON, authority separation, contract handling, and checkpoint actions without burdening routine unchanged tasks.
   - path: core/templates/checkpoints/discover.md
     max_tokens: 800
     why: loaded during Discover. Carries the authoritative-source table + three resolution paths + the gate. SPEC-restated rationale moved to docs.

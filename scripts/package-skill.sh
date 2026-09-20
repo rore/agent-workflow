@@ -279,7 +279,7 @@ cp "$REPO_ROOT/core/templates/work-record-routine.md"        "$TARGET/templates/
 cp "$REPO_ROOT/core/templates/work-record-expanded.md"       "$TARGET/templates/"
 cp "$REPO_ROOT/core/templates/bootstrap-summary.md.template" "$TARGET/templates/"
 cp "$REPO_ROOT/core/templates/skill-feedback.md"             "$TARGET/templates/"
-cp "$REPO_ROOT/core/templates/agent-workflow.yaml.template"  "$TARGET/templates/"
+sed 's/\r$//' "$REPO_ROOT/core/templates/agent-workflow.yaml.template" > "$TARGET/templates/agent-workflow.yaml.template"
 cp "$REPO_ROOT/core/templates/.github/workflows/agent-workflow.yml.template" \
    "$TARGET/templates/.github/workflows/"
 

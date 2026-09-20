@@ -9,6 +9,8 @@
 
 **Completion criteria:** Concurrent retries observably create one wallet; no regression in single-call wallet creation.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Concurrent retries against the wallet creation endpoint produce a single wallet.","scope":"Wallet creation retry path and its tests.","constraints":"Public API unchanged.","completion_criteria":"Concurrent retries observably create one wallet; no regression in single-call wallet creation."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate

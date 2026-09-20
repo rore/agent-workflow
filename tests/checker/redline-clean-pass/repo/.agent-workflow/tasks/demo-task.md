@@ -9,6 +9,8 @@
 
 **Completion criteria:** New test passes; suite stays green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Add a regression test for an internal blue-zone helper.","scope":"Test file under `src/test/java/`.","constraints":"—","completion_criteria":"New test passes; suite stays green."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

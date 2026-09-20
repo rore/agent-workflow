@@ -361,6 +361,7 @@ def test_cli_zero_records_falls_back_when_wr_exists_at_slug(
         "<!-- agent-workflow:start -->\n"
         "**Outcome:** o\n\n**Target:** t\n\n**Scope:** s\n\n"
         "**Constraints:** —\n\n**Completion criteria:** cc\n\n"
+        '**Requirement baseline:** {"source":"test-fixture-initial","outcome":"o","scope":"s","constraints":"—","completion_criteria":"cc"}\n\n'
         "**Risk:** Routine\n\n**Complexity:** Simple\n\n**Reason:** —\n\n"
         "**Approach:** a\n\n**Verification:** v\n\n"
         "**State:** Ready for review\n"
@@ -405,6 +406,7 @@ def test_cli_falls_back_when_changed_files_path_missing(
         "<!-- agent-workflow:start -->\n"
         "**Outcome:** o\n\n**Target:** t\n\n**Scope:** s\n\n"
         "**Constraints:** —\n\n**Completion criteria:** cc\n\n"
+        '**Requirement baseline:** {"source":"test-fixture-initial","outcome":"o","scope":"s","constraints":"—","completion_criteria":"cc"}\n\n'
         "**Risk:** Routine\n\n**Complexity:** Simple\n\n**Reason:** —\n\n"
         "**Approach:** a\n\n**Verification:** v\n\n"
         "**State:** Ready for review\n"
@@ -485,6 +487,7 @@ def test_cli_slug_only_validates_one_record(
         "<!-- agent-workflow:start -->\n"
         "**Outcome:** o\n\n**Target:** t\n\n**Scope:** s\n\n"
         "**Constraints:** —\n\n**Completion criteria:** cc\n\n"
+        '**Requirement baseline:** {"source":"test-fixture-initial","outcome":"o","scope":"s","constraints":"—","completion_criteria":"cc"}\n\n'
         "**Risk:** Routine\n\n**Complexity:** Simple\n\n**Reason:** —\n\n"
         "**Approach:** a\n\n**Verification:** v\n\n"
         "**State:** Ready for review\n"
@@ -558,6 +561,7 @@ def _make_wr(repo_root: Path, slug: str) -> Path:
         "<!-- agent-workflow:start -->\n"
         "**Outcome:** o\n\n**Target:** t\n\n**Scope:** s\n\n"
         "**Constraints:** —\n\n**Completion criteria:** cc\n\n"
+        '**Requirement baseline:** {"source":"test-fixture-initial","outcome":"o","scope":"s","constraints":"—","completion_criteria":"cc"}\n\n'
         "**Risk:** Routine\n\n**Complexity:** Simple\n\n**Reason:** —\n\n"
         "**Approach:** a\n\n**Verification:** v\n\n"
         "**State:** Ready to implement\n"

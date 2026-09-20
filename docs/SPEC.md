@@ -148,6 +148,7 @@ Chat history **MUST NOT** be the only source of required task state.
 The Work Record **MUST** expose, as applicable:
 
 - Task Context
+- Requirement baseline and Behavior changes, when applicable
 - risk and complexity decision
 - material discoveries, assumptions, and decisions
 - plan and Verification Plan
@@ -185,7 +186,7 @@ The compact record **MUST** contain:
 - verification method
 - current readiness state or blocker
 
-For routine work, an issue-tracker task or equivalent **MAY** serve as the complete Work Record. No separate Markdown file is required.
+For routine work, an issue-tracker task or equivalent **MAY** serve as the complete Work Record. No separate Markdown file is required. The Requirement baseline and an exceptional Behavior changes record **MUST NOT** by themselves force migration from the compact shape.
 
 The minimum readiness states are:
 
@@ -326,9 +327,27 @@ Good completion criterion:
 Concurrent retries create only one wallet.
 ```
 
-The initial context **MUST** be sufficient to begin focused discovery. It **MAY** be refined during discovery.
+The initial context **MUST** be sufficient to begin focused discovery.
 
-**Gate:** Planning and implementation **MUST NOT** begin while the outcome, scope, constraints, or completion criteria remain materially unclear.
+#### Requirement baseline and behavior changes
+
+Before discovery or planning, the Work Record **MUST** capture an immutable Requirement baseline containing the authoritative source reference when one exists and the exact initial Outcome, Scope, Constraints, and Completion criteria. Target is structural identity and is not part of the baseline. New records capture this without human interaction. A legacy record remains parseable but **MUST NOT** advance until its owner establishes a baseline from an authoritative source; the agent **MUST NOT** guess one.
+
+Later refinements update current Task Context and **MUST NOT** rewrite the baseline. Each behavioral difference from the baseline or a prior approved change **MUST** appear in an ordered Behavior changes record with exact before and after values. Entries use one of:
+
+- **equivalent** — wording or mechanics change without changing required behavior;
+- **coverage-only** — verification covers more of the same obligation without creating a new product obligation;
+- **requirement-change** — required behavior is removed, weakened, narrowed, deferred, made manual or best-effort, otherwise redefined, or broadened into a materially new obligation.
+
+A stricter or broader product guarantee is a requirement change, not coverage-only. Scope narrowing is a requirement change even when other Task Context fields do not change.
+
+A requirement-change entry **MUST** record the reason, impact, alternatives, authority scope, and approval bound to the exact before and after values. Before approval, the task **MUST** be Blocked and implementation **MUST NOT** continue under the replacement behavior. After approval, the current Task Context may change, but the baseline and complete ordered chain remain. Approval of one entry does not authorize later or wider changes.
+
+Task-local authority is the human who owns the current requirement. Repository-wide contract authority comes from repository configuration or governance. Clean-context review, plan approval, risk classification, and Redline checkpoint satisfaction **MUST NOT** substitute for either authority.
+
+The harness validates structure, exact chain continuity, current-context equality, and approval-shaped evidence. Reviewers validate semantic classification, approval authorship, and that the stored baseline was not rewritten; the harness **MUST NOT** claim to authenticate those judgments.
+
+**Gate:** Planning and implementation **MUST NOT** begin while Task Context is materially unclear, the baseline is missing, a change chain is inconsistent, or a requirement change lacks the required approval.
 
 ### 9.2 Discover Current State
 
@@ -355,6 +374,10 @@ The agent **MUST** record only material findings:
 - references to inspected evidence
 
 Discovery **MUST NOT** become an open-ended documentation exercise.
+
+A repository **MAY** designate authoritative behavior contracts in configuration using one or more slash-normalized exact paths or boundary-safe directory patterns ending in /**, an existing required-CI verification identifier, and a repository approval authority. Other glob syntax is unsupported. Configured paths are governance surfaces and **MUST NOT** qualify for a documentation-only exemption.
+
+For a relevant task, inspect only affected configured contracts. Planning and verification **MUST** identify whether each affected contract is preserved, coverage-only, or a proposed requirement change, and reference the configured verification surface. Mutation integrity and regression enforcement are separate: protecting contract edits does not prove the configured suite ran or passed. Bootstrap and review **MUST** verify that the identifier names an existing required CI surface; unavailable evidence leaves the gate unsatisfied.
 
 When repository guidance, durable documentation, requirements, and observed system behavior disagree on a material point, the agent **MUST** identify which source is authoritative for that kind of question and resolve the disagreement, or record it as an explicit assumption with a validation condition, before planning proceeds. A disagreement is material when it would change scope, approach, completion criteria, or risk classification.
 
@@ -600,6 +623,7 @@ For work to which the workflow applies, the harness **MUST** maintain or update 
 
 - current readiness state
 - Task Context
+- Requirement baseline and Behavior changes, when applicable
 - risk and complexity decision
 - material assumptions and decisions
 - required approvals and review results
@@ -660,6 +684,14 @@ For routine work, the Work Record may expose only:
 - Blocked
 - Ready for review
 
+The harness **MUST** block a missing or malformed Requirement baseline, an inconsistent exact Task Context change chain, and an unapproved requirement change. These predicates are non-waivable. The baseline and optional Behavior changes fields remain compatible with both compact and expanded records.
+
+When behavior contracts are configured, the PR-time checker **MUST** use the same complete trusted NUL-delimited changed-path evidence used for applicability. The contract gate is global to the change and runs whether zero, one, or multiple Work Records resolve. Missing, incomplete, legacy newline, malformed, unsafe, or non-UTF-8 path evidence **MUST NOT** pass the gate. Rename detection is disabled so both old and new paths are evaluated; deletion, untracked files, Unicode, spaces, and repository containment follow the common changed-path contract.
+
+Every affected contract path **MUST** have exactly one structured classification in a changed Work Record. Requirement changes **MUST** name the configured repository authority and carry approval bound to the exact proposed change. A task-local user approval, clean-context review, plan approval, or Redline checkpoint cannot substitute. At least one affected Work Record **MUST** reference the configured verification identifier. Contract classifications, approvals, and verification linkage are non-waivable.
+
+The harness may deterministically validate baseline/change JSON, exact Task Context chain continuity, changed-path coverage, configured authority-name equality, approval-shaped evidence, and verification-name linkage. It **MUST NOT** claim to decide semantic equivalence, authenticate a human or external required-check setting, prove regression execution, or discover every affected behavior.
+
 GitHub or equivalent linked systems may provide implementation and completion state.
 
 ### 13.3 Verification Record
@@ -690,9 +722,9 @@ The harness **MUST** preserve:
 - required approvals
 - exception references
 
-Checkpoint satisfaction and human approval **MUST** remain distinct.
+Checkpoint satisfaction, plan approval, task-local behavioral authority, and repository contract authority **MUST** remain distinct.
 
-A clean-context agent review **MUST NOT** satisfy a human-approval requirement.
+A clean-context agent review **MUST NOT** satisfy a human-approval requirement. Behavioral approvals **MUST** be scoped to the exact recorded before and after behavior and authority domain.
 
 ### 13.5 Missing Evidence, Unavailable Systems, and Resumability
 

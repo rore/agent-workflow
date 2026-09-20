@@ -9,6 +9,8 @@
 
 **Completion criteria:** Existing tests stay green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Small change touches a single utility file.","scope":"Utility class.","constraints":"—","completion_criteria":"Existing tests stay green."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

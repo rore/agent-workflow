@@ -15,11 +15,24 @@ or directly:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
-from core.work_record import WorkRecord, WorkRecordParseError, parse
+from core.work_record import (
+    BehaviorChangeApproval,
+    BehaviorChangeAuthority,
+    BehaviorChange,
+    RequirementBaseline,
+    WorkRecord,
+    WorkRecordParseError,
+    parse,
+    parse_behavior_changes,
+    parse_record,
+    render,
+    render_expanded,
+)
 from core.work_record.parser import _render_for_roundtrip
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -492,3 +505,170 @@ def test_invalid_complexity_value_is_rejected() -> None:
     )
     with pytest.raises(WorkRecordParseError, match="Complexity value.*not allowed"):
         parse_record(text)
+
+# ---------------------------------------------------------------------------
+# Requirement-integrity optional JSON fields
+# ---------------------------------------------------------------------------
+
+
+def _baseline() -> RequirementBaseline:
+    return RequirementBaseline(
+        source="roadmap/features/example.md@abc123",
+        outcome="Preserve the exact outcome — including Unicode.",
+        scope="A multiline scope\nwith a second line.",
+        constraints="stdlib only",
+        completion_criteria="Round-trip safely.",
+    )
+
+
+def _behavior_changes() -> list[BehaviorChange]:
+    return [
+        BehaviorChange(
+            target="task-context.scope",
+            classification="equivalent",
+            before="old scope",
+            after="new scope",
+            reason="Clarified the wording.",
+        ),
+        BehaviorChange(
+            target="repository-contract",
+            path="core/schema/agent-workflow.schema.json",
+            classification="requirement-change",
+            before="Must preserve the old contract.",
+            after="May replace the contract with an approved one.",
+            reason="The old contract is obsolete.",
+            impact="Existing consumers need migration.",
+            alternatives="Keep the old contract and add an adapter.",
+            authority=BehaviorChangeAuthority(scope="repository", name="architecture-review"),
+            approval=BehaviorChangeApproval(
+                by="Rotem",
+                reference="PR-42",
+                verbatim="Approved the exact replacement.",
+            ),
+        ),
+    ]
+
+
+def test_compact_optional_integrity_fields_parse_and_round_trip() -> None:
+    record = parse(ROUTINE_PASS.read_text(encoding="utf-8"))
+    record["requirement_baseline"] = _baseline()
+    record["behavior_changes"] = _behavior_changes()
+
+    rendered = render(record)
+    assert rendered.index("**Requirement baseline:**") < rendered.index("**State:**")
+    assert rendered.index("**Behavior changes:**") < rendered.index("**State:**")
+    reparsed = parse(rendered)
+    assert reparsed == record
+    assert "multiline scope" in reparsed["requirement_baseline"].scope
+
+
+def test_expanded_optional_integrity_fields_parse_and_round_trip() -> None:
+    parsed = parse_record(EXPANDED_PASS.read_text(encoding="utf-8"))
+    record = parsed.record
+    record["requirement_baseline"] = _baseline()
+    record["behavior_changes"] = _behavior_changes()
+
+    reparsed = parse_record(render_expanded(record))
+    assert reparsed.record == record
+
+
+def test_baseline_requires_exact_keys_and_nonempty_context() -> None:
+    value = json.dumps(
+        {
+            "source": "src",
+            "outcome": "outcome",
+            "scope": "scope",
+            "constraints": "constraints",
+            "completion_criteria": "criteria",
+        },
+        ensure_ascii=False,
+    )
+    assert parse_record(_block(
+        "**Outcome:** o",
+        "**Target:** t",
+        "**Scope:** s",
+        "**Constraints:** c",
+        "**Completion criteria:** cc",
+        "**Risk:** Routine",
+        "**Complexity:** Simple",
+        "**Reason:** —",
+        "**Approach:** a",
+        "**Verification:** v",
+        f"**Requirement baseline:** {value}",
+        "**State:** Ready to implement",
+    )).record["requirement_baseline"] == RequirementBaseline(
+        source="src",
+        outcome="outcome",
+        scope="scope",
+        constraints="constraints",
+        completion_criteria="criteria",
+    )
+    with pytest.raises(WorkRecordParseError, match="unknown key"):
+        from core.work_record import parse_requirement_baseline
+
+        parse_requirement_baseline(value[:-1] + ', "extra": "x"}')
+
+
+def test_requirement_change_may_be_unapproved_but_requires_change_fields() -> None:
+    entry = {
+        "target": "task-context.outcome",
+        "classification": "requirement-change",
+        "before": "old",
+        "after": "new",
+        "reason": "The old behavior is infeasible.",
+        "impact": "Users lose automatic handling.",
+        "alternatives": "Keep investigating.",
+        "authority": {"scope": "task", "name": "product-owner"},
+    }
+    parsed = parse_behavior_changes(json.dumps([entry]))
+    assert parsed[0].approval is None
+
+
+@pytest.mark.parametrize(
+    "entry, pattern",
+    [
+        ({"target": "task-context.scope", "classification": "equivalent"}, "missing required"),
+        ({"target": "other", "classification": "equivalent",
+         "before": "a", "after": "b", "reason": "r"}, "invalid shape"),
+        ({"target": "task-context.scope", "classification": "equivalent",
+         "before": "same", "after": "same", "reason": "r"}, "must differ"),
+        ({"target": "repository-contract", "classification": "equivalent",
+         "before": "a", "after": "b", "reason": "r"}, "path is required"),
+        ({"target": "task-context.scope", "path": "x", "classification": "equivalent",
+         "before": "a", "after": "b", "reason": "r"}, "only valid"),
+    ],
+)
+def test_behavior_changes_reject_malformed_entries(entry: dict[str, object], pattern: str) -> None:
+    with pytest.raises(WorkRecordParseError, match=pattern):
+        parse_behavior_changes(json.dumps([entry]))
+
+
+def test_behavior_changes_reject_unknown_keys_and_duplicate_repository_paths() -> None:
+    base = {
+        "target": "repository-contract",
+        "path": "contracts/api.yaml",
+        "classification": "coverage-only",
+        "before": "old",
+        "after": "new",
+        "reason": "Added coverage.",
+    }
+    with pytest.raises(WorkRecordParseError, match="unknown key"):
+        parse_behavior_changes(json.dumps([{**base, "unexpected": True}]))
+    with pytest.raises(WorkRecordParseError, match="duplicate"):
+        parse_behavior_changes(json.dumps([base, base]))
+
+
+def test_requirement_change_approval_shape_is_checked_when_present() -> None:
+    entry = {
+        "target": "task-context.scope",
+        "classification": "requirement-change",
+        "before": "old",
+        "after": "new",
+        "reason": "reason",
+        "impact": "impact",
+        "alternatives": "alternative",
+        "authority": {"scope": "task", "name": "owner"},
+        "approval": {"by": "owner", "reference": "ref"},
+    }
+    with pytest.raises(WorkRecordParseError, match="missing required key"):
+        parse_behavior_changes(json.dumps([entry]))

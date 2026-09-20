@@ -25,9 +25,10 @@ use the compact shape; everything else must use the expanded shape.
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 # ---------------------------------------------------------------------------
 # Public types
@@ -41,6 +42,54 @@ ALLOWED_COMPLEXITY: frozenset[str] = frozenset({"Simple", "Moderate", "Large"})
 # (Routine, Simple) is the only classification that may use the compact
 # (routine) shape. Anything else must use the expanded shape.
 _COMPACT_ALLOWED: frozenset[tuple[str, str]] = frozenset({("Routine", "Simple")})
+
+
+@dataclass(frozen=True)
+class RequirementBaseline:
+    """The immutable Task Context captured before discovery."""
+
+    source: str | None
+    outcome: str
+    scope: str
+    constraints: str
+    completion_criteria: str
+
+
+@dataclass(frozen=True)
+class BehaviorChangeAuthority:
+    """BehaviorChangeAuthority domain and name recorded for a requirement change."""
+
+    scope: Literal["task", "repository"]
+    name: str
+
+
+@dataclass(frozen=True)
+class BehaviorChangeApproval:
+    """BehaviorChangeApproval-shaped evidence bound to one exact behavior change."""
+
+    by: str
+    reference: str
+    verbatim: str
+
+
+@dataclass(frozen=True)
+class BehaviorChange:
+    """One structured Task Context or repository-contract change."""
+
+    target: str
+    classification: Literal["equivalent", "coverage-only", "requirement-change"]
+    before: str
+    after: str
+    reason: str
+    path: str | None = None
+    impact: str | None = None
+    alternatives: str | None = None
+    authority: BehaviorChangeAuthority | None = None
+    approval: BehaviorChangeApproval | None = None
+
+
+
+
 
 
 class WorkRecord(TypedDict):
@@ -65,6 +114,8 @@ class WorkRecord(TypedDict):
     approach: str
     verification: str
     state: str
+    requirement_baseline: NotRequired[RequirementBaseline]
+    behavior_changes: NotRequired[list[BehaviorChange]]
 
 
 class ExpandedWorkRecord(TypedDict):
@@ -105,6 +156,8 @@ class ExpandedWorkRecord(TypedDict):
     approvals: str
     exceptions: str
     state: str
+    requirement_baseline: NotRequired[RequirementBaseline]
+    behavior_changes: NotRequired[list[BehaviorChange]]
 
 
 Shape = Literal["routine", "expanded"]
@@ -186,16 +239,17 @@ _EXPANDED_FIELD_SCHEMA: tuple[tuple[str, str], ...] = (
     ("State", "state"),
 )
 
-# Optional expanded fields not in ``_EXPANDED_FIELD_SCHEMA`` —
-# recognised by the parser when present, ignored when absent. Slice F
-# adds ``Exceptions``: an optional list of per-task rule waivers per
-# SPEC §11. Keeping it outside the required-schema means existing
-# expanded records (which were written before the slice) parse
-# unchanged. When present, the field's free-text content is decoded by
-# :func:`parse_exceptions` for the checker.
+# Optional fields are accepted on both shapes so legacy records remain
+# parseable and routine records do not migrate merely to carry integrity data.
+_OPTIONAL_JSON_FIELDS: dict[str, str] = {
+    "Requirement baseline": "requirement_baseline",
+    "Behavior changes": "behavior_changes",
+}
 _EXPANDED_OPTIONAL_EXTRA_FIELDS: dict[str, str] = {
+    **_OPTIONAL_JSON_FIELDS,
     "Exceptions": "exceptions",
 }
+_ROUTINE_OPTIONAL_EXTRA_FIELDS: dict[str, str] = dict(_OPTIONAL_JSON_FIELDS)
 
 # Fields whose value is allowed to be empty on each shape. Everything
 # else is rejected as malformed when its value is blank. On the routine
@@ -386,7 +440,8 @@ def _validate_against_schema(
 def _validate_routine_fields(found: dict[str, str]) -> WorkRecord:
     """Validate the routine-path field set. See :func:`_validate_against_schema`."""
     return _validate_against_schema(  # type: ignore[return-value]
-        found, _FIELD_SCHEMA, _OPTIONAL_FIELDS, shape_name="routine"
+        found, _FIELD_SCHEMA, _OPTIONAL_FIELDS, shape_name="routine",
+        optional_extra_fields=_ROUTINE_OPTIONAL_EXTRA_FIELDS,
     )
 
 
@@ -439,6 +494,233 @@ def _decide_shape(found: dict[str, str]) -> Shape:
     if (risk, complexity) in _COMPACT_ALLOWED:
         return "routine"
     return "expanded"
+
+
+# ---------------------------------------------------------------------------
+# Requirement-integrity JSON
+# ---------------------------------------------------------------------------
+
+_BASELINE_KEYS = frozenset({
+    "source",
+    "outcome",
+    "scope",
+    "constraints",
+    "completion_criteria",
+})
+_BEHAVIOR_CORE_KEYS = frozenset({
+    "target",
+    "classification",
+    "before",
+    "after",
+    "reason",
+})
+_BEHAVIOR_CHANGE_KEYS = frozenset({
+    "impact",
+    "alternatives",
+    "authority",
+    "approval",
+})
+_AUTHORITY_KEYS = frozenset({"scope", "name"})
+_APPROVAL_KEYS = frozenset({"by", "reference", "verbatim"})
+_TASK_CONTEXT_TARGETS = frozenset(
+    {
+        "task-context.outcome",
+        "task-context.scope",
+        "task-context.constraints",
+        "task-context.completion_criteria",
+    }
+)
+_BEHAVIOR_CLASSIFICATIONS = frozenset(
+    {"equivalent", "coverage-only", "requirement-change"}
+)
+
+
+def _json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject duplicate object keys instead of silently keeping the last one."""
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
+def _load_integrity_json(text: str, label: str) -> object:
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=_json_object,
+            parse_constant=lambda value: (_ for _ in ()).throw(
+                ValueError(f"non-standard JSON constant {value!r}")
+            ),
+        )
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise WorkRecordParseError(f"{label} must be valid canonical JSON: {exc}") from exc
+
+
+def _required_json_string(value: object, field: str) -> str:
+    if not isinstance(value, str):
+        raise WorkRecordParseError(f"{field} must be a JSON string")
+    if not value.strip():
+        raise WorkRecordParseError(f"{field} must be a non-empty string")
+    return value
+
+
+def _exact_keys(value: object, expected: frozenset[str], label: str) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise WorkRecordParseError(f"{label} must be a JSON object")
+    actual = set(value)
+    missing = expected - actual
+    unknown = actual - expected
+    if missing:
+        raise WorkRecordParseError(
+            f"{label} is missing required key(s): {', '.join(sorted(missing))}"
+        )
+    if unknown:
+        raise WorkRecordParseError(
+            f"{label} contains unknown key(s): {', '.join(sorted(unknown))}"
+        )
+    return value
+
+
+def parse_requirement_baseline(text: str) -> RequirementBaseline:
+    """Parse and validate a canonical Requirement baseline JSON object."""
+    value = _exact_keys(
+        _load_integrity_json(text, "Requirement baseline"),
+        _BASELINE_KEYS,
+        "Requirement baseline",
+    )
+    source = value["source"]
+    if source is not None:
+        source = _required_json_string(source, "Requirement baseline.source")
+    return RequirementBaseline(
+        source=source,
+        outcome=_required_json_string(value["outcome"], "Requirement baseline.outcome"),
+        scope=_required_json_string(value["scope"], "Requirement baseline.scope"),
+        constraints=_required_json_string(value["constraints"], "Requirement baseline.constraints"),
+        completion_criteria=_required_json_string(
+            value["completion_criteria"], "Requirement baseline.completion_criteria"
+        ),
+    )
+
+
+def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:
+    label = f"Behavior changes entry #{index}"
+    if not isinstance(value, dict):
+        raise WorkRecordParseError(f"{label} must be a JSON object")
+    target_value = value.get("target")
+    target = _required_json_string(target_value, f"{label}.target")
+    classification = _required_json_string(
+        value.get("classification"), f"{label}.classification"
+    )
+    if classification not in _BEHAVIOR_CLASSIFICATIONS:
+        raise WorkRecordParseError(
+            f"{label}.classification must be one of "
+            + ", ".join(sorted(_BEHAVIOR_CLASSIFICATIONS))
+        )
+    expected = _BEHAVIOR_CORE_KEYS | {"path"}
+    required = set(_BEHAVIOR_CORE_KEYS)
+    if classification == "requirement-change":
+        expected |= _BEHAVIOR_CHANGE_KEYS
+        required |= {"impact", "alternatives", "authority"}
+    missing = required - set(value)
+    unknown = set(value) - expected
+    if missing:
+        raise WorkRecordParseError(
+            f"{label} is missing required key(s): {', '.join(sorted(missing))}"
+        )
+    if unknown:
+        raise WorkRecordParseError(
+            f"{label} contains unknown key(s): {', '.join(sorted(unknown))}"
+        )
+    if target not in _TASK_CONTEXT_TARGETS and target != "repository-contract":
+        raise WorkRecordParseError(f"{label}.target has an invalid shape: {target!r}")
+    has_path = "path" in value
+    path: str | None = None
+    if target == "repository-contract":
+        if not has_path:
+            raise WorkRecordParseError(f"{label}.path is required for repository-contract")
+        path = _required_json_string(value["path"], f"{label}.path")
+    elif has_path:
+        raise WorkRecordParseError(f"{label}.path is only valid for repository-contract")
+
+    before = _required_json_string(value["before"], f"{label}.before")
+    after = _required_json_string(value["after"], f"{label}.after")
+    if before == after:
+        raise WorkRecordParseError(f"{label} before and after must differ")
+    reason = _required_json_string(value["reason"], f"{label}.reason")
+
+    impact: str | None = None
+    alternatives: str | None = None
+    authority: BehaviorChangeAuthority | None = None
+    approval: BehaviorChangeApproval | None = None
+    if classification == "requirement-change":
+        impact = _required_json_string(value["impact"], f"{label}.impact")
+        alternatives = _required_json_string(value["alternatives"], f"{label}.alternatives")
+        authority_value = _exact_keys(value["authority"], _AUTHORITY_KEYS, f"{label}.authority")
+        authority_scope = _required_json_string(
+            authority_value["scope"], f"{label}.authority.scope"
+        )
+        if authority_scope not in {"task", "repository"}:
+            raise WorkRecordParseError(
+                f"{label}.authority.scope must be 'task' or 'repository'"
+            )
+        authority = BehaviorChangeAuthority(
+            scope=authority_scope,  # type: ignore[arg-type]
+            name=_required_json_string(authority_value["name"], f"{label}.authority.name"),
+        )
+        if "approval" in value and value["approval"] is not None:
+            approval_value = _exact_keys(
+                value["approval"], _APPROVAL_KEYS, f"{label}.approval"
+            )
+            approval = BehaviorChangeApproval(
+                by=_required_json_string(approval_value["by"], f"{label}.approval.by"),
+                reference=_required_json_string(
+                    approval_value["reference"], f"{label}.approval.reference"
+                ),
+                verbatim=_required_json_string(
+                    approval_value["verbatim"], f"{label}.approval.verbatim"
+                ),
+            )
+    return BehaviorChange(
+        target=target,
+        classification=classification,  # type: ignore[arg-type]
+        before=before,
+        after=after,
+        reason=reason,
+        path=path,
+        impact=impact,
+        alternatives=alternatives,
+        authority=authority,
+        approval=approval,
+    )
+
+
+def parse_behavior_changes(text: str) -> list[BehaviorChange]:
+    """Parse and validate the canonical Behavior changes JSON array."""
+    value = _load_integrity_json(text, "Behavior changes")
+    if not isinstance(value, list):
+        raise WorkRecordParseError("Behavior changes must be a JSON array")
+    out = [_parse_behavior_entry(entry, index) for index, entry in enumerate(value, 1)]
+    repository_paths = [entry.path for entry in out if entry.target == "repository-contract"]
+    duplicates = {path for path in repository_paths if repository_paths.count(path) > 1}
+    if duplicates:
+        raise WorkRecordParseError(
+            "Behavior changes contains duplicate repository-contract path(s): "
+            + ", ".join(sorted(duplicates))
+        )
+    return out
+
+
+def _parse_optional_integrity_fields(
+    found: dict[str, str], record: dict[str, object]
+) -> None:
+    if "Requirement baseline" in found:
+        record["requirement_baseline"] = parse_requirement_baseline(
+            found["Requirement baseline"]
+        )
+    if "Behavior changes" in found:
+        record["behavior_changes"] = parse_behavior_changes(found["Behavior changes"])
 
 
 # ---------------------------------------------------------------------------
@@ -605,8 +887,12 @@ def parse_record(text: str) -> ParsedRecord:
     found = _extract_fields(block)
     shape = _decide_shape(found)
     if shape == "routine":
-        return ParsedRecord(shape="routine", record=_validate_routine_fields(found))
-    return ParsedRecord(shape="expanded", record=_validate_expanded_fields(found))
+        record = _validate_routine_fields(found)
+        _parse_optional_integrity_fields(found, record)
+        return ParsedRecord(shape="routine", record=record)
+    record = _validate_expanded_fields(found)
+    _parse_optional_integrity_fields(found, record)
+    return ParsedRecord(shape="expanded", record=record)
 
 
 def parse(text: str) -> WorkRecord:
@@ -641,7 +927,9 @@ def render(record: WorkRecord) -> str:
     content can be embedded into a Markdown file without joining
     artifacts.
     """
-    return _render_against(record, _FIELD_SCHEMA)
+    return _render_against(
+        record, _FIELD_SCHEMA, optional_extra_fields=_ROUTINE_OPTIONAL_EXTRA_FIELDS
+    )
 
 
 def render_expanded(record: ExpandedWorkRecord) -> str:
@@ -673,6 +961,63 @@ def render_record(parsed: ParsedRecord) -> str:
     return render_expanded(parsed.record)  # type: ignore[arg-type]
 
 
+def _integrity_json_value(key: str, value: object) -> str:
+    if key == "requirement_baseline":
+        if not isinstance(value, RequirementBaseline):
+            raise WorkRecordParseError("requirement_baseline must be a RequirementBaseline")
+        data: object = {
+            "source": value.source,
+            "outcome": value.outcome,
+            "scope": value.scope,
+            "constraints": value.constraints,
+            "completion_criteria": value.completion_criteria,
+        }
+    elif key == "behavior_changes":
+        if not isinstance(value, list) or not all(
+            isinstance(entry, BehaviorChange) for entry in value
+        ):
+            raise WorkRecordParseError(
+                "behavior_changes must be a list of BehaviorChange entries"
+            )
+        entries: list[dict[str, object]] = []
+        for entry in value:
+            item: dict[str, object] = {
+                "target": entry.target,
+                "classification": entry.classification,
+                "before": entry.before,
+                "after": entry.after,
+                "reason": entry.reason,
+            }
+            if entry.path is not None:
+                item["path"] = entry.path
+            if entry.classification == "requirement-change":
+                item.update(
+                    {
+                        "impact": entry.impact,
+                        "alternatives": entry.alternatives,
+                        "authority": (
+                            None
+                            if entry.authority is None
+                            else {
+                                "scope": entry.authority.scope,
+                                "name": entry.authority.name,
+                            }
+                        ),
+                    }
+                )
+                if entry.approval is not None:
+                    item["approval"] = {
+                        "by": entry.approval.by,
+                        "reference": entry.approval.reference,
+                        "verbatim": entry.approval.verbatim,
+                    }
+            entries.append(item)
+        data = entries
+    else:
+        raise WorkRecordParseError(f"unknown integrity JSON field {key!r}")
+    return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
 def _render_against(
     record: WorkRecord | ExpandedWorkRecord,
     schema: tuple[tuple[str, str], ...],
@@ -685,10 +1030,8 @@ def _render_against(
     placeholder lines for fields that weren't set.
     """
     parts = [_START_MARKER]
-    schema_keys: set[str] = set()
     for label, key in schema:
         parts.append(f"**{label}:** {record[key]}")  # type: ignore[literal-required]
-        schema_keys.add(key)
     extra = optional_extra_fields or {}
     # Render optional-extras after the State field would conflict —
     # State is the last schema entry in expanded, and Exceptions should
@@ -702,11 +1045,26 @@ def _render_against(
         state_line = body_parts[-1]
         body_parts = body_parts[:-1]
         for label, key in extra.items():
-            # ``record.get(key)`` works because TypedDicts are dicts at
-            # runtime; emit the field only when present.
+            # ``record.get`` works because TypedDicts are dicts at runtime;
+            # emit the field only when present.
             value = record.get(key)  # type: ignore[misc]
-            if value is not None and value != "":
-                body_parts.append(f"**{label}:** {value}")
+            if value is None or (key not in _OPTIONAL_JSON_FIELDS.values() and value == ""):
+                continue
+            rendered = (
+                _integrity_json_value(key, value)
+                if key in _OPTIONAL_JSON_FIELDS.values()
+                else str(value)
+            )
+            line = f"**{label}:** {rendered}"
+            if label == "Requirement baseline":
+                completion = next(
+                    i
+                    for i, part in enumerate(body_parts)
+                    if part.startswith("**Completion criteria:**")
+                )
+                body_parts.insert(completion + 1, line)
+            else:
+                body_parts.append(line)
         body_parts.append(state_line)
         parts = [parts[0]] + body_parts
     parts.append(_END_MARKER)
