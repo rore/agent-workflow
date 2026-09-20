@@ -45,6 +45,7 @@
 - Updated the public README, bootstrap integration flow, default-profile examples, documentation index, and roadmap summaries without changing normative behavior.
 - Result review rejected the byte-identical public-copy assumption because copied package-relative links are broken in the repository public layout; returned to planning for link adaptation and coverage.
 - Rewrote only the four reviewed public-layout links, removed the link-check exclusion, and added parity enforcement that permits only those declared substitutions.
+- CodeRabbit found two documentation-contract mismatches: the public Implement guide obscured its required target-file/class-list exception, and the README implied every affected Work Record must carry the verification identifier. Corrected the authoritative template, public/generated copies, and README to match the established contract.
 
 ## Evidence
 
@@ -59,6 +60,7 @@
 - Initial `bash tests/links/run.sh` passed 185 files but excluded `docs/agent-workflow/`; result review correctly rejected it as evidence for the public guides.
 - `bash tests/package/run.sh`: source/dist/local parity, references, install probe, and bootstrap E2E passed.
 - `bash tests/run-all.sh` with the existing project virtual environment selected for WSL: exit 0 across budget, schema, Work Record, checker, Redline, tuner, hooks, links, and package layers; evaluated the working tree based on `f6a68c6`.
+- Post-CodeRabbit correction: `bash tests/links/run.sh` and `bash tests/package/run.sh` passed; budget, schema, Work Record, checker, Redline, tuner, and links passed with the project pytest environment; the package and hook layers passed separately under native WSL Python because Windows Python cannot address their WSL temporary paths.
 
 ## Plan review
 

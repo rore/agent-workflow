@@ -57,7 +57,7 @@ templates/checkpoints/assess-risk.md	3423
 templates/checkpoints/behavioral-integrity.md	3362
 templates/checkpoints/discover.md	2920
 templates/checkpoints/establish-context.md	2922
-templates/checkpoints/implement.md	6441
+templates/checkpoints/implement.md	6501
 templates/checkpoints/plan-and-review.md	5004
 templates/checkpoints/review-result.md	4018
 templates/checkpoints/verify.md	3124

@@ -101,7 +101,7 @@ The checker reads the Work Record and the classifier's verdict — it does not r
 
 - The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
 - Its Requirement baseline and any ordered Behavior changes are complete, consistent, and authorized.
-- Every changed configured behavior-contract path is classified, repository-authorized when required, and linked to its configured verification identifier.
+- Every changed configured behavior-contract path is classified and repository-authorized when required; at least one affected Work Record references its configured verification identifier.
 - Declared risk is not below what the classifier detected on the diff.
 - No architectural-boundary violation.
 - Required reviews/approvals are recorded for Elevated/High work. (Once the classifier is in binding mode, any triggered review checkpoint must also be satisfied.)
