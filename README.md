@@ -21,6 +21,7 @@ agent-workflow makes that state durable, uses risk to focus reviewer attention, 
 ## What you get
 
 - **Durable task state** — scope, assumptions, decisions, and verification live in the committed Work Record, so work can be reviewed and resumed rather than lost in a chat log.
+- **Behavioral integrity** — the Work Record preserves the requirements implementation started with, and repositories can protect selected behavior-contract paths from silent weakening.
 - **Risk-aware visibility** — the risk classification decides where a reviewer's attention goes, and what the agent decided and verified is on the record.
 - **Objective CI gates** — mechanically detectable violations fail CI, so they don't depend on the agent reporting itself correctly.
 
@@ -66,6 +67,7 @@ Target: wallet-service
 Scope: the retry path and its tests; no public API or schema change
 Constraints: public API and tenant isolation unchanged
 Completion criteria: a transient failure produces a single retry
+Requirement baseline: {"source":"work-record-initial","outcome":"Fix retry handling in WalletService — a transient failure retries once, not in a loop","scope":"the retry path and its tests; no public API or schema change","constraints":"public API and tenant isolation unchanged","completion_criteria":"a transient failure produces a single retry"}
 Risk: Routine
 Complexity: Simple
 Approach: reuse the existing retry utility; add a regression test
@@ -98,6 +100,8 @@ Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, writ
 The checker reads the Work Record and the classifier's verdict — it does not re-run your tests. It fails CI on blocking violations (and blocks merge where configured as a required check):
 
 - The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
+- Its Requirement baseline and any ordered Behavior changes are complete, consistent, and authorized.
+- Every changed configured behavior-contract path is classified and repository-authorized when required; at least one affected Work Record references its configured verification identifier.
 - Declared risk is not below what the classifier detected on the diff.
 - No architectural-boundary violation.
 - Required reviews/approvals are recorded for Elevated/High work. (Once the classifier is in binding mode, any triggered review checkpoint must also be satisfied.)
@@ -111,6 +115,8 @@ By design — these stay reviewer judgments the checker never touches:
 
 - Whether the plan is sound, discovery thorough, or the code correct.
 - Whether the chosen verification method actually proves the criterion.
+- Whether a behavior-change classification is semantically honest or the stored baseline was never rewritten.
+- Whether a configured contract check is actually required or passed; bootstrap/review validates required-check status and CI reports execution.
 - Whether the tests pass — GitHub already knows that.
 - Whether a human genuinely approved. The checker confirms approval-shaped text exists, not who wrote it; this "cheating window" is acknowledged openly. Its answer is visibility — the recorded approvals, classifications, and claims land in the PR conversation and the reviewer's notification, where a human can see them and object.
 
@@ -127,5 +133,6 @@ On an internal repository, agent-workflow has governed its own development acros
 | Predicate-by-predicate reference of what CI blocks on | [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md) |
 | The normative workflow + harness contract | [`docs/SPEC.md`](docs/SPEC.md) |
 | Default profile mapping (risk triggers, GitHub, CI) | [`docs/DEFAULT_PROFILE.md`](docs/DEFAULT_PROFILE.md) |
+| Requirement baselines, behavior changes, and protected contracts | [`docs/agent-workflow/behavioral-integrity.md`](docs/agent-workflow/behavioral-integrity.md) |
 | Publishing the skill | [`docs/PACKAGING.md`](docs/PACKAGING.md) |
 | Working on agent-workflow itself | [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md) |

@@ -15,7 +15,7 @@ If you only read one thing first, read the top-level [`../README.md`](../README.
 
 | Doc | When to read |
 |---|---|
-| [`agent-workflow/`](agent-workflow/) | One file per checkpoint. Plain copies of `core/templates/checkpoints/*.md` so the agent has a stable reference inside the install. |
+| [`agent-workflow/`](agent-workflow/) | Checkpoint and on-demand guides. Content-synchronized from `core/templates/checkpoints/*.md`, with repository-relative links adjusted for this public layout. |
 | [`agent-redline/skills/`](agent-redline/skills/) | One file per redline zone / boundary signal. Bootstrap copies these in too. |
 
 ## Enforcement and risk reference

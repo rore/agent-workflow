@@ -67,7 +67,7 @@ Read on the agent-workflow side:
 - **Existing agent-instruction files:** inspect `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `copilot-instructions.md`, and any `*-instructions.md`; always create or reconcile only the owned marker in root `AGENTS.md` and preserve every other instruction file.
 - **Authoritative-source map:** what existing files this repo treats as canonical for *what the system should do* (requirements, Jira), *how it's organised* (architecture, ADRs), and *what was decided* (`DECISIONS.md`). Bootstrap doesn't invent these; it lists what it found.
 - **Existing CI:** `.github/workflows/`. Note whether `agent-workflow.yml` exists, name collisions on `redline-verdict`, and dominant trigger style (`pull_request:` vs `push:`).
-- **Behavior-contract candidates:** exact acceptance/E2E/contract/regression paths, the existing required CI check that runs each, and repository authority from CODEOWNERS or governance. Propose only; never protect automatically.
+- **Behavior-contract candidates:** exact repo-relative acceptance/E2E/contract/regression paths or boundary-safe dir/** patterns; for each, record the existing required-CI identifier, live required-status evidence, and repository-authority evidence covering the path. Report none when absent and unresolved when evidence is missing. Propose only; never protect automatically.
 - **Existing CODEOWNERS:** `.github/CODEOWNERS` or `CODEOWNERS` at root. Bootstrap doesn't modify it.
 - **Flow signal:** `gh pr list --state merged --limit 30 --json number` vs `git log --since="3 months ago" --pretty=format:%h | wc -l`. Used to pick PR-driven vs push-driven; agent-workflow CI template assumes PR-driven.
 - **Applicability candidates:** load [`applicability.md`](core/templates/checkpoints/applicability.md); discover actual documentation/roadmap/root-README paths and live default-branch protection. Do not assume path names.
@@ -87,6 +87,7 @@ Then invoke redline's Phase 1 (extension pick, build files, source layout, bound
 **Existing agent-instruction file:** <path or "none">
 **Authoritative sources found:** <requirements / architecture / decisions — paths or "none">
 **Existing CI:** <paths to workflows / "none">
+**Behavior-contract candidates:** <path/pattern → required-CI identifier + required-status evidence → covering repository-authority evidence / "none" / unresolved>
 **Existing CODEOWNERS:** <yes / no>
 **Applicability candidates + protection:** <exact paths / none>; <protected / unprotected / unavailable>
 
@@ -131,7 +132,7 @@ Backend is always `local`. The taskPath template is the canonical default; don't
 
 If candidates exist, add `applicability.documentationOnly` to the inert draft with exact paths. Set direct-default true only when live checks prove unprotected; otherwise false.
 
-Add behaviorContracts only when the developer selects exact paths, each is already exercised by a named required CI check, and a repository approval authority is identified:
+Add behaviorContracts only after explicit selection of exact repo-relative paths or boundary-safe dir/** patterns. Every path must share one existing required-CI identifier and one covering repository authority; split/defer or omit incompatible or unresolved candidates:
 
     behaviorContracts:
       paths: ["tests/contracts/**"]
@@ -157,6 +158,7 @@ Ask the developer **only** what the inspection didn't already answer:
 - Repository-local paths the policy should treat specially that didn't surface in inspection?
 - PR-driven vs push-driven? (Confirm Phase 1's detection.)
 - Per-checkpoint reference docs under `docs/agent-workflow/` (default) or somewhere else?
+- Behavior-contract candidates: select or reject each? Selection is not authority approval. Emit one compatible set sharing one verification and authority; split/defer or omit the rest.
 
 Update both drafts using the approval command in [`applicability.md`](core/templates/checkpoints/applicability.md); use only its emitted fragment. Direct-default needs separate approval. Show revised drafts until explicit sign-off.
 

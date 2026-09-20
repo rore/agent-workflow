@@ -118,6 +118,9 @@ Public API and tenant isolation unchanged.
 Completion criteria:
 A retry under transient failure produces one wallet, not multiple.
 
+Requirement baseline:
+{"source":"work-record-initial","outcome":"Fix retry handling in WalletService.","scope":"Retry path and its tests. No public API or schema changes.","constraints":"Public API and tenant isolation unchanged.","completion_criteria":"A retry under transient failure produces one wallet, not multiple."}
+
 Risk and complexity:
 Routine / Simple.
 No sensitive path or blocking finding detected.
@@ -151,6 +154,9 @@ Tenant isolation remains unchanged.
 Completion criteria:
 When concurrent retry requests arrive, the system shall create exactly one wallet (verified by concurrency test).
 When a single wallet-creation request is made, the system shall create one wallet with no regression.
+
+Requirement baseline:
+{"source":"work-record-initial","outcome":"Repeated or concurrent wallet-creation retries create one wallet.","scope":"Wallet creation flow, persistence, and related tests.","constraints":"No public API change.\nTenant isolation remains unchanged.","completion_criteria":"When concurrent retry requests arrive, the system shall create exactly one wallet (verified by concurrency test).\nWhen a single wallet-creation request is made, the system shall create one wallet with no regression."}
 
 Risk:
 Elevated.

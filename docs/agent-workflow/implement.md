@@ -4,6 +4,10 @@ The longest stretch of the work — where scope drift, assumption decay, and sil
 
 > **Drift signal.** More than ~30 minutes wall time or ~5 file edits without touching the Work Record's Implementation prose → you've drifted. Stop, write what just happened, then continue. The `workrecord.commit_order` advisory predicate catches retroactive Work Records.
 
+## Before writing the first line
+
+List the specific files or classes you intend to modify. Record it in Implementation prose. If during implementation you discover you need to touch something not on this list, treat it as potential scope expansion (Rule 2 below) — stop and decide before continuing.
+
 ## Where to record what
 
 | Surface | What goes there |
@@ -25,11 +29,13 @@ If a decision is structural (future readers benefit), put it in code AND Impleme
 
 4. **Write planned tests as part of Implement, not as an afterthought.** For bug fixes: regression test that fails BEFORE the fix when practical (SPEC §9.6 SHOULD).
 
-5. **Record material decisions in Implementation prose in-line.** Things the planner didn't anticipate: pivoted approaches, discovered constraints, deferred refinements. Routine details (file names, signatures) belong in code review, not prose.
+5. **Delegate test runs to a sub-agent or separate invocation** that returns only STATUS / SUMMARY / FAILURES. Do not let full compiler or test-runner output accumulate in the implementing agent's context — it crowds out task state and degrades decision quality on long sessions.
 
-6. **Pause on assumption failure.** Stop coding → update Material assumptions with the disproving evidence → decide next step per the recorded action → record the pivot in Implementation prose. The harness can't enforce this; it's a discipline.
+6. **Record material decisions in Implementation prose in-line.** Things the planner didn't anticipate: pivoted approaches, discovered constraints, deferred refinements. Routine details (including signatures and file names outside the required target-file or class list) belong in code review, not prose.
 
-7. **Stop on boundary violation.** Non-waivable. Surface in conversation → treat as material scope change → either pivot to avoid it or escalate to the developer. A change that *fixes* an existing boundary violation is welcome; a change that *creates* one is not.
+7. **Pause on assumption failure.** Stop coding → update Material assumptions with the disproving evidence → decide next step per the recorded action → record the pivot in Implementation prose. The harness can't enforce this; it's a discipline.
+
+8. **Stop on boundary violation.** Non-waivable. Surface in conversation → treat as material scope change → either pivot to avoid it or escalate to the developer. A change that *fixes* an existing boundary violation is welcome; a change that *creates* one is not.
 
 ## What counts as material scope expansion
 

@@ -54,17 +54,17 @@ SKIP_PREFIXES = (
     # install root. Source-tree validation would need
     # package-aware path rewriting; tracked as a follow-up.
     "core/skill/",
-    # `docs/agent-workflow/` is bootstrap-time content vendored
-    # FROM `core/templates/checkpoints/`. Relative paths inside
-    # those files resolve correctly inside the consuming repo
-    # (where bootstrap places them at `docs/agent-workflow/`), not
-    # inside this source tree where the same files live one level
-    # deeper. Same package-time-path issue as core/skill/.
-    "docs/agent-workflow/",
+
 )
 
 # Markdown link pattern: [text](target). Allows nested brackets in text.
 LINK_RE = re.compile(r"!?\[(?:[^\[\]]|\[[^\]]*\])*\]\(([^)]+)\)")
+
+PUBLIC_GUIDE_REWRITES = {
+    "../../skill/operating-mode.md": "../../core/skill/operating-mode.md",
+    "../../agent-redline/core/skill/agent-redline.md": "../../core/agent-redline/core/skill/agent-redline.md",
+    "../skill-feedback.md": "../../core/templates/skill-feedback.md",
+}
 
 
 def iter_markdown_files() -> list[Path]:
@@ -145,13 +145,31 @@ def check_file(md_path: Path) -> list[str]:
     return broken
 
 
+def check_public_guide_parity() -> list[str]:
+    source_dir = REPO_ROOT / "core/templates/checkpoints"
+    public_dir = REPO_ROOT / "docs/agent-workflow"
+    source = {path.name: path for path in source_dir.glob("*.md")}
+    public = {path.name: path for path in public_dir.glob("*.md")}
+    errors = []
+    if source.keys() != public.keys():
+        errors.append(f"public guide filenames differ: source={sorted(source)} public={sorted(public)}")
+        return errors
+    for name, source_path in source.items():
+        expected = source_path.read_text(encoding="utf-8")
+        for old, new in PUBLIC_GUIDE_REWRITES.items():
+            expected = expected.replace(old, new)
+        if public[name].read_text(encoding="utf-8") != expected:
+            errors.append(f"docs/agent-workflow/{name} differs beyond declared public-link rewrites")
+    return errors
+
+
 def main() -> int:
     files = iter_markdown_files()
     if not files:
         print("error: no markdown files found", file=sys.stderr)
         return 2
 
-    all_broken: list[str] = []
+    all_broken: list[str] = check_public_guide_parity()
     for md in sorted(files):
         broken = check_file(md)
         if broken:

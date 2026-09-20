@@ -2,6 +2,8 @@
 
 Routine path. Five fields, each one line where possible: **Outcome**, **Target**, **Scope**, **Constraints**, **Completion criteria**. Write all five before you read code.
 
+If the task arrived from an authoritative source item, link it in surrounding prose and record only task-local context; do not copy it into a competing local specification.
+
 The point of this checkpoint is to write down what you would otherwise *infer*. Agents fill gaps confidently and silently; the marker block makes the gap-filling visible to a reviewer.
 
 ## Field-by-field
@@ -34,9 +36,11 @@ What must NOT change, even if it would be convenient. Use this to name things th
 
 ### Completion criteria
 
-Observable outcome — a thing a reviewer could check from the diff or from CI. Not "the change works"; that is unfalsifiable.
+Observable outcome — a thing a reviewer could check from the diff or from CI. Not "the change works"; that is unfalsifiable. Not "add a test" — that describes implementation, not the outcome.
 
-> A regression test asserts single-wallet behaviour under simulated concurrent retries.
+State the observable result directly. EARS form works well: *`When <trigger>, the <system> shall <observable outcome>`.*
+
+> When concurrent retries arrive, the system shall produce exactly one wallet — verified by the CI concurrency test.
 
 If you cannot name an observable outcome, you do not yet know what success looks like. Stop and discuss with the developer before continuing.
 
@@ -46,6 +50,8 @@ If you cannot name an observable outcome, you do not yet know what success looks
 - It is not an exhaustive context dump. Five lines (one per field) is the typical shape.
 - It is not a place to record reasoning. The reasoning lives in surrounding prose, not in the marker block.
 
-## When to revise
+## Baseline and revision
 
-The Task Context can be refined during discovery — the spec allows this. If you revise it after starting implementation, ask whether the change is material. A material change (different outcome, different scope, different completion criteria) means re-planning, not in-place editing.
+Before discovery, copy Outcome, Scope, Constraints, and Completion criteria into the Requirement baseline JSON. See [behavioral-integrity.md](behavioral-integrity.md). Equivalent clarification uses a change entry; a material refinement blocks for task-owner approval. Never rewrite the baseline.
+
+Planning and implementation cannot begin while context is unclear or the baseline is missing.
