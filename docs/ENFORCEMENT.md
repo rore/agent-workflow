@@ -122,7 +122,7 @@ A task exception **MUST NOT** downgrade these. The list is enforced by `exceptio
 
 - `risk.boundary_violation_absent` — SPEC §11.
 - `workrecord.exists`, `workrecord.markers_present`, `risk.declared`, `complexity.declared`, `workrecord.shape_matches_classification` — preconditions; without them the verdict is unreliable.
-- All equirements.* and ehavior_contracts.* predicates above — the task baseline, exact change chain, authority separation, complete path evidence, classification, and verification linkage cannot be waived.
+- All `requirements.*` and `behavior_contracts.*` predicates above — the task baseline, exact change chain, authority separation, complete path evidence, classification, and verification linkage cannot be waived.
 - `exceptions.well_formed`, `exceptions.not_against_boundary`, `exceptions.not_expired` — circular waivers are not honoured.
 - `approval.clean_context_does_not_satisfy_human` — SPEC §13.4 structural invariant.
 - `review.checkpoints_satisfied` — SPEC §13.4 (checkpoint satisfaction MUST remain distinct from human approval). Disposition is mode-dependent (blocking under `binding`, advisory under `shadow`), but a task exception cannot waive it either way.

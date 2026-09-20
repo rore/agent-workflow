@@ -52,6 +52,7 @@
 - Work Record parser suite: 79 passed; schema suite: 63 passed.
 - Required `bash tests/run-all.sh`: all layers passed (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, and `package`). Re-run after the cross-platform package-manifest fix with the same result.
 - Source, `dist`, and `.claude` checker/schema/template parity verified; both manifests have correct byte sizes with zero mismatches.
+- CodeRabbit review of `c26204a` reported two actionable findings; the missing vendored `NotRequired` import and corrupted enforcement predicate names were fixed at source, packages regenerated, unexpected control bytes scanned, and the full suite passed again.
 - Pre-edit Redline review: `SCHEMA_CHANGE/RED`; architecture-review required; no boundary risk.
 - Final local checker: every blocking predicate passed; only the expected shadow-mode `architecture-review` checkpoint remains advisory until PR governance records it.
 
@@ -70,4 +71,4 @@ The reviewer also confirmed that semantic classification and historical baseline
 
 ## Result review
 
-Clean-context review by `/root/result_review` found one blocking package-parity issue after the final duplicate-path guard. Regenerating `dist` and both local installs resolved it. The reviewer then verified checker/schema/template hashes, manifest byte sizes, duplicate-path rejection, and changed-record isolation and accepted the result with no remaining correctness findings. A bounded follow-up review accepted the CI-driven LF-normalization fix as minimal and correctly scoped.
+Clean-context review by `/root/result_review` found one blocking package-parity issue after the final duplicate-path guard. Regenerating `dist` and both local installs resolved it. The reviewer then verified checker/schema/template hashes, manifest byte sizes, duplicate-path rejection, and changed-record isolation and accepted the result with no remaining correctness findings. A bounded follow-up review accepted the CI-driven LF-normalization fix as minimal and correctly scoped. CodeRabbit then reviewed `c26204a` and reported two valid quick fixes, both resolved and reverified.
