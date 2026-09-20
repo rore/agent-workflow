@@ -9,6 +9,8 @@
 
 **Completion criteria:** Existing tests stay green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"A small routine change to the bravo module.","scope":"Bravo module helpers.","constraints":"—","completion_criteria":"Existing tests stay green."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

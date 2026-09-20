@@ -662,6 +662,146 @@ def review_checkpoints_satisfied(ctx: CheckerContext) -> PredicateResult:
 
 
 # ---------------------------------------------------------------------------
+# Behavioral requirement integrity predicates
+# ---------------------------------------------------------------------------
+
+_TASK_CONTEXT_FIELDS = {
+    "task-context.outcome": "outcome",
+    "task-context.scope": "scope",
+    "task-context.constraints": "constraints",
+    "task-context.completion_criteria": "completion_criteria",
+}
+
+
+def _integrity_error(ctx: CheckerContext) -> str | None:
+    if ctx.record is None:
+        if ctx.parse_error is not None:
+            return f"Work Record integrity fields could not be parsed: {ctx.parse_error}"
+        return "Work Record integrity fields are unavailable because the record is missing."
+    return None
+
+
+def requirements_baseline_present(ctx: CheckerContext) -> PredicateResult:
+    """Require the task-local baseline before any record can advance."""
+    name = "requirements.baseline_present"
+    error = _integrity_error(ctx)
+    if error is not None:
+        return PredicateResult(name, False, error, True)
+    baseline = ctx.record.get("requirement_baseline")  # type: ignore[union-attr]
+    if baseline is None:
+        return PredicateResult(
+            name,
+            False,
+            "Requirement baseline is missing; legacy records remain readable "
+            "but cannot advance.",
+            True,
+        )
+    return PredicateResult(name, True, "Requirement baseline is present.", True)
+
+
+def behavior_changes_well_formed(ctx: CheckerContext) -> PredicateResult:
+    """Surface malformed optional integrity JSON as a named blocking rule."""
+    name = "requirements.behavior_changes_well_formed"
+    error = _integrity_error(ctx)
+    if error is not None:
+        return PredicateResult(name, False, error, True)
+    return PredicateResult(
+        name, True, "Behavior changes are absent or parser-validated.", True
+    )
+
+
+def task_context_traceable(ctx: CheckerContext) -> PredicateResult:
+    """Require an ordered, lossless baseline-to-current Task Context chain."""
+    name = "requirements.task_context_traceable"
+    error = _integrity_error(ctx)
+    if error is not None:
+        return PredicateResult(name, False, error, True)
+    baseline = ctx.record.get("requirement_baseline")  # type: ignore[union-attr]
+    if baseline is None:
+        return PredicateResult(
+            name, False, "Task Context cannot be traced without a baseline.", True
+        )
+    values = {
+        field: getattr(baseline, field) for field in _TASK_CONTEXT_FIELDS.values()
+    }
+    for index, change in enumerate(
+        ctx.record.get("behavior_changes", []), 1  # type: ignore[union-attr]
+    ):
+        field = _TASK_CONTEXT_FIELDS.get(change.target)
+        if field is None:
+            continue
+        if change.before != values[field]:
+            return PredicateResult(
+                name,
+                False,
+                f"Task Context chain entry #{index} for {change.target!r} starts "
+                f"at {change.before!r}, expected {values[field]!r}.",
+                True,
+            )
+        values[field] = change.after
+    mismatches = [
+        target
+        for target, field in _TASK_CONTEXT_FIELDS.items()
+        if values[field] != ctx.record[field]  # type: ignore[index]
+    ]
+    if mismatches:
+        return PredicateResult(
+            name,
+            False,
+            "Task Context chain does not end at the current record fields: "
+            + ", ".join(mismatches),
+            True,
+        )
+    return PredicateResult(
+        name,
+        True,
+        "Task Context changes form an ordered baseline-to-current chain.",
+        True,
+    )
+
+
+def requirement_changes_authorized(ctx: CheckerContext) -> PredicateResult:
+    """Require exact task-owner/user approval for task requirement changes."""
+    name = "requirements.requirement_changes_authorized"
+    error = _integrity_error(ctx)
+    if error is not None:
+        return PredicateResult(name, False, error, True)
+    for index, change in enumerate(
+        ctx.record.get("behavior_changes", []), 1  # type: ignore[union-attr]
+    ):
+        if (
+            change.classification != "requirement-change"
+            or change.target == "repository-contract"
+        ):
+            continue
+        if (
+            change.authority is None
+            or change.authority.scope != "task"
+            or change.authority.name != "task-owner"
+        ):
+            return PredicateResult(
+                name,
+                False,
+                f"Task requirement change entry #{index} must use authority "
+                "scope 'task' and name 'task-owner'.",
+                True,
+            )
+        if change.approval is None or change.approval.by != "user":
+            return PredicateResult(
+                name,
+                False,
+                f"Task requirement change entry #{index} requires approval.by "
+                "== 'user'; an unapproved proposal remains blocked.",
+                True,
+            )
+    return PredicateResult(
+        name,
+        True,
+        "Task requirement changes have exact task-owner/user authority.",
+        True,
+    )
+
+# ---------------------------------------------------------------------------
 # Exceptions predicates (slice F)
 # ---------------------------------------------------------------------------
 #
@@ -688,6 +828,14 @@ _NON_WAIVABLE_PREDICATES: frozenset[str] = frozenset({
     "complexity.declared",
     "workrecord.shape_matches_classification",
     "workrecord.implementation_ready",
+    "requirements.baseline_present",
+    "requirements.behavior_changes_well_formed",
+    "requirements.task_context_traceable",
+    "requirements.requirement_changes_authorized",
+    "behavior_contracts.changed_paths_complete",
+    "behavior_contracts.changed_paths_classified",
+    "behavior_contracts.requirement_changes_authorized",
+    "behavior_contracts.verification_linked",
     # The exception predicates themselves — circular waivers are not
     # honoured. An exception waiving exceptions.well_formed would be
     # the harness telling itself to ignore its own content checks.
@@ -1322,6 +1470,14 @@ PREDICATE_SOURCE: dict[str, str] = {
     "evidence.criteria_have_methods": "core",
     "evidence.failure_not_claimed_as_success": "core",
     "workrecord.commit_order": "core",
+    "requirements.baseline_present": "core",
+    "requirements.behavior_changes_well_formed": "core",
+    "requirements.task_context_traceable": "core",
+    "requirements.requirement_changes_authorized": "core",
+    "behavior_contracts.changed_paths_complete": "repo",
+    "behavior_contracts.changed_paths_classified": "repo",
+    "behavior_contracts.requirement_changes_authorized": "repo",
+    "behavior_contracts.verification_linked": "repo",
     # default — redline-derived risk controls
     "risk.redline_findings_available": "default",
     "risk.boundary_violation_absent": "default",
@@ -1571,6 +1727,11 @@ PREDICATES: tuple = (
     # — no double-implementation of redline's satisfy-by logic. Appended
     # here so the three redline-derived predicates stay grouped.
     review_checkpoints_satisfied,
+    # --- behavioral requirement integrity ---------------------------
+    requirements_baseline_present,
+    behavior_changes_well_formed,
+    task_context_traceable,
+    requirement_changes_authorized,
     # --- exceptions predicates (slice F) ----------------------------
     exceptions_well_formed,
     exceptions_not_against_boundary,

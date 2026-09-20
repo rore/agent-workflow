@@ -47,13 +47,21 @@ import argparse
 import dataclasses
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
-from core.config import ConfigError, approve_documentation_only, evaluate_applicability
+from core.config import (
+    Config,
+    ConfigError,
+    approve_documentation_only,
+    behavior_contract_matches,
+    evaluate_applicability,
+    valid_repository_path,
+)
 from core.config import load as load_config_yaml
 from core.work_record import WorkRecordParseError, parse_exceptions
 from core.work_record.local_backend import (
@@ -558,6 +566,163 @@ def _github_default_branch_protection(repo_root: Path) -> str:
         return "unavailable"
     return "protected" if branch_info["protected"] or rules else "unprotected"
 
+def _contract_changed_path_valid(repo_root: Path, path: str) -> bool:
+    return valid_repository_path(path) and not _unsafe_applicability_path(repo_root, path)
+
+
+def _verification_reference_present(text: str, identifier: str) -> bool:
+    token = r"[A-Za-z0-9_.-]"
+    return re.search(rf"(?<!{token}){re.escape(identifier)}(?!{token})", text) is not None
+
+
+def _behavior_contract_record(
+    repo_root: Path,
+    cfg: Config,
+    slugs: list[str],
+    paths: list[str],
+    *,
+    paths_complete: bool,
+    redline_verdict_path: Path | None,
+    base_ref: str | None,
+    head_ref: str | None,
+) -> RecordVerdict:
+    """Check configured repository contracts against the trusted PR path set."""
+    config = cfg.behavior_contracts
+    assert config is not None
+    affected = list(dict.fromkeys(
+        path
+        for path in paths
+        if any(behavior_contract_matches(path, pattern) for pattern in config.paths)
+    ))
+    paths_safe = all(_contract_changed_path_valid(repo_root, path) for path in paths)
+    paths_unique = len(paths) == len(set(paths))
+    complete = paths_complete and paths_safe and paths_unique
+    contexts: list[CheckerContext] = []
+    if complete:
+        for slug in slugs:
+            try:
+                contexts.append(_build_context(
+                    repo_root,
+                    slug,
+                    redline_verdict_path,
+                    base_ref=base_ref,
+                    head_ref=head_ref,
+                ))
+            except (InvalidSlugError, UnsafeWorkRecordPathError):
+                continue
+
+    entries: dict[str, list[tuple[object, CheckerContext]]] = {
+        path: [] for path in affected
+    }
+    for ctx in contexts:
+        if ctx.record is None:
+            continue
+        for change in ctx.record.get("behavior_changes", []):  # type: ignore[union-attr]
+            if change.target == "repository-contract" and change.path in entries:
+                entries[change.path].append((change, ctx))
+
+    classified = complete and all(len(entries[path]) == 1 for path in affected)
+    authorized = classified
+    classification_detail: list[str] = []
+    authorization_detail: list[str] = []
+    affected_contexts: dict[str, CheckerContext] = {}
+    for path in affected:
+        matches = entries[path]
+        if len(matches) != 1:
+            classification_detail.append(
+                f"{path!r} has {len(matches)} repository-contract entries; expected exactly one"
+            )
+            continue
+        change, ctx = matches[0]
+        affected_contexts[ctx.slug] = ctx
+        classification_detail.append(f"{path!r} classified as {change.classification}")
+        if change.classification != "requirement-change":
+            continue
+        authority = change.authority
+        approval = change.approval
+        if (
+            authority is None
+            or authority.scope != "repository"
+            or authority.name != config.approval_authority
+            or approval is None
+            or approval.by != config.approval_authority
+        ):
+            authorized = False
+            authorization_detail.append(
+                f"{path!r} requires repository authority and approval.by "
+                f"{config.approval_authority!r}"
+            )
+
+    verification_linked = classified and any(
+        _verification_reference_present(
+            str(ctx.record.get("verification", ""))
+            + "\n"
+            + str(ctx.record.get("verification_plan", "")),
+            config.verification,
+        )
+        for ctx in affected_contexts.values()
+        if ctx.record is not None
+    )
+    if not paths_complete:
+        complete_detail = "trusted NUL changed-path evidence is missing or incomplete."
+    elif not paths_safe:
+        complete_detail = "changed-path evidence contains an unsafe or non-normalized path."
+    elif not paths_unique:
+        complete_detail = "changed-path evidence contains duplicate paths."
+    else:
+        complete_detail = "trusted NUL changed-path evidence is complete."
+
+    results = [
+        PredicateResult(
+            name="behavior_contracts.changed_paths_complete",
+            passed=complete,
+            detail=complete_detail,
+            blocking=True,
+        ),
+        PredicateResult(
+            name="behavior_contracts.changed_paths_classified",
+            passed=classified,
+            detail=(
+                "all affected repository contracts have exactly one classification."
+                if classified
+                else "; ".join(classification_detail)
+                or "contract path classification is unavailable."
+            ),
+            blocking=True,
+        ),
+        PredicateResult(
+            name="behavior_contracts.requirement_changes_authorized",
+            passed=authorized,
+            detail=(
+                "repository requirement changes use the configured repository authority."
+                if authorized
+                else "; ".join(authorization_detail)
+                or "repository contract classifications are not authorized."
+            ),
+            blocking=True,
+        ),
+        PredicateResult(
+            name="behavior_contracts.verification_linked",
+            passed=verification_linked,
+            detail=(
+                f"an affected Work Record references configured verification "
+                f"{config.verification!r}."
+                if verification_linked
+                else f"no affected Work Record references configured verification "
+                f"{config.verification!r}."
+            ),
+            blocking=True,
+        ),
+    ]
+    record = aggregate_record("<behavior-contracts>", results)
+    return dataclasses.replace(
+        record,
+        effective_rules=[{"name": result.name, "source": "repo"} for result in results],
+    )
+
+def _append_record(verdict: Verdict, record: RecordVerdict) -> Verdict:
+    return aggregate([*verdict.records, record])
+
 def _synthetic_verdict(
     slug: str,
     results: list[PredicateResult],
@@ -835,6 +1000,7 @@ def main(argv: list[str] | None = None) -> int:
 
     paths: list[str] = []
     slugs: list[str] = []
+    changed_record_slugs: list[str] = []
     discovery_succeeded = False
     if changed_path is not None:
         try:
@@ -851,6 +1017,7 @@ def main(argv: list[str] | None = None) -> int:
                 changed_paths=paths,
                 nul_delimited=trusted_paths,
             )
+            changed_record_slugs = list(slugs)
             discovery_succeeded = True
         except (OSError, UnicodeError, ValueError) as exc:
             print(
@@ -932,6 +1099,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     if trusted_paths and discovery_succeeded and cfg is not None and not verdict.records:
         protected_paths = list(_PROTECTED_APPLICABILITY_PATHS)
+        if cfg.behavior_contracts is not None:
+            protected_paths.extend(
+                pattern[:-2] if pattern.endswith("/**") else pattern
+                for pattern in cfg.behavior_contracts.paths
+            )
+
         protected_paths.extend(
             path
             for path in paths
@@ -1033,6 +1206,38 @@ def main(argv: list[str] | None = None) -> int:
                 ))
             verdict = _synthetic_verdict(args.slug or "<branch slug>", results, source="core")
 
+    if (
+        changed_path is not None
+        and cfg is not None
+        and cfg.behavior_contracts is not None
+    ):
+        evidence_complete = (
+            trusted_paths
+            and discovery_succeeded
+            and len(paths) == len(set(paths))
+            and all(_contract_changed_path_valid(repo_root, path) for path in paths)
+        )
+        affected_contract_paths = any(
+            any(
+                behavior_contract_matches(path, pattern)
+                for pattern in cfg.behavior_contracts.paths
+            )
+            for path in paths
+        )
+        if affected_contract_paths or not evidence_complete:
+            verdict = _append_record(
+                verdict,
+                _behavior_contract_record(
+                    repo_root,
+                    cfg,
+                    changed_record_slugs,
+                    paths,
+                    paths_complete=trusted_paths and discovery_succeeded,
+                    redline_verdict_path=args.redline_verdict,
+                    base_ref=args.base_ref,
+                    head_ref=args.head_ref,
+                ),
+            )
     payload = json.dumps(verdict.to_dict(), indent=2, ensure_ascii=False) + "\n"
     sys.stdout.buffer.write(payload.encode("utf-8"))
     return verdict.exit_code

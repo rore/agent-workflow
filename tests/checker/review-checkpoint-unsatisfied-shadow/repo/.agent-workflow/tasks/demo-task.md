@@ -9,6 +9,8 @@
 
 **Completion criteria:** Migration applies cleanly on existing data; existing tests pass.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Schema migration adds a new column to the wallets table.","scope":"Persistence layer; Flyway migration.","constraints":"Backward-compatible column add.","completion_criteria":"Migration applies cleanly on existing data; existing tests pass."}
+
 **Risk:** Elevated
 
 **Complexity:** Simple

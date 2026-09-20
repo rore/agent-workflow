@@ -9,6 +9,8 @@
 
 **Completion criteria:** Retry test passes.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Small refactor.","scope":"Wallet retry helper.","constraints":"No API change.","completion_criteria":"Retry test passes."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

@@ -1,7 +1,7 @@
 ---
 id: behavioral-requirement-integrity
 title: 'Behavioral requirement integrity'
-status: queued
+status: shipped
 priority: high
 commitment: committed
 ---
@@ -436,6 +436,18 @@ a green queue-only implementation.
 
 No new checkpoint, semantic-diff engine, service, or universal contract format
 is required.
+
+## Delivery result
+
+Shipped the generic Agent Workflow feature: immutable task baselines, structured
+behavior-change records, protected repository contract paths, distinct task and
+repository approval authority, required-verification linkage, fail-closed
+changed-path handling, bootstrap guidance, packaged checker parity, and replay
+coverage for both PR #167 erosion paths.
+
+Pallium adoption of a dedicated Relay contract suite and any later generic
+stable-ID enforcement remain the downstream dogfood slice described above; they
+are not hidden requirements of this repository-level delivery.
 
 ## Acceptance coverage
 

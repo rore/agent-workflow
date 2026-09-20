@@ -215,6 +215,8 @@ cat > .agent-workflow/tasks/_probe.md <<'EOF'
 
 **Completion criteria:** Checker exits cleanly against this record.
 
+**Requirement baseline:** {"source":"bootstrap-self-probe","outcome":"Probe Work Record for the bootstrap self-check.","scope":"None — probe record only.","constraints":"—","completion_criteria":"Checker exits cleanly against this record."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

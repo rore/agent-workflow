@@ -9,6 +9,8 @@
 
 **Completion criteria:** Existing tests stay green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Safe blue-zone refactor.","scope":"Internal utility class plus its tests.","constraints":"—","completion_criteria":"Existing tests stay green."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate

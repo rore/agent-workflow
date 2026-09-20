@@ -67,6 +67,7 @@ Read on the agent-workflow side:
 - **Existing agent-instruction files:** inspect `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `copilot-instructions.md`, and any `*-instructions.md`; always create or reconcile only the owned marker in root `AGENTS.md` and preserve every other instruction file.
 - **Authoritative-source map:** what existing files this repo treats as canonical for *what the system should do* (requirements, Jira), *how it's organised* (architecture, ADRs), and *what was decided* (`DECISIONS.md`). Bootstrap doesn't invent these; it lists what it found.
 - **Existing CI:** `.github/workflows/`. Note whether `agent-workflow.yml` exists, name collisions on `redline-verdict`, and dominant trigger style (`pull_request:` vs `push:`).
+- **Behavior-contract candidates:** exact acceptance/E2E/contract/regression paths, the existing required CI check that runs each, and repository authority from CODEOWNERS or governance. Propose only; never protect automatically.
 - **Existing CODEOWNERS:** `.github/CODEOWNERS` or `CODEOWNERS` at root. Bootstrap doesn't modify it.
 - **Flow signal:** `gh pr list --state merged --limit 30 --json number` vs `git log --since="3 months ago" --pretty=format:%h | wc -l`. Used to pick PR-driven vs push-driven; agent-workflow CI template assumes PR-driven.
 - **Applicability candidates:** load [`applicability.md`](core/templates/checkpoints/applicability.md); discover actual documentation/roadmap/root-README paths and live default-branch protection. Do not assume path names.
@@ -129,6 +130,15 @@ Backend is always `local`. The taskPath template is the canonical default; don't
 **`hooks.guardedPaths`** — the plan-mode gate hook (4.3h) requires a plan to include the Work Record step when it touches these path prefixes. Detect this repo's code root(s) from inspection (the layout that holds the code redline treats as sensitive — e.g. `src/` for a standard Maven/Gradle repo, or the actual top-level dirs like `core/`, `lib/`, `app/`), propose them here, and confirm with the developer in Phase 3. Prefixes match on a path boundary, case-insensitively. If omitted the gate defaults to `["src/"]`.
 
 If candidates exist, add `applicability.documentationOnly` to the inert draft with exact paths. Set direct-default true only when live checks prove unprotected; otherwise false.
+
+Add behaviorContracts only when the developer selects exact paths, each is already exercised by a named required CI check, and a repository approval authority is identified:
+
+    behaviorContracts:
+      paths: ["tests/contracts/**"]
+      verification: behavior-contracts
+      approvalAuthority: "@product-owners"
+
+Missing or unavailable required-CI/authority evidence leaves the block out; record it as unresolved instead of claiming protection.
 
 ### Draft 2: `agent-redline-policy.yaml`
 

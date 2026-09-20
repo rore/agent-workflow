@@ -9,6 +9,8 @@
 
 **Completion criteria:** Regression test asserts single-wallet behaviour under simulated concurrent retries; wallet-service CI stays green.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Concurrent retries against the wallet creation endpoint produce a single wallet.","scope":"Wallet creation retry path; its regression tests.","constraints":"Public API unchanged. Tenant isolation unchanged.","completion_criteria":"Regression test asserts single-wallet behaviour under simulated concurrent retries; wallet-service CI stays green."}
+
 **Risk:** Routine
 
 **Complexity:** Simple

@@ -18,9 +18,13 @@ from .applicability import (
     ApplicabilityDecision,
     DocumentationOnlyConfig,
     approve_documentation_only,
+    behavior_contract_matches,
     evaluate_applicability,
+    valid_behavior_contract_pattern,
+    valid_repository_path,
 )
 from .loader import (
+    BehaviorContractsConfig,
     Config,
     ConfigError,
     LocalBackendConfig,
@@ -32,6 +36,7 @@ from .loader import (
 __all__ = [
     "ApplicabilityConfig",
     "ApplicabilityDecision",
+    "BehaviorContractsConfig",
     "Config",
     "ConfigError",
     "DocumentationOnlyConfig",
@@ -39,6 +44,9 @@ __all__ = [
     "RedlineConfig",
     "WorkRecordConfig",
     "approve_documentation_only",
+    "behavior_contract_matches",
     "evaluate_applicability",
+    "valid_behavior_contract_pattern",
+    "valid_repository_path",
     "load",
 ]

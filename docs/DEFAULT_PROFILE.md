@@ -15,6 +15,7 @@ Profile-specific mapping of the workflow and harness contract (`SPEC.md`) to Git
 - **Approval and merge enforcement:** GitHub required reviewers, required checks, and branch protection
 - **Exceptions:** recorded in the Work Record's structured block (the marker-bounded Markdown section), approved under team policy
 - **Applicability:** an optional, bootstrap-approved documentation-only rule may omit the Work Record. Mixed, protected, risky, or uncertain changes use the normal workflow; direct-default work additionally requires live proof that the branch is unprotected.
+- **Behavioral integrity:** each new Work Record baselines Task Context before discovery. Repositories may explicitly protect behavior-contract paths only when an existing required CI surface and repository approval authority are recorded.
 - **External post-merge follow-up:** separate linked issue or task accepted by its delivery or operational owner
 
 ### Repository Delivery Guidance
@@ -37,7 +38,7 @@ The Work Record backend (currently the local Markdown file under `.agent-workflo
 
 The `/agent-workflow` skill confirms:
 
-- outcome, target, and scope are present
+- outcome, target, scope, constraints, completion criteria, and their Requirement baseline are present
 - risk is Routine
 - approach and verification are stated
 - no blocking finding exists
@@ -49,6 +50,7 @@ GitHub and CI remain authoritative for implementation, verification, review, and
 The Work Record backend (currently local) is the canonical index and contains or links:
 
 - Task Context (outcome, target, scope, constraints, completion criteria — SHOULD use EARS form: *When `<trigger>`, the `<system>` shall `<observable outcome>`*)
+- immutable Requirement baseline and any ordered Behavior changes
 - material Discovery Summary
 - risk and complexity decision
 - plan and Verification Plan

@@ -10,6 +10,8 @@
 **Completion criteria:** Initial Task Context is durably baselined before discovery; approved changes retain the baseline and exact decision trail; unapproved task or protected-contract requirement changes block; equivalent and coverage-only changes remain usable; configured contracts require existing CI linkage and cannot use documentation-only exemption; PR #167 erosion paths are rejected; source and packaged tests pass across at least two repository layouts.
 
 
+**Requirement baseline:** {"source":"roadmap/features/behavioral-requirement-integrity.md@b6ddd9d","outcome":"Agent Workflow preserves the behavior a task entered with and protects configured repository behavior contracts, so agents cannot silently make incomplete work pass by weakening requirements or tests.","scope":"Normative workflow semantics; Work Record schema, parser, templates, checker predicates and verdicts; agent guidance and bootstrap/reconfiguration UX; packaged artifacts and focused regression/acceptance coverage, including the Pallium PR #167 replay.","constraints":"No new checkpoint, semantic-diff engine, service, universal requirement-ID format, or routine ceremony when behavior is unchanged. Reuse trusted changed-path matching. Keep task-local and repository-wide approval authority distinct; mutation integrity must not be presented as CI regression enforcement.","completion_criteria":"Initial Task Context is durably baselined before discovery; approved changes retain the baseline and exact decision trail; unapproved task or protected-contract requirement changes block; equivalent and coverage-only changes remain usable; configured contracts require existing CI linkage and cannot use documentation-only exemption; PR #167 erosion paths are rejected; source and packaged tests pass across at least two repository layouts."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate
@@ -30,21 +32,28 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
-
-## Requirement baseline (pre-feature bootstrap)
-
-The accepted source is roadmap/features/behavioral-requirement-integrity.md@b6ddd9d. Before discovery, commit 47816ee recorded the exact Outcome, Scope, Constraints, and Completion criteria now present in Task Context. This baseline temporarily remains outside the marker block because the pre-feature parser rejects the new field; implementation will migrate it verbatim into canonical JSON once parser support lands.
 
 ## Implementation
 
-- Established Task Context from the committed roadmap feature and completed clean-context pre-edit Redline classification. No product files changed.
-- Discovery found reusable optional-field parsing, predicate plumbing, trusted changed-path evidence, applicability safety, and bootstrap seams; arbitrary semantic comparison, external authority authentication, and a new checkpoint remain unnecessary.
+- Updated the normative specification first and recorded the decision rationale, including the boundary between deterministic structure checks and reviewer judgment.
+- Added optional `behaviorContracts` configuration with safe exact and trailing `/**` paths, an existing verification reference, and repository approval authority.
+- Added canonical task baselines and ordered behavior-change records to both Work Record shapes, with strict parsing, exact continuity checks, distinct task/repository authority, and non-waivable authorization predicates.
+- Added one global fail-closed contract gate over trusted NUL-delimited changed paths. It rejects incomplete, unsafe, duplicate, stale-record, unclassified, unauthorized, or unlinked contract changes and denies the documentation-only exemption.
+- Integrated the behavior into Establish, bootstrap, one on-demand integrity guide, templates, packaged checkers, and local installs without a new checkpoint or routine change record.
+- Added focused replay and edge coverage for Pallium PR #167, exact and `dir/**` layouts, renames/deletes/untracked paths, Unicode/spaces, authority substitutions, stale historical records, duplicate evidence, and package parity.
+- Marked the generic roadmap feature shipped while retaining Pallium contract-suite adoption and stable-ID dogfooding as the documented downstream slice.
 
 ## Evidence
 
+- Focused behavioral-integrity checker suite: 21 passed.
+- Full checker suite: 181 passed.
+- Work Record parser suite: 79 passed; schema suite: 63 passed.
+- Required `bash tests/run-all.sh`: all layers passed (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, and `package`).
+- Source, `dist`, and `.claude` checker/schema/template parity verified; both manifests have correct byte sizes with zero mismatches.
 - Pre-edit Redline review: `SCHEMA_CHANGE/RED`; architecture-review required; no boundary risk.
+- Final local checker: every blocking predicate passed; only the expected shadow-mode `architecture-review` checkpoint remains advisory until PR governance records it.
 
 ## Plan review
 
@@ -61,4 +70,4 @@ The reviewer also confirmed that semantic classification and historical baseline
 
 ## Result review
 
-Pending implementation and verification.
+Clean-context review by `/root/result_review` found one blocking package-parity issue after the final duplicate-path guard. Regenerating `dist` and both local installs resolved it. The reviewer then verified checker/schema/template hashes, manifest byte sizes, duplicate-path rejection, and changed-record isolation and accepted the result with no remaining correctness findings.

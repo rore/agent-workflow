@@ -9,6 +9,8 @@
 
 **Completion criteria:** Existing tests stay green; refactor passes review.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"OrderService receives a small refactor.","scope":"`src/main/java/com/example/orders/application/OrderService.java`.","constraints":"Public API unchanged.","completion_criteria":"Existing tests stay green; refactor passes review."}
+
 **Risk:** Elevated
 
 **Complexity:** Simple

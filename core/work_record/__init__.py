@@ -32,16 +32,26 @@ from .local_backend import LocalBackend
 from .parser import (
     ALLOWED_COMPLEXITY,
     ALLOWED_RISK,
+    BehaviorChangeApproval,
+    BehaviorChangeAuthority,
+    BehaviorChange,
+
+
+
+
     ExceptionEntry,
     ExpandedWorkRecord,
     ParsedRecord,
+    RequirementBaseline,
     Shape,
     WorkRecord,
     WorkRecordParseError,
     find_block_span,
     parse,
+    parse_behavior_changes,
     parse_exceptions,
     parse_record,
+    parse_requirement_baseline,
     render,
     render_expanded,
     render_record,
@@ -50,18 +60,28 @@ from .parser import (
 __all__ = [
     "ALLOWED_COMPLEXITY",
     "ALLOWED_RISK",
+    "BehaviorChangeApproval",
+    "BehaviorChangeAuthority",
+    "BehaviorChange",
+
+
+
+
     "ExceptionEntry",
     "ExpandedWorkRecord",
     "LocalBackend",
     "ParsedRecord",
+    "RequirementBaseline",
     "Shape",
     "WorkRecord",
     "WorkRecordBackend",
     "WorkRecordParseError",
     "find_block_span",
     "parse",
+    "parse_behavior_changes",
     "parse_exceptions",
     "parse_record",
+    "parse_requirement_baseline",
     "render",
     "render_expanded",
     "render_record",

@@ -45,6 +45,20 @@ Disposition column legend:
 | `workrecord.markers_present` | The marker pair `<!-- agent-workflow:start --> … <!-- agent-workflow:end -->` bounds a single block. | Blocking, non-waivable | Use [`core/templates/work-record-routine.md`](../core/templates/work-record-routine.md) or [`work-record-expanded.md`](../core/templates/work-record-expanded.md) as the reference. |
 | `workrecord.required_for_branch_changes` | When `--changed-files` or `--changed-files-z` lists non-exempt paths but the checker resolved no Work Record at the branch slug, this synthetic predicate names the missing record. Fires only on changed-file runs. | Blocking. Without applicability policy, `workRecord.requiredForBranchChanges: false` opts out. With `applicability.documentationOnly`, trusted `-z` paths must pass that rule or require a record regardless of the legacy flag. | Create the Work Record, or use the legacy opt-out only when no applicability rule overrides it. |
 
+### Behavioral integrity — do requirements remain traceable
+
+| Predicate | Checks | Disposition | Fix |
+|---|---|---|---|
+| `requirements.baseline_present` | The record carries the initial Outcome, Scope, Constraints, and Completion criteria baseline. Legacy records remain parseable but cannot advance without it. | Blocking, non-waivable | Establish the baseline from the task owner or an authoritative source; do not guess or reconstruct it silently. |
+| `requirements.behavior_changes_well_formed` | Optional Behavior changes JSON parsed with exact fields, classifications, targets, paths, and approval shapes. | Blocking, non-waivable | Correct the structured entry described by the parse failure. |
+| `requirements.task_context_traceable` | Ordered task-context entries start at the baseline, form an exact before/after chain, and end at current Task Context. | Blocking, non-waivable | Restore the baseline and complete ordered chain, or return to the owner when the authoritative history is unclear. |
+| `requirements.requirement_changes_authorized` | Every task-local `requirement-change` uses task/task-owner authority and exact user approval evidence. | Blocking, non-waivable | Keep the task Blocked until the task owner approves the exact before/after change. |
+| `behavior_contracts.changed_paths_complete` | A configured repository contract gate received complete, safe, NUL-delimited PR paths. | Blocking, non-waivable | Repair the changed-path producer; legacy newline, malformed, unsafe, or unavailable evidence cannot pass this gate. |
+| `behavior_contracts.changed_paths_classified` | Every affected configured contract path has exactly one repository-contract entry across changed Work Records. | Blocking, non-waivable | Add one `equivalent`, `coverage-only`, or `requirement-change` entry for each named path. |
+| `behavior_contracts.requirement_changes_authorized` | Contract requirement changes use the configured repository authority and matching approval. | Blocking, non-waivable | Obtain approval from `behaviorContracts.approvalAuthority`; task, plan, agent, and Redline approvals do not substitute. |
+| `behavior_contracts.verification_linked` | An affected Work Record names the configured existing required-CI verification identifier. | Blocking, non-waivable | Reference `behaviorContracts.verification`; bootstrap/review remains responsible for proving that it is actually required CI. |
+
+The checker validates structure, not semantic equivalence, baseline history, approval authorship, or CI execution. Reviewers and the hosting platform remain authoritative for those judgments.
 ### Classification — is the risk/complexity declaration valid
 
 | Predicate | Checks | Disposition | Fix |
@@ -108,6 +122,7 @@ A task exception **MUST NOT** downgrade these. The list is enforced by `exceptio
 
 - `risk.boundary_violation_absent` — SPEC §11.
 - `workrecord.exists`, `workrecord.markers_present`, `risk.declared`, `complexity.declared`, `workrecord.shape_matches_classification` — preconditions; without them the verdict is unreliable.
+- All equirements.* and ehavior_contracts.* predicates above — the task baseline, exact change chain, authority separation, complete path evidence, classification, and verification linkage cannot be waived.
 - `exceptions.well_formed`, `exceptions.not_against_boundary`, `exceptions.not_expired` — circular waivers are not honoured.
 - `approval.clean_context_does_not_satisfy_human` — SPEC §13.4 structural invariant.
 - `review.checkpoints_satisfied` — SPEC §13.4 (checkpoint satisfaction MUST remain distinct from human approval). Disposition is mode-dependent (blocking under `binding`, advisory under `shadow`), but a task exception cannot waive it either way.
@@ -123,6 +138,7 @@ By design. Each is a reviewer judgment:
 - Whether the verification method actually proves the criterion. Today the checker validates **structural mapping** (each Verification plan line names a method via one of the accepted grammars) and scans for **explicit contradictions** (a failure marker and a success marker against the same test identifier). Both are advisory. SPEC §13.3 names a fuller contract — presence, status, revision, freshness of the Verification Record — as the target shape; status/revision/freshness enforcement is not yet implemented and lives on the PR-status side of the harness. The checker does **not** validate adequacy — whether the named check meaningfully proves the criterion — in any slice; that stays a reviewer judgment.
 - Whether tests pass. GitHub already knows that — the workflow does not re-verify CI results.
 - Whether a human actually wrote a given approval. The checker enforces that something approval-shaped is recorded, not that a human authored it; the cheating window is acknowledged.
+- Whether a configured behavior-contract verification identifier is a required check or passed. Bootstrap/review validates the required-CI linkage; GitHub or the equivalent CI platform reports execution.
 
 If you find the checker passing on something a reviewer should have caught, that is by design — the gates the checker enforces are structural. Human review remains the authority for everything else.
 

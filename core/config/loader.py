@@ -19,7 +19,11 @@ import yaml
 
 from core.work_record.local_backend import InvalidTaskPathError, validate_task_path_template
 
-from .applicability import ApplicabilityConfig, DocumentationOnlyConfig
+from .applicability import (
+    ApplicabilityConfig,
+    DocumentationOnlyConfig,
+    valid_behavior_contract_pattern,
+)
 
 # ---------------------------------------------------------------------------
 # Public types
@@ -87,6 +91,15 @@ class RedlineConfig:
 
 
 @dataclass(frozen=True)
+class BehaviorContractsConfig:
+    """Repository-designated behavioral contract protection."""
+
+    paths: tuple[str, ...]
+    verification: str
+    approval_authority: str
+
+
+@dataclass(frozen=True)
 class Config:
     """Typed view of the per-repo ``agent-workflow.yaml``.
 
@@ -101,6 +114,7 @@ class Config:
     work_record: WorkRecordConfig
     redline: RedlineConfig
     applicability: ApplicabilityConfig | None
+    behavior_contracts: BehaviorContractsConfig | None
     raw: dict[str, Any]
 
 
@@ -219,6 +233,25 @@ def _to_config(data: dict[str, Any]) -> Config:
             )
         )
 
+    behavior_contracts_block = data.get("behaviorContracts")
+    behavior_contracts = None
+    if behavior_contracts_block is not None:
+        paths = tuple(behavior_contracts_block["paths"])
+        if not all(valid_behavior_contract_pattern(path) for path in paths):
+            raise ConfigError("config invalid at behaviorContracts/paths: unsafe contract path")
+        verification = behavior_contracts_block["verification"].strip()
+        approval_authority = behavior_contracts_block["approvalAuthority"].strip()
+        if not verification or not approval_authority:
+            raise ConfigError(
+                "config invalid at behaviorContracts: verification and "
+                "approvalAuthority must contain non-whitespace text"
+            )
+        behavior_contracts = BehaviorContractsConfig(
+            paths=paths,
+            verification=verification,
+            approval_authority=approval_authority,
+        )
+
     return Config(
         version=data["version"],
         project_name=data["project"]["name"],
@@ -231,6 +264,7 @@ def _to_config(data: dict[str, Any]) -> Config:
         ),
         redline=redline,
         applicability=applicability,
+        behavior_contracts=behavior_contracts,
         raw=data,
     )
 

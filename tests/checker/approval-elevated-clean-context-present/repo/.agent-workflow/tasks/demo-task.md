@@ -9,6 +9,8 @@
 
 **Completion criteria:** New GET endpoint returns the wallet by id.
 
+**Requirement baseline:** {"source":"test-fixture-initial","outcome":"Add a new HTTP endpoint to the wallet API.","scope":"WalletController plus its tests.","constraints":"Backwards-compatible.","completion_criteria":"New GET endpoint returns the wallet by id."}
+
 **Risk:** Elevated
 
 **Complexity:** Moderate
