@@ -49,7 +49,7 @@ scripts/agent-workflow-runtime.sh	1207
 scripts/agent-workflow-tune.py	25253
 scripts/format-verdict-comment.py	38255
 templates/.github/workflows/agent-workflow.yml.template	17140
-templates/agent-workflow.yaml.template	2711
+templates/agent-workflow.yaml.template	2643
 templates/agents-section.md.template	2423
 templates/bootstrap-summary.md.template	3899
 templates/checkpoints/applicability.md	3018
