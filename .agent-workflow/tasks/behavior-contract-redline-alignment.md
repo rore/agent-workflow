@@ -52,6 +52,7 @@
 - Independent result review reran package parity and the complete `tests/run-all.sh`; all layers passed.
 - `git diff --check` passed with only line-ending normalization warnings. Source was packaged and reinstalled locally after the final implementation changes.
 - Final task-local checker passed every blocking predicate after human result approval; the repository's shadow-mode `architecture-review` checkpoint remains advisory until PR governance supplies its label or CODEOWNER approval.
+- Implementation revision: `8fc0cd8506809fbb4d43e23af9c318eaf580bbeb`.
 
 ## Plan review
 Initial clean-context review rejected the draft pending exact payload validation, CODEOWNERS semantics, exclude precedence, explicit legacy migration, old-reporter behavior, and full bootstrap evidence. The revised plan makes contract paths override excludes/blue rules; constrains the checkpoint to CODEOWNER-only satisfaction and compatible owner sets; emits versioned per-path canonical CODEOWNERS owners using last-match semantics while keeping semantic classifications in Work Records; validates repository authority separately from checkpoint routing; rejects the legacy Agent Workflow block; relies on the old Redline schema's closed top level to fail a new policy loudly; and requires live required-status, required Code Owner review, and path-covering CODEOWNERS evidence in bootstrap. The final clean-context re-review approved this separation with no blocking findings. User approved the finalized plan on 2026-09-22: "i approve".
