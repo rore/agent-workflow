@@ -10,6 +10,7 @@ If you only read one thing first, read the top-level [`../README.md`](../README.
 |---|---|
 | [`../README.md`](../README.md) | Top-level overview. Capability map + what's in / out of scope + checkpoint summary. |
 | [`INTEGRATION.md`](INTEGRATION.md) | Adopt agent-workflow on your repo, tune the risk policy, troubleshoot the CI checker. |
+| [`BEHAVIORAL_INTEGRITY.md`](BEHAVIORAL_INTEGRITY.md) | Understand how task requirements and repository behavior contracts are protected from silent weakening. |
 
 ## Day-to-day use (per-checkpoint reference)
 
