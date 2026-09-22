@@ -8,6 +8,15 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-22 — Behavior contracts separate workflow and repository protection
+
+**Decision:** Add optional `behaviorContracts.protection` in `agent-redline-policy.yaml`. Omitted or explicit `repository` preserves the existing branch-required CI, CODEOWNERS, dedicated CODEOWNER-only checkpoint, repository-authority approval, and version-1 verdict detail. Explicit `workflow` keeps Redline red classification, per-path semantic records, exact task-owner approval, and named PR verification, but has no behavior checkpoint or repository-authority claim and emits a distinct version-2 detail. Both the named verification and the combined Redline/Agent Workflow harness must run on pull requests before bootstrap persists either mode.
+
+Workflow protection records unauthenticated task-scoped approval evidence; it does not authenticate repository authority or technically prevent a hosting-platform merge. Bootstrap explains this boundary, requires an explicit choice, and never silently downgrades repository protection. Proposal-only or missing PR execution defers the behavior-contract block.
+
+**Alternatives considered:** Call the mode `advisory`; reuse Redline shadow/binding; allow a label checkpoint; put empty owners or checkpoint fields into version 1; add an Agent Workflow approver registry; treat any CI job as equivalent to a branch-required check.
+
+**Rationale:** The useful semantic safeguards do not require GitHub governance, while merge enforcement does. Separating the protection level lets solo repositories use mutation integrity and visible regression checks without pretending CODEOWNERS or branch protection exists. A new evidence version prevents weakening or ambiguously reinterpreting the existing repository-protected contract.
 ## 2026-09-22 — Redline owns repository behavior contracts
 
 **Decision:** Define repository behavior-contract paths, required-CI verification, and review checkpoint only in `agent-redline-policy.yaml`. Redline makes affected paths red ahead of excludes and blue zones, resolves canonical owners from the last matching CODEOWNERS rule, and emits versioned per-path facts. Agent Workflow consumes those facts for its global semantic-change gate; it does not carry a second path or authority configuration. Checkpoint routing, repository authority, exact behavioral approval, and required CI remain distinct controls.

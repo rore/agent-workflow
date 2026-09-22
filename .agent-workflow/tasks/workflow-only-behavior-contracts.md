@@ -39,6 +39,7 @@
 - Established Task Context and pre-edit classification before implementation. The change is not documentation-only because schema, reporter, checker, bootstrap, and normative specification are in scope.
 - Plan approved; implementation targets are `docs/SPEC.md`, `docs/DECISIONS.md`, behavior-contract public/reference docs, Redline policy schema and reporter, checker/verdict parsing, bootstrap instructions, the shipped PR workflow template, focused tests, and generated install artifacts. No unrelated policy or workflow behavior is in scope.
 - Architecture checkpoint: add explicit workflow-only behavior-contract protection while preserving repository protection as the compatible default; migration risk is high because incorrect defaults could silently weaken governance. Verification is the compatibility/malformed-evidence matrix, packaged two-layout E2E, generated-package parity, and full suite.
+- Normative phase complete: SPEC and decision log now define repository versus workflow protection, version-mode evidence separation, task-scoped unauthenticated approval, PR-execution prerequisites, and no manual-merge claim.
 
 ## Evidence
 
