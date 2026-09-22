@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import pytest  # type: ignore
+import yaml  # type: ignore
 
 from core.reporter.reporter import (  # noqa: E402
     Diff,
@@ -1587,24 +1588,40 @@ class TestCodeownersIntersection:
         assert rules[0].owners == ("@org/everyone",)
         assert rules[2].owners == ("@user-alice", "@org/schema-team")
 
+    def test_invalid_github_patterns_are_skipped(self):
+        from core.reporter.reporter import _parse_codeowners_text
+        rules = _parse_codeowners_text(
+            "!generated/** @owner\n"
+            "docs/[ab].md @owner\n"
+            "\\#literal @owner\n"
+        )
+        assert rules == []
+
     def test_no_codeowners_returns_empty(self, tmp_path):
         from core.reporter.reporter import load_codeowners
         assert load_codeowners(tmp_path) == []
 
-    def test_owners_for_paths_union(self, tmp_path):
+    def test_owners_for_paths_use_last_matching_rule(self, tmp_path):
         from core.reporter.reporter import _parse_codeowners_text, owners_for_paths
         rules = _parse_codeowners_text(
             "* @org/everyone\n"
             "agent-redline-policy.yaml @org/governance\n"
             "core/schema/** @user-alice\n"
         )
-        # File matches both '*' (catch-all) and the specific rule.
-        owners = owners_for_paths(rules, ["agent-redline-policy.yaml"])
-        assert "@org/everyone" in owners
-        assert "@org/governance" in owners
-        # Glob path
-        owners = owners_for_paths(rules, ["core/schema/foo.json"])
-        assert "@user-alice" in owners
+        assert owners_for_paths(
+            rules, ["agent-redline-policy.yaml"]
+        ) == {"@org/governance"}
+        assert owners_for_paths(
+            rules, ["core/schema/foo.json"]
+        ) == {"@user-alice"}
+
+    def test_ownerless_last_match_clears_earlier_owner_for_descendants(self):
+        from core.reporter.reporter import _parse_codeowners_text, owners_for_paths
+        rules = _parse_codeowners_text(
+            "/apps/ @trusted\n"
+            "/apps/github\n"
+        )
+        assert owners_for_paths(rules, ["apps/github/file.py"]) == set()
 
     def test_satisfaction_user_match_completes(self):
         from core.reporter.reporter import _codeowner_satisfaction
@@ -1622,13 +1639,11 @@ class TestCodeownersIntersection:
         assert ok is False
         assert complete is True  # we had user owners and could check
 
-    def test_satisfaction_team_only_incomplete(self):
+    def test_satisfaction_team_only_delegates_membership_to_branch_protection(self):
         from core.reporter.reporter import _codeowner_satisfaction
         owners = {"@org/team-a"}
-        # Even with an approver, we can't resolve team membership locally.
-        ok, complete = _codeowner_satisfaction(owners, {"some-user"})
-        assert ok is False
-        assert complete is False  # branch protection must enforce
+        assert _codeowner_satisfaction(owners, {"some-user"}) == (True, False)
+        assert _codeowner_satisfaction(owners, set()) == (False, False)
 
     def test_satisfaction_mixed_team_and_user_user_wins(self):
         from core.reporter.reporter import _codeowner_satisfaction
@@ -1668,7 +1683,7 @@ class TestCodeownersIntersection:
         # Local check can't confirm team membership; branch protection
         # has to. Surface this in the satisfy_by_human strings.
         assert any("team membership" in s for s in by)
-        assert ok is False  # not locally provable
+        assert ok is True  # GitHub required Code Owner review authenticates the team
 
     def test_is_satisfied_legacy_no_owners_arg_degrades_to_any_approval(self):
         from core.reporter.reporter import _is_satisfied
@@ -1719,15 +1734,19 @@ class TestCodeownersGlobMatching:
         assert not _codeowners_match("/foo/**/bar", "x/foo/bar")
 
     def test_single_star_stays_within_segment(self):
-        # In the `**` branch (the path fix A rewrote), a single `*` stays
-        # within a segment ([^/]*) while `**` crosses segments. (Patterns
-        # WITHOUT `**` use fnmatch, which over-matches `*` across '/' by
-        # design — that's the docstring's conservative note, not fix A.)
         from core.reporter.reporter import _codeowners_match
         assert _codeowners_match("core/**/test_*.py", "core/test_x.py")
         assert _codeowners_match("core/**/test_*.py", "core/a/b/test_x.py")
-        # `test_*` must not swallow a slash:
         assert not _codeowners_match("core/**/test_*.py", "core/a/test_x/y.py")
+        assert _codeowners_match("docs/*", "docs/guide.md")
+        assert not _codeowners_match("docs/*", "docs/build/troubleshooting.md")
+        assert _codeowners_match("docs/file?.md", "docs/file1.md")
+        assert not _codeowners_match("docs/file?.md", "docs/file10.md")
+
+    def test_literal_directory_pattern_matches_descendants(self):
+        from core.reporter.reporter import _codeowners_match
+        assert _codeowners_match("/apps/github", "apps/github/file.py")
+        assert _codeowners_match("**/logs", "deeply/nested/logs/output.txt")
 
     def test_double_star_glued_to_literal_stays_within_segment(self):
         # `foo/**bar` is not a whole-segment `**`; the asterisks act as a
@@ -1803,3 +1822,126 @@ checkpoints:
         p = self._write(tmp_path, "- just\n- a\n- list\n")
         with pytest.raises(SystemExit):
             load_policy(p)
+
+class TestBehaviorContracts:
+
+    @staticmethod
+    def _policy(satisfied_by=None):
+        return {
+            "version": 1,
+            "project": {"name": "contracts"},
+            "zones": {
+                "blue": [{"path": "tests/**", "reason": "tests"}],
+            },
+            "excludes": ["tests/contracts/**"],
+            "behaviorContracts": {
+                "paths": ["tests/contracts/**"],
+                "verification": "behavior-contracts",
+                "checkpoint": "behavior-review",
+            },
+            "checkpoints": {
+                "behavior-review": {
+                    "satisfiedBy": satisfied_by or ["codeownerApproval"],
+                },
+            },
+        }
+
+    def test_contract_path_overrides_exclude_and_blue_and_emits_owners(self):
+        from core.reporter.reporter import _parse_codeowners_text
+        rules = _parse_codeowners_text(
+            "* @org/everyone\n"
+            "tests/contracts/** @org/product-owners\n"
+        )
+        verdict = classify(
+            self._policy(),
+            Diff(["tests/contracts/wake.md"], 1, 1),
+            codeowners_rules=rules,
+        )
+        assert verdict.verdict == "RED"
+        assert verdict.zones["red"] == ["tests/contracts/wake.md"]
+        assert verdict.behavior_contract_changes == {
+            "version": 1,
+            "detected": True,
+            "paths": [
+                {
+                    "path": "tests/contracts/wake.md",
+                    "owners": ["@org/product-owners"],
+                }
+            ],
+            "verification": "behavior-contracts",
+            "checkpoint": "behavior-review",
+        }
+        checkpoint = next(
+            item for item in verdict.checkpoints
+            if item.id == "behavior-review"
+        )
+        assert checkpoint.satisfied is False
+        assert "team membership verified by branch protection" in checkpoint.satisfy_by[0]
+
+    def test_team_codeowner_checkpoint_can_satisfy_in_binding_mode(self):
+        from core.reporter.reporter import _parse_codeowners_text
+        policy = self._policy()
+        policy["modes"] = {"default": "binding"}
+        verdict = classify(
+            policy,
+            Diff(["tests/contracts/wake.md"], 1, 1),
+            codeowners_rules=_parse_codeowners_text(
+                "tests/contracts/** @org/product-owners\n"
+            ),
+            codeowner_approvals=["approved-reviewer"],
+        )
+        checkpoint = next(
+            item for item in verdict.checkpoints if item.id == "behavior-review"
+        )
+        assert checkpoint.satisfied is True
+        assert "team membership verified by branch protection" in checkpoint.satisfy_by[0]
+
+    def test_user_codeowner_can_satisfy_contract_checkpoint(self):
+        from core.reporter.reporter import _parse_codeowners_text
+        rules = _parse_codeowners_text(
+            "tests/contracts/** @alice\n"
+        )
+        verdict = classify(
+            self._policy(),
+            Diff(["tests/contracts/wake.md"], 1, 1),
+            codeowners_rules=rules,
+            codeowner_approvals=["alice"],
+        )
+        assert next(
+            item for item in verdict.checkpoints
+            if item.id == "behavior-review"
+        ).satisfied is True
+
+    @pytest.mark.parametrize(
+        "checkpoint",
+        [
+            "  architecture-review:\n    satisfiedBy: [codeownerApproval]\n",
+            "  behavior-review:\n    satisfiedBy: [{label: reviewed}]\n",
+        ],
+    )
+    def test_policy_requires_defined_codeowner_only_checkpoint(
+        self, tmp_path: Path, checkpoint: str
+    ) -> None:
+        policy = tmp_path / "policy.yaml"
+        policy.write_text(
+            "version: 1\nproject: {name: contracts}\n"
+            "zones:\n  blue:\n    - path: tests/**\n      reason: tests\n"
+            "behaviorContracts:\n  paths: [tests/contracts/**]\n"
+            "  verification: behavior-contracts\n"
+            "  checkpoint: behavior-review\n"
+            f"checkpoints:\n{checkpoint}",
+            encoding="utf-8",
+        )
+        with pytest.raises(SystemExit, match="behaviorContracts.checkpoint"):
+            load_policy(policy)
+
+    def test_policy_requires_dedicated_checkpoint(self, tmp_path: Path) -> None:
+        data = self._policy()
+        data["behaviorContracts"]["checkpoint"] = "architecture-review"
+        data["checkpoints"] = {
+            "architecture-review": {"satisfiedBy": ["codeownerApproval"]},
+        }
+        policy = tmp_path / "policy.yaml"
+        policy.write_text(yaml.safe_dump(data), encoding="utf-8")
+        with pytest.raises(SystemExit, match="must be dedicated"):
+            load_policy(policy)

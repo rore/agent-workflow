@@ -78,6 +78,7 @@ class RedlineVerdict:
     schema_changed: bool
     security_changed: bool
     runtime_config_changed: bool
+    behavior_contract_changes: dict[str, Any] | None = None
     """Disambiguators for red-zone → High vs Elevated. Pulled from
     ``apiChanges.detected``, ``schemaChanges.detected``,
     ``securityChanges.detected``, ``runtimeConfigChanges.detected`` —
@@ -136,7 +137,15 @@ class RedlineVerdict:
         # Step 1: High signals — contract/schema/security changes,
         # plus High-class checkpoint ids. Wins over any zone-based
         # baseline.
-        if self.api_changed or self.schema_changed or self.security_changed:
+        if (
+            self.api_changed
+            or self.schema_changed
+            or self.security_changed
+            or bool(
+                self.behavior_contract_changes
+                and self.behavior_contract_changes["detected"]
+            )
+        ):
             return "High"
         if self._has_high_checkpoint():
             return "High"
@@ -322,6 +331,66 @@ def load_redline_verdict(path: Path) -> RedlineVerdict | None:
     return _from_mapping(data)
 
 
+def _behavior_contract_changes(data: dict[str, Any]) -> dict[str, Any] | None:
+    raw = data.get("behaviorContractChanges")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise RedlineVerdictError("behaviorContractChanges must be an object")
+    required = {"version", "detected", "paths", "verification", "checkpoint"}
+    if set(raw) != required or raw.get("version") != 1:
+        raise RedlineVerdictError(
+            "behaviorContractChanges has an unsupported or malformed shape"
+        )
+    if not isinstance(raw["detected"], bool):
+        raise RedlineVerdictError("behaviorContractChanges.detected must be boolean")
+    if not isinstance(raw["verification"], str) or not raw["verification"].strip():
+        raise RedlineVerdictError(
+            "behaviorContractChanges.verification must contain text"
+        )
+    if not isinstance(raw["checkpoint"], str) or not raw["checkpoint"].strip():
+        raise RedlineVerdictError(
+            "behaviorContractChanges.checkpoint must contain text"
+        )
+    entries = raw["paths"]
+    if not isinstance(entries, list):
+        raise RedlineVerdictError("behaviorContractChanges.paths must be an array")
+    seen: set[str] = set()
+    normalized: list[dict[str, Any]] = []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"path", "owners"}:
+            raise RedlineVerdictError(
+                "behaviorContractChanges path entries require path and owners"
+            )
+        path = entry["path"]
+        owners = entry["owners"]
+        if not isinstance(path, str) or not path or path in seen:
+            raise RedlineVerdictError(
+                "behaviorContractChanges paths must be unique non-empty strings"
+            )
+        if (
+            not isinstance(owners, list)
+            or any(not isinstance(owner, str) or not owner for owner in owners)
+            or len(owners) != len(set(owners))
+        ):
+            raise RedlineVerdictError(
+                "behaviorContractChanges owners must be unique non-empty strings"
+            )
+        seen.add(path)
+        normalized.append({"path": path, "owners": list(owners)})
+    if raw["detected"] != bool(normalized):
+        raise RedlineVerdictError(
+            "behaviorContractChanges.detected must match affected paths"
+        )
+    return {
+        "version": 1,
+        "detected": raw["detected"],
+        "paths": normalized,
+        "verification": raw["verification"],
+        "checkpoint": raw["checkpoint"],
+    }
+
+
 def _from_mapping(data: dict[str, Any]) -> RedlineVerdict:
     """Build the typed view, defaulting missing keys to safe values.
 
@@ -349,6 +418,7 @@ def _from_mapping(data: dict[str, Any]) -> RedlineVerdict:
         runtime_config_changed=bool(
             (data.get("runtimeConfigChanges") or {}).get("detected", False)
         ),
+        behavior_contract_changes=_behavior_contract_changes(data),
         modes=dict(data.get("modes") or {}),
         raw=data,
     )

@@ -178,24 +178,3 @@ def evaluate_applicability(
         paths=paths,
         reason_codes=tuple(dict.fromkeys(reasons)),
     )
-
-def valid_behavior_contract_pattern(pattern: object) -> bool:
-    """True for one safe exact path or boundary-safe dir/** pattern."""
-    if not isinstance(pattern, str) or not pattern or "\x00" in pattern:
-        return False
-    if any(ord(char) < 32 for char in pattern):
-        return False
-    exact = pattern[:-3] if pattern.endswith("/**") else pattern
-    if not exact or any(char in exact for char in _GLOB_CHARS):
-        return False
-    return valid_repository_path(exact, allow_prefix=False)
-
-
-def behavior_contract_matches(path: str, pattern: str) -> bool:
-    """Match one validated exact path or all descendants of dir/**."""
-    if not valid_repository_path(path, allow_prefix=False):
-        return False
-    if pattern.endswith("/**"):
-        prefix = pattern[:-2]
-        return path.startswith(prefix) and len(path) > len(prefix)
-    return path == pattern

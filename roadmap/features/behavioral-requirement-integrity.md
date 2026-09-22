@@ -194,18 +194,26 @@ Behavior-change approval and Risk are separate dimensions:
 
 ### Configuration and adoption
 
-Allow a repository to configure authoritative contract artifacts, initially with
-one minimal shape such as:
+Configure authoritative contract artifacts in `agent-redline-policy.yaml`, using
+one compatible CODEOWNERS set per block:
 
     behaviorContracts:
       paths:
         - tests/behavior/**
         - tests/relay/contracts/**
       verification: relay-behavior-contracts
+      checkpoint: behavior-review
 
-The exact verification representation may reference an existing required CI job
-or repository verification surface. A redundant **policy: protected** option is
-unnecessary while protection is the only supported policy.
+    checkpoints:
+      behavior-review:
+        description: Review authoritative behavior-contract changes
+        satisfiedBy:
+          - codeownerApproval
+
+`verification` names an existing required CI job or repository verification
+surface. `checkpoint` routes review and must be CODEOWNER-only. A redundant
+**policy: protected** option is unnecessary while protection is the only
+supported policy.
 
 Configured paths provide mutation integrity. They do not by themselves provide
 regression enforcement. Adoption therefore requires the configured suite to
@@ -286,11 +294,15 @@ Task-local and repository-level approvals have different authority:
 
 - A task-local requirement originating with the current user may be changed by
   that user's explicit approval.
-- A repository-wide contract uses repository-defined authority, such as a
-  CODEOWNER, designated product owner, or existing review checkpoint.
+- A repository-wide contract uses the canonical owner token from GitHub's
+  last-matching CODEOWNERS rule for its path. One configured block has one
+  compatible non-empty owner set in v1.
 
-Configuration or existing GitHub governance identifies the repository authority.
-An arbitrary human interaction with the agent must not silently authorize a
+Redline reports those canonical owner tokens from the PR base revision for changed contract paths. The
+hosting platform authenticates the approving user or team through required Code
+Owner review; the Work Record records one matching token. The Redline checkpoint
+is review routing, not a substitute authority. An arbitrary human interaction,
+task-local approval, plan approval, or clean-context review cannot authorize a
 product-wide contract change.
 
 ## Checkpoint integration
@@ -314,17 +326,24 @@ Do not add another workflow stage.
 
 ## Deterministic enforcement
 
-Reuse the checker's trusted NUL-delimited changed-path input and existing
-repository path-matching semantics. Do not add another diff or policy engine.
+Agent Redline reuses its trusted NUL-delimited changed-path input and existing
+path matcher. It classifies configured behavior-contract paths as red before
+`excludes` or broader blue zones, resolves each path through GitHub's
+last-matching CODEOWNERS rule, triggers the configured review checkpoint, and
+emits versioned `behaviorContractChanges` detail. Do not add another diff or
+policy engine in Agent Workflow.
 
 At PR time:
 
-1. Detect whether configured behavioral-contract paths changed.
+1. Redline detects and reports exact changed behavior-contract paths, canonical
+   owner tokens, verification identifier, and checkpoint.
 2. If none changed, add no contract-mutation gate.
-3. If protected files changed, require a machine-readable classification.
-4. If classified **requirement-change**, require the matching authorized human
-   approval record.
-5. Surface every affected contract file prominently in the verdict.
+3. Agent Workflow rejects stale, malformed, out-of-diff, non-red, or ownerless
+   Redline detail and requires one semantic classification per affected path.
+4. If classified **requirement-change**, require repository-scoped authority and
+   approval fields equal to one reported owner token.
+5. Check checkpoint presence separately; satisfaction still follows Redline mode
+   and hosting-platform governance.
 6. Continue relying on required CI for regression execution and pass/fail state.
 
 Behavior-change approval predicates are non-waivable through task exceptions.
@@ -360,22 +379,25 @@ deterministic control.
 
 During installation or reconfiguration, inspect for likely acceptance,
 end-to-end, contract, regression, and scenario-fixture surfaces. Do not protect
-them automatically. Present exact candidates and their existing CI coverage to
-the human, who chooses the paths and repository approval authority.
+them automatically. Present exact candidates with live evidence for:
+
+- the required CI check that exercises them;
+- their canonical last-match CODEOWNERS tokens on the target base branch;
+- required Code Owner review in branch protection.
 
 Example:
 
     I found these likely behavioral-contract surfaces:
 
-    - tests/relay/behavior/**
-    - tests/relay/wake/fixtures/**
+    - tests/relay/behavior/** — relay-behavior-contracts; @relay-owners
+    - tests/relay/wake/fixtures/** — no required check
 
-    The relay-behavior-contracts required check exercises the first path.
-    Should Agent Workflow protect either path, and which repository role may
-    approve a requirement change?
+    Required Code Owner review is enabled. Protect the first path?
 
-This follows the existing rule that repository governance is explicitly adopted,
-not inferred by the agent.
+Only an explicitly selected compatible set is added to
+`agent-redline-policy.yaml`; bootstrap also writes its CODEOWNER-only checkpoint
+and any needed CODEOWNERS rules. If any evidence is missing, omit the block and
+report why. This keeps repository governance explicitly adopted, not inferred.
 
 ## Pallium target usage
 
@@ -428,9 +450,10 @@ a green queue-only implementation.
 1. **Workflow semantics and baseline:** update the normative SPEC first, then
    existing checkpoint guidance; define the immutable baseline, classifications,
    approval lifecycle, and optional record shape for both Work Record forms.
-2. **Configuration and checker:** add **behaviorContracts.paths**, required
-   verification linkage, changed-path detection, classification and non-waivable
-   approval predicates, verdict output, bootstrap adoption, and packaged tests.
+2. **Redline configuration and checker:** add **behaviorContracts.paths** to
+   `agent-redline-policy.yaml`; make matches red; report exact paths, CODEOWNERS,
+   verification, and checkpoint; consume that evidence for semantic classification
+   and non-waivable approval predicates; cover bootstrap with packaged tests.
 3. **Pallium dogfood and stable IDs:** add the Relay behavioral suite, replay
    PR #167, then decide whether generic stable-ID checks earn their complexity.
 
@@ -439,11 +462,13 @@ is required.
 
 ## Delivery result
 
-Shipped the generic Agent Workflow feature: immutable task baselines, structured
-behavior-change records, protected repository contract paths, distinct task and
-repository approval authority, required-verification linkage, fail-closed
-changed-path handling, bootstrap guidance, packaged checker parity, and replay
-coverage for both PR #167 erosion paths.
+Shipped the generic feature with one ownership boundary: Agent Workflow owns
+immutable task baselines and semantic behavior-change records; Agent Redline owns
+protected repository path classification, canonical CODEOWNERS evidence, and
+review routing. Agent Workflow consumes Redline's versioned detail for
+non-waivable approval and verification-linkage checks. Bootstrap proposes only
+explicitly selected candidates backed by live required-CI, CODEOWNERS, and required
+Code Owner review evidence. Packaged coverage includes both PR #167 erosion paths.
 
 Pallium adoption of a dedicated Relay contract suite and any later generic
 stable-ID enforcement remain the downstream dogfood slice described above; they
@@ -462,11 +487,13 @@ are not hidden requirements of this repository-level delivery.
 6. Completion-criteria weakening and Scope narrowing both block until authorized.
 7. Compact tasks remain compact when no requirement changes and can record an
    exceptional behavior change without migrating solely for ceremony.
-8. A repository can configure one or more behavioral-contract paths plus an
-   existing required verification surface.
+8. A repository can configure one compatible behavioral-contract path set in
+   `agent-redline-policy.yaml` with an existing required verification surface and
+   a CODEOWNER-only review checkpoint.
 9. Relevant tasks inspect and reference affected contracts during discovery,
    planning, and verification without loading the complete suite.
-10. Protected contract edits are prominent in the verdict and cannot use the
+10. Protected contract edits are red and prominent in the verdict even when a
+    broader blue zone or `excludes` entry also matches; they cannot use the
     documentation-only exemption.
 11. A declared repository requirement change requires repository-authorized
     approval; task-local user approval cannot silently substitute for it.
@@ -478,7 +505,9 @@ are not hidden requirements of this repository-level delivery.
     implementation-correctness claim.
 15. Missing, malformed, renamed, deleted, Unicode, spaced, and outside-repository
     path inputs follow existing fail-closed safety rules.
-16. At least two repository layouts and contract locations are covered.
+16. At least two repository layouts and contract locations are covered, and the
+    packaged bootstrap journey proves selected paths, CODEOWNERS, required CI,
+    Redline detail, and checker consumption end to end.
 17. The Pallium PR #167 replay blocks both documented erosion paths and cannot
     legitimately reach queue-only behavior without explicit approval.
 18. Pallium can protect its Relay suite without making Agent Workflow the product

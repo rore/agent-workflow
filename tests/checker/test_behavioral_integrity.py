@@ -248,16 +248,83 @@ def _contract_config(
         if applicability
         else ""
     )
+    (repo / "agent-redline-policy.yaml").write_text(
+        "version: 1\nproject: {name: relay}\n"
+        "zones:\n  blue:\n    - path: src/**\n      reason: source\n"
+        "behaviorContracts:\n"
+        f"  paths: [{pattern}]\n"
+        "  verification: relay-behavior-contracts\n"
+        "  checkpoint: behavior-review\n"
+        "checkpoints:\n  behavior-review:\n"
+        "    satisfiedBy: [codeownerApproval]\n",
+        encoding="utf-8",
+    )
     (repo / "agent-workflow.yaml").write_text(
         "version: 1\nproject: {name: relay}\n"
         "workRecord:\n  backend: local\n  local:\n"
         f'    taskPath: "{task_path}"\n'
-        "redline: optional\n"
-        f"{app}"
-        "behaviorContracts:\n"
-        f'  paths: ["{pattern}"]\n'
-        "  verification: relay-behavior-contracts\n"
-        "  approvalAuthority: '@relay-owners'\n",
+        "redline: required\n"
+        "redlineVerdictPath: build/redline-verdict.json\n"
+        f"{app}",
+        encoding="utf-8",
+    )
+
+
+def _write_contract_redline(
+    repo: Path,
+    contract_paths: list[str],
+    *,
+    owners: list[str] | None = None,
+    red_paths: list[str] | None = None,
+) -> None:
+    owners = ["@relay-owners"] if owners is None else owners
+    red_paths = contract_paths if red_paths is None else red_paths
+    payload = {
+        "verdict": "RED" if contract_paths else "BLUE",
+        "summary": "Behavior contract changed." if contract_paths else "No contract changed.",
+        "zones": {
+            "blue": [],
+            "gray": [],
+            "red": red_paths,
+            "watch": [],
+        },
+        "boundaryViolations": [],
+        "checkpoints": (
+            [
+                {
+                    "id": "behavior-review",
+                    "reason": f"Behavior contract changed: {contract_paths[0]}",
+                    "satisfied": True,
+                    "satisfy_by": ["CODEOWNER approval"],
+                }
+            ]
+            if contract_paths
+            else []
+        ),
+        "apiChanges": {"detected": False},
+        "schemaChanges": {"detected": False},
+        "securityChanges": {"detected": False},
+        "runtimeConfigChanges": {"detected": False},
+        "prSize": {"verdict": "pass"},
+        "exitCode": 0,
+        "recommendedAction": "none",
+        "modes": {"default": "shadow", "perCheck": {}},
+        "suppressions": [],
+        "behaviorContractChanges": {
+            "version": 1,
+            "detected": bool(contract_paths),
+            "paths": [
+                {"path": path, "owners": owners}
+                for path in contract_paths
+            ],
+            "verification": "relay-behavior-contracts",
+            "checkpoint": "behavior-review",
+        },
+    }
+    build = repo / "build"
+    build.mkdir(exist_ok=True)
+    (build / "redline-verdict.json").write_text(
+        json.dumps(payload),
         encoding="utf-8",
     )
 
@@ -291,10 +358,19 @@ def _run_contract(
     *,
     record_paths: dict[str, str],
     changed_paths: list[str],
+    contract_paths: list[str],
     trusted: bool = True,
+    owners: list[str] | None = None,
+    red_paths: list[str] | None = None,
 ) -> tuple[int, dict]:
     for relative, text in record_paths.items():
         _write_record(repo, relative, text)
+    _write_contract_redline(
+        repo,
+        contract_paths,
+        owners=owners,
+        red_paths=red_paths,
+    )
     changed = repo / ("changed.z" if trusted else "changed.txt")
     if trusted:
         changed.write_bytes(
@@ -304,7 +380,16 @@ def _run_contract(
     else:
         changed.write_text("\n".join(changed_paths) + "\n", encoding="utf-8")
         flag = "--changed-files"
-    code = main(["--repo-root", str(repo), flag, str(changed)])
+    code = main(
+        [
+            "--repo-root",
+            str(repo),
+            flag,
+            str(changed),
+            "--redline-verdict",
+            str(repo / "build" / "redline-verdict.json"),
+        ]
+    )
     return code, json.loads(capsys.readouterr().out)
 
 
@@ -352,13 +437,14 @@ def test_contract_gate_handles_exact_and_descendant_layouts_rename_delete_unicod
         capsys,
         record_paths={record_path: record},
         changed_paths=[record_path, *contract_paths],
+        contract_paths=contract_paths,
     )
     contract = next(record for record in payload["records"] if record["slug"] == "<behavior-contracts>")
     assert contract["status"] == "clean"
     assert all(predicate["passed"] for predicate in contract["predicates"])
 
 
-@pytest.mark.parametrize("case", ["missing", "wrong-authority", "verification-substring"])
+@pytest.mark.parametrize("case", ["missing", "wrong-authority", "wrong-codeowner", "verification-substring"])
 def test_contract_gate_blocks_missing_classification_authority_or_verification(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], case: str
 ) -> None:
@@ -375,6 +461,11 @@ def test_contract_gate_blocks_missing_classification_authority_or_verification(
             "verbatim": "Approved only for this task.",
         }
         changes = [change]
+    elif case == "wrong-codeowner":
+        change = _contract_change(path, classification="requirement-change")
+        change["authority"] = {"scope": "repository", "name": "@other-owner"}
+        change["approval"]["by"] = "@other-owner"
+        changes = [change]
     elif case == "verification-substring":
         changes = [_contract_change(path)]
         verification = "relay-behavior-contracts-extra"
@@ -384,6 +475,7 @@ def test_contract_gate_blocks_missing_classification_authority_or_verification(
         capsys,
         record_paths={record_path: _record(changes=changes, verification=verification)},
         changed_paths=[record_path, path],
+        contract_paths=[path],
     )
     assert next(record for record in payload["records"] if record["slug"] == "<behavior-contracts>")["status"] == "blocking"
 
@@ -401,6 +493,7 @@ def test_contract_gate_does_not_reuse_unchanged_branch_record(
     )
     changed = tmp_path / "changed.z"
     changed.write_bytes(path.encode("utf-8") + b"\0")
+    _write_contract_redline(tmp_path, [path])
     main([
         "--repo-root",
         str(tmp_path),
@@ -429,6 +522,7 @@ def test_contract_gate_rejects_duplicate_classification_across_records(
         capsys,
         record_paths=records,
         changed_paths=[*records, path],
+        contract_paths=[path],
     )
     assert _predicate(payload, "behavior_contracts.changed_paths_classified")["passed"] is False
 
@@ -442,16 +536,18 @@ def test_contract_gate_requires_trusted_safe_paths_and_denies_documentation_exem
         capsys,
         record_paths={},
         changed_paths=["contracts/wake.md"],
+        contract_paths=["contracts/wake.md"],
         trusted=False,
     )
     assert _predicate(legacy, "behavior_contracts.changed_paths_complete")["passed"] is False
 
     incomplete = tmp_path / "incomplete.z"
     incomplete.write_bytes(b"contracts/wake.md")
+    _write_contract_redline(tmp_path, ["contracts/wake.md"])
     main(["--repo-root", str(tmp_path), "--changed-files-z", str(incomplete)])
     incomplete_payload = json.loads(capsys.readouterr().out)
     assert _predicate(
-        incomplete_payload, "behavior_contracts.changed_paths_complete"
+        incomplete_payload, "behavior_contracts.redline_evidence_complete"
     )["passed"] is False
 
     _, unsafe = _run_contract(
@@ -459,30 +555,16 @@ def test_contract_gate_requires_trusted_safe_paths_and_denies_documentation_exem
         capsys,
         record_paths={},
         changed_paths=["../contracts/wake.md"],
+        contract_paths=["../contracts/wake.md"],
     )
-    assert _predicate(unsafe, "behavior_contracts.changed_paths_complete")["passed"] is False
-
-    build = tmp_path / "build"
-    build.mkdir()
-    (build / "redline-verdict.json").write_text(
-        json.dumps({
-            "verdict": "BLUE",
-            "zones": {"blue": ["contracts/wake.md"], "gray": [], "red": [], "watch": []},
-            "boundaryViolations": [],
-            "checkpoints": [],
-            "apiChanges": {"detected": False},
-            "schemaChanges": {"detected": False},
-            "securityChanges": {"detected": False},
-            "runtimeConfigChanges": {"detected": False},
-        }),
-        encoding="utf-8",
-    )
+    assert _predicate(unsafe, "behavior_contracts.redline_evidence_complete")["passed"] is False
 
     _, protected = _run_contract(
         tmp_path,
         capsys,
         record_paths={},
         changed_paths=["contracts/wake.md"],
+        contract_paths=["contracts/wake.md"],
     )
     names = [
         predicate["name"]
@@ -494,6 +576,38 @@ def test_contract_gate_requires_trusted_safe_paths_and_denies_documentation_exem
     assert "behavior_contracts.changed_paths_classified" in names
 
 
+@pytest.mark.parametrize("case", ["missing-detail", "omitted-current", "wrong-controls"])
+def test_contract_gate_correlates_current_redline_policy_and_detail(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    case: str,
+) -> None:
+    path = "contracts/wake.md"
+    _contract_config(tmp_path, pattern="contracts/**")
+    _write_contract_redline(tmp_path, [path])
+    verdict_path = tmp_path / "build" / "redline-verdict.json"
+    payload = json.loads(verdict_path.read_text(encoding="utf-8"))
+    if case == "missing-detail":
+        del payload["behaviorContractChanges"]
+    elif case == "omitted-current":
+        payload["behaviorContractChanges"]["detected"] = False
+        payload["behaviorContractChanges"]["paths"] = []
+    else:
+        payload["behaviorContractChanges"]["verification"] = "stale-check"
+    verdict_path.write_text(json.dumps(payload), encoding="utf-8")
+    changed = tmp_path / "changed.z"
+    changed.write_bytes(path.encode("utf-8") + b"\0")
+    main([
+        "--repo-root", str(tmp_path),
+        "--changed-files-z", str(changed),
+        "--redline-verdict", str(verdict_path),
+    ])
+    result = json.loads(capsys.readouterr().out)
+    assert _predicate(
+        result, "behavior_contracts.redline_evidence_complete"
+    )["passed"] is False
+
+
 def test_contract_gate_rejects_duplicate_changed_path_evidence(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -503,6 +617,7 @@ def test_contract_gate_rejects_duplicate_changed_path_evidence(
         capsys,
         record_paths={},
         changed_paths=["contracts/wake.md", "contracts/wake.md"],
+        contract_paths=["contracts/wake.md"],
     )
     assert _predicate(
         payload, "behavior_contracts.changed_paths_complete"
@@ -518,5 +633,38 @@ def test_complete_non_contract_diff_adds_no_contract_gate(
         capsys,
         record_paths={},
         changed_paths=["src/app.py"],
+        contract_paths=[],
     )
     assert all(record["slug"] != "<behavior-contracts>" for record in payload["records"])
+
+@pytest.mark.parametrize("case", ["ownerless", "non-red", "out-of-diff"])
+def test_contract_gate_rejects_inconsistent_redline_evidence(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    case: str,
+) -> None:
+    path = "contracts/wake.md"
+    _contract_config(tmp_path, pattern="contracts/**")
+    changed_paths = [path]
+    owners = ["@relay-owners"]
+    red_paths = [path]
+    if case == "ownerless":
+        owners = []
+    elif case == "non-red":
+        red_paths = []
+    else:
+        changed_paths = ["src/app.py"]
+    _, payload = _run_contract(
+        tmp_path,
+        capsys,
+        record_paths={},
+        changed_paths=changed_paths,
+        contract_paths=[path],
+        owners=owners,
+        red_paths=red_paths,
+    )
+    assert next(
+        record
+        for record in payload["records"]
+        if record["slug"] == "<behavior-contracts>"
+    )["status"] == "blocking"

@@ -1,0 +1,17 @@
+version: 1
+project:
+  name: behavior-contracts
+zones:
+  blue:
+    - path: tests/**
+      reason: tests
+behaviorContracts:
+  paths:
+    - tests/contracts/**
+    - specs/wake.md
+  verification: behavior-contracts
+  checkpoint: behavior-review
+checkpoints:
+  behavior-review:
+    satisfiedBy:
+      - codeownerApproval

@@ -67,7 +67,7 @@ Read on the agent-workflow side:
 - **Existing agent-instruction files:** inspect `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `copilot-instructions.md`, and any `*-instructions.md`; always create or reconcile only the owned marker in root `AGENTS.md` and preserve every other instruction file.
 - **Authoritative-source map:** what existing files this repo treats as canonical for *what the system should do* (requirements, Jira), *how it's organised* (architecture, ADRs), and *what was decided* (`DECISIONS.md`). Bootstrap doesn't invent these; it lists what it found.
 - **Existing CI:** `.github/workflows/`. Note whether `agent-workflow.yml` exists, name collisions on `redline-verdict`, and dominant trigger style (`pull_request:` vs `push:`).
-- **Behavior-contract candidates:** exact repo-relative acceptance/E2E/contract/regression paths or boundary-safe dir/** patterns; for each, record the existing required-CI identifier, live required-status evidence, and repository-authority evidence covering the path. Report none when absent and unresolved when evidence is missing. Propose only; never protect automatically.
+- **Behavior-contract candidates:** exact repo-relative acceptance/E2E/contract/regression paths or boundary-safe dir/** patterns; for each, record the existing required-CI identifier, live required-status evidence, last-match CODEOWNERS tokens covering the path on the target base branch, and live evidence that Code Owner review is required. Report none when absent and unresolved when evidence is missing. Propose only; never protect automatically.
 - **Existing CODEOWNERS:** `.github/CODEOWNERS` or `CODEOWNERS` at root. Bootstrap doesn't modify it.
 - **Flow signal:** `gh pr list --state merged --limit 30 --json number` vs `git log --since="3 months ago" --pretty=format:%h | wc -l`. Used to pick PR-driven vs push-driven; agent-workflow CI template assumes PR-driven.
 - **Applicability candidates:** load [`applicability.md`](templates/checkpoints/applicability.md); discover actual documentation/roadmap/root-README paths and live default-branch protection. Do not assume path names.
@@ -87,7 +87,7 @@ Then invoke redline's Phase 1 (extension pick, build files, source layout, bound
 **Existing agent-instruction file:** <path or "none">
 **Authoritative sources found:** <requirements / architecture / decisions — paths or "none">
 **Existing CI:** <paths to workflows / "none">
-**Behavior-contract candidates:** <path/pattern → required-CI identifier + required-status evidence → covering repository-authority evidence / "none" / unresolved>
+**Behavior-contract candidates:** <path/pattern → required-CI identifier + required-status evidence → base-branch last-match CODEOWNERS tokens + required-Code-Owner-review evidence / "none" / unresolved>
 **Existing CODEOWNERS:** <yes / no>
 **Applicability candidates + protection:** <exact paths / none>; <protected / unprotected / unavailable>
 
@@ -132,18 +132,26 @@ Backend is always `local`. The taskPath template is the canonical default; don't
 
 If candidates exist, add `applicability.documentationOnly` to the inert draft with exact paths. Set direct-default true only when live checks prove unprotected; otherwise false.
 
-Add behaviorContracts only after explicit selection of exact repo-relative paths or boundary-safe dir/** patterns. Every path must share one existing required-CI identifier and one covering repository authority; split/defer or omit incompatible or unresolved candidates:
-
-    behaviorContracts:
-      paths: ["tests/contracts/**"]
-      verification: behavior-contracts
-      approvalAuthority: "@product-owners"
-
-Missing or unavailable required-CI/authority evidence leaves the block out; record it as unresolved instead of claiming protection.
+Do not put behavior-contract paths or authority in `agent-workflow.yaml`.
 
 ### Draft 2: `agent-redline-policy.yaml`
 
 Invoke redline's Phase 2 ([`agent-redline/bootstrap-mode.md`](agent-redline/bootstrap-mode.md) §"Phase 2"). Adapt the chosen extension's `profile.md` to this repo. Show the draft inline.
+
+After explicit selection, add one compatible set sharing the same verification identifier and base-branch last-match CODEOWNERS tokens. Use a dedicated CODEOWNER-only checkpoint:
+
+    behaviorContracts:
+      paths:
+        - "tests/contracts/**"
+      verification: behavior-contracts
+      checkpoint: behavior-review
+    checkpoints:
+      behavior-review:
+        description: Review authoritative behavior-contract changes
+        satisfiedBy:
+          - codeownerApproval
+
+Missing, conflicting, or unavailable required-CI, CODEOWNERS, or required-review evidence leaves the block out; record it as unresolved.
 
 Present both drafts. State the ask:
 
@@ -158,7 +166,7 @@ Ask the developer **only** what the inspection didn't already answer:
 - Repository-local paths the policy should treat specially that didn't surface in inspection?
 - PR-driven vs push-driven? (Confirm Phase 1's detection.)
 - Per-checkpoint reference docs under `docs/agent-workflow/` (default) or somewhere else?
-- Behavior-contract candidates: select or reject each? Selection is not authority approval. Emit one compatible set sharing one verification and authority; split/defer or omit the rest.
+- Behavior-contract candidates: select or reject each? Selection does not authorize a requirement change. Emit one compatible Redline set sharing verification, base-branch last-match CODEOWNERS tokens, and a CODEOWNER-only checkpoint; split/defer or omit the rest.
 
 Update both drafts using the approval command in [`applicability.md`](templates/checkpoints/applicability.md); use only its emitted fragment. Direct-default needs separate approval. Show revised drafts until explicit sign-off.
 
@@ -210,7 +218,7 @@ Write `docs/agent-workflow-ci-proposal.md`. Always. Content:
 - **The combined two-job workflow file** (ready to copy) — derived from `templates/.github/workflows/agent-workflow.yml.template`. Substitute repo-specific values if any (rare; the template is parameterized).
 - **Required-status-check additions** for branch protection: name the **bare job names** as required checks — `agent-workflow` and `redline`. GitHub Actions reports each job by its job name (not `workflow / job` — display-only). A workflow-prefixed name causes GitHub to wait forever; learned from PR #32 dogfooding.
 - **Require conversation resolution** before merge: turn on `required_conversation_resolution` in the branch-protection rule. GitHub then refuses merge while any review thread is unresolved (line comments, review summaries, bot threads). Pairs with operating-mode §7 — the platform enforces what the skill teaches.
-- **CODEOWNERS additions** — when the Phase 1 tuner ran, paste its **Proposed `.github/CODEOWNERS`** block verbatim. When the tuner skipped (no PR history, not org-scoped), fall back to `@TODO-codeowners-team` placeholder and note in the Phase 6 summary why. Self-protecting paths (`agent-redline/**`, `agent-workflow.yaml`) get an explicit override pointing at the same team as default `*`; when default is `@TODO-*`, propagate the placeholder.
+- **CODEOWNERS additions** — when the Phase 1 tuner ran, paste its **Proposed `.github/CODEOWNERS`** block verbatim. When the tuner skipped (no PR history, not org-scoped), fall back to `@TODO-codeowners-team` placeholder and note in the Phase 6 summary why. Self-protecting paths (`agent-redline/**`, `agent-workflow.yaml`, `agent-redline-policy.yaml`, and `.github/CODEOWNERS`) get an explicit override pointing at the same team as default `*`; selected behavior-contract paths retain their confirmed compatible owners. GitHub evaluates CODEOWNERS from the PR base branch: when a new or changed owner rule is needed, stage that rule first and defer behaviorContracts until it reaches the base. When default is `@TODO-*`, propagate the placeholder. Require Code Owner review in branch protection; without live evidence of that rule, omit behaviorContracts.
 - **Recommended initial mode for redline:** `shadow` for 4 weeks / 30 PRs before flipping to binding (per redline's Phase 5).
 - **Decisions explicitly flagged for human judgment** — every line the developer needs to inspect.
 

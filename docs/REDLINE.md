@@ -41,13 +41,15 @@ And one terminal state:
 
 The combined verdict the reporter posts is one of `BLUE`, `GRAY`, `RED`, `MIXED`, or `BOUNDARY_VIOLATION` — the most-restrictive applicable signal wins.
 
+`behaviorContracts` is a protected path class, not another top-level verdict. Matching paths are red even when `zones.blue` or `excludes` also matches. The reporter emits versioned `behaviorContractChanges` detail with exact affected paths, their last-match CODEOWNERS tokens from the PR base revision, the required-CI identifier, and checkpoint. Agent Workflow consumes that detail; it does not carry a second path list.
+
 ## Checkpoints
 
 A checkpoint is required human attention. **Triggered** when the diff hits any signal the policy associates with that checkpoint — a red-zone path that names the checkpoint (the `checkpoint:` field on a zone entry), or a vertical-signal block that names it (`api.checkpoint`, `persistence.checkpoint`, `security.checkpoint`, `runtimeConfig.checkpoint`). Once triggered, the checkpoint must be **satisfied** before the PR can merge. Defined under `checkpoints:` in the policy; `satisfiedBy:` uses OR-semantics.
 
 | Entry | Satisfied when |
 |---|---|
-| `codeownerApproval` | A CODEOWNER for any of the touched red-zone paths approves the PR. |
+| `codeownerApproval` | User owners intersect locally with approving logins. Team-owner approval is recorded locally as externally verified; required Code Owner review on the hosting platform authenticates membership. Authority is resolved from the PR base branch CODEOWNERS. |
 | `label: <name>` | The named label is applied to the PR. |
 
 Built-in checkpoint IDs the policy can reference: `architecture-review`, `api-review`, `persistence-review`, `security-review`, `ops-review`. You can define others.
@@ -105,6 +107,12 @@ runtimeConfig:                          # optional
   paths: [<glob>, ...]
   checkpoint: ops-review
 
+behaviorContracts:                      # optional; one compatible set
+  paths:                                # exact paths or boundary-safe dir/**
+    - "tests/contracts/**"
+  verification: behavior-contracts      # existing required CI identifier
+  checkpoint: behavior-review           # must be CODEOWNER-only
+
 prRules:                                # optional; defaults shown
   maxChangedFiles: { warn: 50, fail: 100 }
   maxLinesChanged: { warn: 1000, fail: 2000 }
@@ -115,6 +123,10 @@ checkpoints:                            # required if any zone references one
     satisfiedBy:
       - codeownerApproval
       - label: architecture-reviewed
+  behavior-review:                      # required with behaviorContracts
+    description: <string>
+    satisfiedBy:
+      - codeownerApproval               # no label alternative
 
 modes:                                  # see "Shadow vs binding" below
   default: shadow                       # shadow | binding (default: shadow)
@@ -124,7 +136,7 @@ modes:                                  # see "Shadow vs binding" below
     report: shadow
     suppression: binding                # hardcoded default
 
-excludes:                               # optional; paths excluded from all classification
+excludes:                               # optional; behaviorContracts paths override excludes
   - <glob>
 
 boundaryAdapter:                        # how the backend's output is read by the reporter;
@@ -152,6 +164,8 @@ A policy is invalid if:
 7. The policy does not protect its own architecture-test directory (e.g. `src/test/**/architecture/**`) as a red zone.
 8. A glob is malformed.
 9. A non-empty `boundaries:` block exists without an explicit `boundaryAdapter:` block.
+10. `behaviorContracts.paths` contains anything except a unique safe exact path or `dir/**` pattern.
+11. `behaviorContracts.checkpoint` is missing, undefined, reused by another Redline signal, or satisfiable by anything except `codeownerApproval`.
 
 Bootstrap produces a valid policy. The reporter refuses to run on an invalid policy with a clear error.
 
@@ -171,6 +185,8 @@ Standard shell globs: `*`, `**`, `?`, `[abc]`, `[!abc]`. **Brace expansion is no
 | `pr_size` | Whether exceeding `prRules.*.fail` fails the check | follows `modes.default` |
 
 Important: `modes.default: shadow` does **not** downgrade `boundary_violation` or `suppression` — only an explicit `modes.perCheck.<rule>: shadow` flips those.
+
+Behavior-contract classifications and Agent Workflow's semantic predicates remain visible and non-waivable regardless of shadow mode. Shadow/binding controls whether an unmet Redline checkpoint itself fails this job; required Code Owner review remains the authority-enforcement layer.
 
 The recommended rollout is:
 

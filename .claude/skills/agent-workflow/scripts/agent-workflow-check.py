@@ -150,48 +150,12 @@ _INLINED_SCHEMA = { '$schema': 'https://json-schema.org/draft/2020-12/schema',
                                                          "redline's verdict artifact. "
                                                          'Repo-relative or absolute. Default when '
                                                          "omitted: 'build/redline-verdict.json'."},
-                  'behaviorContracts': { 'type': 'object',
-                                         'description': 'Optional repository-designated behavioral '
-                                                        'contract paths, their existing required '
-                                                        'CI surface, and the authority allowed to '
-                                                        'approve product-wide requirement changes.',
-                                         'required': ['paths', 'verification', 'approvalAuthority'],
-                                         'properties': { 'paths': { 'type': 'array',
-                                                                    'minItems': 1,
-                                                                    'uniqueItems': True,
-                                                                    'items': { 'type': 'string',
-                                                                               'minLength': 1,
-                                                                               'pattern': '^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^/*?\\[\\]{}]+(?:/[^/*?\\[\\]{}]+)*(?:/\\*\\*)?$'}},
-                                                         'verification': { 'type': 'string',
-                                                                           'minLength': 1,
-                                                                           'description': 'Identifier '
-                                                                                          'of an '
-                                                                                          'existing '
-                                                                                          'required '
-                                                                                          'CI '
-                                                                                          'check '
-                                                                                          'or '
-                                                                                          'verification '
-                                                                                          'surface '
-                                                                                          'that '
-                                                                                          'runs '
-                                                                                          'the '
-                                                                                          'configured '
-                                                                                          'contracts.'},
-                                                         'approvalAuthority': { 'type': 'string',
-                                                                                'minLength': 1,
-                                                                                'description': 'Repository-defined '
-                                                                                               'authority '
-                                                                                               'allowed '
-                                                                                               'to '
-                                                                                               'approve '
-                                                                                               'a '
-                                                                                               'requirement '
-                                                                                               'change '
-                                                                                               'to '
-                                                                                               'configured '
-                                                                                               'contracts.'}},
-                                         'additionalProperties': False},
+                  'behaviorContracts': { 'not': {},
+                                         'description': 'Invalid legacy field. Configure '
+                                                        'behaviorContracts in '
+                                                        'agent-redline-policy.yaml so paths, '
+                                                        'CODEOWNERS authority, and review routing '
+                                                        'have one source.'},
                   'hooks': { 'type': 'object',
                              'description': 'Options for the Claude Code accelerator hooks '
                                             'bootstrap installs (a non-normative, harness-specific '
@@ -1788,27 +1752,6 @@ def evaluate_applicability(
         reason_codes=tuple(dict.fromkeys(reasons)),
     )
 
-def valid_behavior_contract_pattern(pattern: object) -> bool:
-    """True for one safe exact path or boundary-safe dir/** pattern."""
-    if not isinstance(pattern, str) or not pattern or "\x00" in pattern:
-        return False
-    if any(ord(char) < 32 for char in pattern):
-        return False
-    exact = pattern[:-3] if pattern.endswith("/**") else pattern
-    if not exact or any(char in exact for char in _GLOB_CHARS):
-        return False
-    return valid_repository_path(exact, allow_prefix=False)
-
-
-def behavior_contract_matches(path: str, pattern: str) -> bool:
-    """Match one validated exact path or all descendants of dir/**."""
-    if not valid_repository_path(path, allow_prefix=False):
-        return False
-    if pattern.endswith("/**"):
-        prefix = pattern[:-2]
-        return path.startswith(prefix) and len(path) > len(prefix)
-    return path == pattern
-
 # ----- core/config/loader.py -----
 
 """``agent-workflow.yaml`` loader.
@@ -1891,15 +1834,6 @@ class RedlineConfig:
 
 
 @dataclass(frozen=True)
-class BehaviorContractsConfig:
-    """Repository-designated behavioral contract protection."""
-
-    paths: tuple[str, ...]
-    verification: str
-    approval_authority: str
-
-
-@dataclass(frozen=True)
 class Config:
     """Typed view of the per-repo ``agent-workflow.yaml``.
 
@@ -1914,7 +1848,6 @@ class Config:
     work_record: WorkRecordConfig
     redline: RedlineConfig
     applicability: ApplicabilityConfig | None
-    behavior_contracts: BehaviorContractsConfig | None
     raw: dict[str, Any]
 
 
@@ -2026,25 +1959,6 @@ def _to_config(data: dict[str, Any]) -> Config:
             )
         )
 
-    behavior_contracts_block = data.get("behaviorContracts")
-    behavior_contracts = None
-    if behavior_contracts_block is not None:
-        paths = tuple(behavior_contracts_block["paths"])
-        if not all(valid_behavior_contract_pattern(path) for path in paths):
-            raise ConfigError("config invalid at behaviorContracts/paths: unsafe contract path")
-        verification = behavior_contracts_block["verification"].strip()
-        approval_authority = behavior_contracts_block["approvalAuthority"].strip()
-        if not verification or not approval_authority:
-            raise ConfigError(
-                "config invalid at behaviorContracts: verification and "
-                "approvalAuthority must contain non-whitespace text"
-            )
-        behavior_contracts = BehaviorContractsConfig(
-            paths=paths,
-            verification=verification,
-            approval_authority=approval_authority,
-        )
-
     return Config(
         version=data["version"],
         project_name=data["project"]["name"],
@@ -2057,7 +1971,6 @@ def _to_config(data: dict[str, Any]) -> Config:
         ),
         redline=redline,
         applicability=applicability,
-        behavior_contracts=behavior_contracts,
         raw=data,
     )
 
@@ -2294,6 +2207,7 @@ class RedlineVerdict:
     schema_changed: bool
     security_changed: bool
     runtime_config_changed: bool
+    behavior_contract_changes: dict[str, Any] | None = None
     """Disambiguators for red-zone → High vs Elevated. Pulled from
     ``apiChanges.detected``, ``schemaChanges.detected``,
     ``securityChanges.detected``, ``runtimeConfigChanges.detected`` —
@@ -2352,7 +2266,15 @@ class RedlineVerdict:
         # Step 1: High signals — contract/schema/security changes,
         # plus High-class checkpoint ids. Wins over any zone-based
         # baseline.
-        if self.api_changed or self.schema_changed or self.security_changed:
+        if (
+            self.api_changed
+            or self.schema_changed
+            or self.security_changed
+            or bool(
+                self.behavior_contract_changes
+                and self.behavior_contract_changes["detected"]
+            )
+        ):
             return "High"
         if self._has_high_checkpoint():
             return "High"
@@ -2538,6 +2460,66 @@ def load_redline_verdict(path: Path) -> RedlineVerdict | None:
     return _from_mapping(data)
 
 
+def _behavior_contract_changes(data: dict[str, Any]) -> dict[str, Any] | None:
+    raw = data.get("behaviorContractChanges")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise RedlineVerdictError("behaviorContractChanges must be an object")
+    required = {"version", "detected", "paths", "verification", "checkpoint"}
+    if set(raw) != required or raw.get("version") != 1:
+        raise RedlineVerdictError(
+            "behaviorContractChanges has an unsupported or malformed shape"
+        )
+    if not isinstance(raw["detected"], bool):
+        raise RedlineVerdictError("behaviorContractChanges.detected must be boolean")
+    if not isinstance(raw["verification"], str) or not raw["verification"].strip():
+        raise RedlineVerdictError(
+            "behaviorContractChanges.verification must contain text"
+        )
+    if not isinstance(raw["checkpoint"], str) or not raw["checkpoint"].strip():
+        raise RedlineVerdictError(
+            "behaviorContractChanges.checkpoint must contain text"
+        )
+    entries = raw["paths"]
+    if not isinstance(entries, list):
+        raise RedlineVerdictError("behaviorContractChanges.paths must be an array")
+    seen: set[str] = set()
+    normalized: list[dict[str, Any]] = []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"path", "owners"}:
+            raise RedlineVerdictError(
+                "behaviorContractChanges path entries require path and owners"
+            )
+        path = entry["path"]
+        owners = entry["owners"]
+        if not isinstance(path, str) or not path or path in seen:
+            raise RedlineVerdictError(
+                "behaviorContractChanges paths must be unique non-empty strings"
+            )
+        if (
+            not isinstance(owners, list)
+            or any(not isinstance(owner, str) or not owner for owner in owners)
+            or len(owners) != len(set(owners))
+        ):
+            raise RedlineVerdictError(
+                "behaviorContractChanges owners must be unique non-empty strings"
+            )
+        seen.add(path)
+        normalized.append({"path": path, "owners": list(owners)})
+    if raw["detected"] != bool(normalized):
+        raise RedlineVerdictError(
+            "behaviorContractChanges.detected must match affected paths"
+        )
+    return {
+        "version": 1,
+        "detected": raw["detected"],
+        "paths": normalized,
+        "verification": raw["verification"],
+        "checkpoint": raw["checkpoint"],
+    }
+
+
 def _from_mapping(data: dict[str, Any]) -> RedlineVerdict:
     """Build the typed view, defaulting missing keys to safe values.
 
@@ -2565,6 +2547,7 @@ def _from_mapping(data: dict[str, Any]) -> RedlineVerdict:
         runtime_config_changed=bool(
             (data.get("runtimeConfigChanges") or {}).get("detected", False)
         ),
+        behavior_contract_changes=_behavior_contract_changes(data),
         modes=dict(data.get("modes") or {}),
         raw=data,
     )
@@ -3387,6 +3370,7 @@ _NON_WAIVABLE_PREDICATES: frozenset[str] = frozenset({
     "requirements.behavior_changes_well_formed",
     "requirements.task_context_traceable",
     "requirements.requirement_changes_authorized",
+    "behavior_contracts.redline_evidence_complete",
     "behavior_contracts.changed_paths_complete",
     "behavior_contracts.changed_paths_classified",
     "behavior_contracts.requirement_changes_authorized",
@@ -4029,6 +4013,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "requirements.behavior_changes_well_formed": "core",
     "requirements.task_context_traceable": "core",
     "requirements.requirement_changes_authorized": "core",
+    "behavior_contracts.redline_evidence_complete": "repo",
     "behavior_contracts.changed_paths_complete": "repo",
     "behavior_contracts.changed_paths_classified": "repo",
     "behavior_contracts.requirement_changes_authorized": "repo",
@@ -4356,6 +4341,7 @@ import os
 import stat
 import subprocess
 from pathlib import Path, PurePosixPath
+
 from urllib.parse import quote
 
 
@@ -4844,6 +4830,70 @@ def _github_default_branch_protection(repo_root: Path) -> str:
         return "unavailable"
     return "protected" if branch_info["protected"] or rules else "unprotected"
 
+def _load_behavior_contract_policy(
+    repo_root: Path,
+) -> tuple[dict[str, object] | None, str | None]:
+    path = repo_root / "agent-redline-policy.yaml"
+    if not path.is_file():
+        return None, None
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        return None, f"could not read Redline behavior-contract policy: {exc}"
+    if not isinstance(data, dict) or "behaviorContracts" not in data:
+        return None, None
+    block = data.get("behaviorContracts")
+    if not isinstance(block, dict):
+        return None, "Redline behaviorContracts must be an object"
+    paths = block.get("paths")
+    verification = block.get("verification")
+    checkpoint = block.get("checkpoint")
+    if (
+        not isinstance(paths, list)
+        or not paths
+        or len(paths) != len(set(paths))
+        or not all(isinstance(pattern, str) for pattern in paths)
+        or not isinstance(verification, str)
+        or not verification.strip()
+        or not isinstance(checkpoint, str)
+        or not checkpoint.strip()
+    ):
+        return None, "Redline behaviorContracts is malformed"
+    for pattern in paths:
+        exact = pattern[:-3] if pattern.endswith("/**") else pattern
+        if (
+            not exact
+            or any(char in exact for char in "*?[]{}")
+            or not valid_repository_path(exact, allow_prefix=False)
+        ):
+            return None, f"Redline behaviorContracts contains unsafe path {pattern!r}"
+    return {
+        "paths": paths,
+        "verification": verification,
+        "checkpoint": checkpoint,
+    }, None
+
+
+def _behavior_contract_policy_matches(path: str, pattern: str) -> bool:
+    if pattern.endswith("/**"):
+        return path.startswith(pattern[:-2])
+    return path == pattern
+
+
+def _behavior_contract_evidence_record(detail: str) -> RecordVerdict:
+    result = PredicateResult(
+        name="behavior_contracts.redline_evidence_complete",
+        passed=False,
+        detail=detail,
+        blocking=True,
+    )
+    record = aggregate_record("<behavior-contracts>", [result])
+    return dataclasses.replace(
+        record,
+        effective_rules=[{"name": result.name, "source": "repo"}],
+    )
+
+
 def _contract_changed_path_valid(repo_root: Path, path: str) -> bool:
     return valid_repository_path(path) and not _unsafe_applicability_path(repo_root, path)
 
@@ -4855,7 +4905,7 @@ def _verification_reference_present(text: str, identifier: str) -> bool:
 
 def _behavior_contract_record(
     repo_root: Path,
-    cfg: Config,
+    redline: RedlineVerdict,
     slugs: list[str],
     paths: list[str],
     *,
@@ -4864,17 +4914,49 @@ def _behavior_contract_record(
     base_ref: str | None,
     head_ref: str | None,
 ) -> RecordVerdict:
-    """Check configured repository contracts against the trusted PR path set."""
-    config = cfg.behavior_contracts
-    assert config is not None
-    affected = list(dict.fromkeys(
-        path
-        for path in paths
-        if any(behavior_contract_matches(path, pattern) for pattern in config.paths)
-    ))
+    """Check Redline-reported repository contracts against the trusted PR paths."""
+    detail = redline.behavior_contract_changes
+    assert detail is not None and detail["detected"]
+    affected_entries = detail["paths"]
+    affected = [entry["path"] for entry in affected_entries]
+    owners_by_path = {
+        entry["path"]: set(entry["owners"])
+        for entry in affected_entries
+    }
+
     paths_safe = all(_contract_changed_path_valid(repo_root, path) for path in paths)
     paths_unique = len(paths) == len(set(paths))
-    complete = paths_complete and paths_safe and paths_unique
+    affected_safe = all(
+        _contract_changed_path_valid(repo_root, path)
+        for path in affected
+    )
+    affected_current = set(affected).issubset(paths)
+    affected_red = set(affected).issubset(redline.zones.get("red", []))
+    complete = (
+        paths_complete
+        and paths_safe
+        and paths_unique
+        and affected_safe
+        and affected_current
+        and affected_red
+    )
+
+    owner_sets = {
+        tuple(sorted(owners))
+        for owners in owners_by_path.values()
+    }
+    owners_compatible = (
+        bool(affected)
+        and all(owners_by_path.values())
+        and len(owner_sets) == 1
+    )
+    checkpoint = detail["checkpoint"]
+    checkpoint_reported = any(
+        item.get("id") == checkpoint
+        for item in redline.checkpoints
+    )
+    authority_configured = owners_compatible and checkpoint_reported
+
     contexts: list[CheckerContext] = []
     if complete:
         for slug in slugs:
@@ -4900,10 +4982,18 @@ def _behavior_contract_record(
                 entries[change.path].append((change, ctx))
 
     classified = complete and all(len(entries[path]) == 1 for path in affected)
-    authorized = classified
+    authorized = classified and authority_configured
     classification_detail: list[str] = []
     authorization_detail: list[str] = []
     affected_contexts: dict[str, CheckerContext] = {}
+    if not owners_compatible:
+        authorization_detail.append(
+            "affected paths need one compatible non-empty CODEOWNERS authority set"
+        )
+    if not checkpoint_reported:
+        authorization_detail.append(
+            f"Redline did not report configured checkpoint {checkpoint!r}"
+        )
     for path in affected:
         matches = entries[path]
         if len(matches) != 1:
@@ -4918,37 +5008,43 @@ def _behavior_contract_record(
             continue
         authority = change.authority
         approval = change.approval
+        owners = owners_by_path[path]
         if (
             authority is None
             or authority.scope != "repository"
-            or authority.name != config.approval_authority
+            or authority.name not in owners
             or approval is None
-            or approval.by != config.approval_authority
+            or approval.by != authority.name
         ):
             authorized = False
             authorization_detail.append(
                 f"{path!r} requires repository authority and approval.by "
-                f"{config.approval_authority!r}"
+                f"from one of {sorted(owners)!r}"
             )
 
+    verification = detail["verification"]
     verification_linked = classified and any(
         _verification_reference_present(
             str(ctx.record.get("verification", ""))
             + "\n"
             + str(ctx.record.get("verification_plan", "")),
-            config.verification,
+            verification,
         )
         for ctx in affected_contexts.values()
         if ctx.record is not None
     )
     if not paths_complete:
         complete_detail = "trusted NUL changed-path evidence is missing or incomplete."
-    elif not paths_safe:
+    elif not paths_safe or not affected_safe:
         complete_detail = "changed-path evidence contains an unsafe or non-normalized path."
     elif not paths_unique:
         complete_detail = "changed-path evidence contains duplicate paths."
+    elif not affected_current:
+        complete_detail = "Redline reported a behavior-contract path outside the current diff."
+    elif not affected_red:
+        complete_detail = "Redline reported a behavior-contract path that is not classified red."
     else:
-        complete_detail = "trusted NUL changed-path evidence is complete."
+        complete_detail = "trusted NUL paths and Redline behavior-contract evidence agree."
 
     results = [
         PredicateResult(
@@ -4972,7 +5068,7 @@ def _behavior_contract_record(
             name="behavior_contracts.requirement_changes_authorized",
             passed=authorized,
             detail=(
-                "repository requirement changes use the configured repository authority."
+                "repository requirement changes reference canonical CODEOWNERS authority."
                 if authorized
                 else "; ".join(authorization_detail)
                 or "repository contract classifications are not authorized."
@@ -4983,11 +5079,11 @@ def _behavior_contract_record(
             name="behavior_contracts.verification_linked",
             passed=verification_linked,
             detail=(
-                f"an affected Work Record references configured verification "
-                f"{config.verification!r}."
+                f"an affected Work Record references reported verification "
+                f"{verification!r}."
                 if verification_linked
-                else f"no affected Work Record references configured verification "
-                f"{config.verification!r}."
+                else f"no affected Work Record references reported verification "
+                f"{verification!r}."
             ),
             blocking=True,
         ),
@@ -5351,7 +5447,7 @@ def main(argv: list[str] | None = None) -> int:
     redline = None
     redline_error: str | None = None
     risk_status = "unavailable"
-    if trusted_paths and discovery_succeeded and cfg is not None:
+    if cfg is not None:
         verdict_path = args.redline_verdict or Path(cfg.redline.verdict_path)
         if not verdict_path.is_absolute():
             verdict_path = repo_root / verdict_path
@@ -5359,7 +5455,7 @@ def main(argv: list[str] | None = None) -> int:
             redline = load_redline_verdict(verdict_path)
         except RedlineVerdictError as exc:
             redline_error = str(exc)
-        if redline is not None:
+        if redline is not None and trusted_paths and discovery_succeeded:
             risk_status = redline.applicability_risk_status(paths)
             if any(_unsafe_applicability_path(repo_root, path) for path in paths):
                 risk_status = "risky"
@@ -5377,11 +5473,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     if trusted_paths and discovery_succeeded and cfg is not None and not verdict.records:
         protected_paths = list(_PROTECTED_APPLICABILITY_PATHS)
-        if cfg.behavior_contracts is not None:
-            protected_paths.extend(
-                pattern[:-2] if pattern.endswith("/**") else pattern
-                for pattern in cfg.behavior_contracts.paths
-            )
 
         protected_paths.extend(
             path
@@ -5484,38 +5575,58 @@ def main(argv: list[str] | None = None) -> int:
                 ))
             verdict = _synthetic_verdict(args.slug or "<branch slug>", results, source="core")
 
-    if (
-        changed_path is not None
-        and cfg is not None
-        and cfg.behavior_contracts is not None
-    ):
-        evidence_complete = (
-            trusted_paths
-            and discovery_succeeded
-            and len(paths) == len(set(paths))
-            and all(_contract_changed_path_valid(repo_root, path) for path in paths)
+    behavior_policy, behavior_policy_error = _load_behavior_contract_policy(repo_root)
+    behavior_detail = redline.behavior_contract_changes if redline is not None else None
+    behavior_evidence_error = behavior_policy_error
+    if behavior_evidence_error is None and behavior_policy is None and behavior_detail is not None:
+        behavior_evidence_error = (
+            "Redline reported behavior contracts but the current policy has no behaviorContracts block"
         )
-        affected_contract_paths = any(
-            any(
-                behavior_contract_matches(path, pattern)
-                for pattern in cfg.behavior_contracts.paths
+    elif behavior_evidence_error is None and behavior_policy is not None:
+        if behavior_detail is None:
+            behavior_evidence_error = (
+                "current Redline behaviorContracts policy has no matching versioned verdict detail"
             )
-            for path in paths
+        else:
+            expected = {
+                path
+                for path in paths
+                if any(
+                    _behavior_contract_policy_matches(path, pattern)
+                    for pattern in behavior_policy["paths"]
+                )
+            }
+            reported = {entry["path"] for entry in behavior_detail["paths"]}
+            if expected != reported:
+                behavior_evidence_error = (
+                    "current Redline policy and verdict disagree on affected behavior-contract paths"
+                )
+            elif (
+                behavior_detail["verification"] != behavior_policy["verification"]
+                or behavior_detail["checkpoint"] != behavior_policy["checkpoint"]
+            ):
+                behavior_evidence_error = (
+                    "current Redline policy and verdict disagree on behavior-contract controls"
+                )
+    if behavior_evidence_error is not None:
+        verdict = _append_record(
+            verdict,
+            _behavior_contract_evidence_record(behavior_evidence_error),
         )
-        if affected_contract_paths or not evidence_complete:
-            verdict = _append_record(
-                verdict,
-                _behavior_contract_record(
-                    repo_root,
-                    cfg,
-                    changed_record_slugs,
-                    paths,
-                    paths_complete=trusted_paths and discovery_succeeded,
-                    redline_verdict_path=args.redline_verdict,
-                    base_ref=args.base_ref,
-                    head_ref=args.head_ref,
-                ),
-            )
+    elif behavior_detail is not None and behavior_detail["detected"]:
+        verdict = _append_record(
+            verdict,
+            _behavior_contract_record(
+                repo_root,
+                redline,
+                changed_record_slugs,
+                paths,
+                paths_complete=trusted_paths and discovery_succeeded,
+                redline_verdict_path=args.redline_verdict,
+                base_ref=args.base_ref,
+                head_ref=args.head_ref,
+            ),
+        )
     payload = json.dumps(verdict.to_dict(), indent=2, ensure_ascii=False) + "\n"
     sys.stdout.buffer.write(payload.encode("utf-8"))
     return verdict.exit_code

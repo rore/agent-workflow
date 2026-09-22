@@ -29,13 +29,13 @@ A requirement-change entry also includes:
     "authority":{"scope":"task|repository","name":"..."},
     "approval":{"by":"...","reference":"...","verbatim":"..."}
 
-Before approval, keep State Blocked and do not update current Task Context or the contract. Task changes require the task owner (scope task, name task-owner, by user). Contract changes require the configured approvalAuthority exactly; task approval, agent review, plan approval, and Redline review do not substitute. Approval binds only that entry's exact before/after values.
+Before approval, keep State Blocked and do not update current Task Context or the contract. Task changes require the task owner (scope task, name task-owner, by user). Contract changes require scope repository; authority.name and approval.by must equal one canonical CODEOWNERS token Redline reports for that path. Task approval, agent review, plan approval, and the review checkpoint do not substitute. Approval binds only that entry's exact before/after values.
 
 ## Configured contracts
 
-behaviorContracts.paths accepts exact repository-relative paths or boundary-safe dir/** descendants. Inspect only affected paths. The Work Record Verification or Verification plan must name behaviorContracts.verification.
+`agent-redline-policy.yaml` owns behaviorContracts paths, required-CI verification, and the CODEOWNER-only checkpoint. Inspect only paths in Redline's versioned behaviorContractChanges detail. Work Record Verification or Verification plan must name its reported verification identifier.
 
-Path protection is mutation integrity, not regression enforcement. Bootstrap/review confirms the named check already runs in required CI and that the configured authority is valid. The checker validates structure, path coverage, authority-name equality, and verification linkage; it cannot decide semantic equivalence, authenticate a person or required-check setting, prove a test ran, or prove the baseline was never rewritten.
+Path protection is mutation integrity, not regression enforcement. Bootstrap admits only an explicitly selected compatible path set with live required-CI, last-match CODEOWNERS, and required Code Owner review evidence. The checker validates current Redline policy/detail/path agreement, owner-token equality, checkpoint presence, and verification linkage; it cannot judge semantics, authenticate a person or team, prove a test ran, or prove the baseline was never rewritten.
 
 ## Checkpoint actions
 
