@@ -18,6 +18,13 @@ Bootstrap proposes one compatible set only after explicit human selection and li
 
 **Rationale:** Redline already owns structural path classification, CODEOWNERS, checkpoints, and modes. A second path and authority model can disagree and lets protected tests remain blue. Per-path CODEOWNERS facts let Agent Workflow validate exact authority references without reimplementing repository governance. Keeping semantic classification in the Work Record avoids pretending a path classifier can judge behavioral meaning.
 
+## 2026-09-22 — Existing runtime adapters own local checker execution
+
+**Decision:** Consumer local checks run through the shipped shell or PowerShell runtime adapter. The adapter selects one Python executable, invokes the vendored checker without reading hook input, and preserves checker exits `0/1/2`. Missing interpreters or checker dependencies block with repository-`.venv` repair guidance; bootstrap never installs them silently.
+
+**Alternatives considered:** Keep direct `python` commands; add another launcher or dependency manager; install into whichever interpreter happens to run bootstrap; let local checks degrade like pre-evaluation hooks.
+
+**Rationale:** The adapters already own cross-platform interpreter selection. Extending that path keeps hooks and local checks consistent without another abstraction, while a blocking prerequisite failure prevents a broken environment from looking like successful validation. CI continues to install the dependencies explicitly.
 ## 2026-09-20 — Baseline task intent and configured behavior contracts
 
 **Decision:** Capture Outcome, Scope, Constraints, and Completion criteria before

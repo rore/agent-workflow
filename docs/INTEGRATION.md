@@ -7,7 +7,7 @@ This is the guide for adopting agent-workflow on a repository the first time. It
 - The repo is a git repository with a `main` (or equivalent default) branch.
 - You can open PRs and merge them — bootstrap commits artifacts via a normal PR, nothing privileged.
 - The repo has a host that can run the CI workflow (GitHub Actions on github.com or GHES). The shipped workflow template defaults to `ubuntu-latest` (GitHub-hosted runners); if your organization runs its own runners, change `runs-on` to `[self-hosted]` (or your runner labels) during bootstrap.
-- Python 3.11+ is available on CI runners (the checker is single-file Python; no extra packaging).
+- Python 3.11+ is available on CI runners. Bootstrap and local checks also need `PyYAML` and `jsonschema` in one repository or explicitly selected interpreter; the shipped workflow installs both.
 
 You do **not** need: a database, a service to deploy, an account anywhere, or admin rights on the repo. Branch protection changes are proposed for a human to apply; bootstrap never reaches into repo settings.
 
@@ -168,11 +168,10 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 
 Run the same checker CI runs:
 
-```bash
-python scripts/agent-workflow-check.py --repo-root . --slug <slug>
-```
+- POSIX: `bash scripts/agent-workflow-runtime.sh codex check --repo-root . --slug <slug>`
+- PowerShell: `& scripts/agent-workflow-runtime.ps1 codex check --repo-root . --slug <slug>`
 
-Exit codes: `0` clean, `1` advisory, `2` blocking. The output is JSON; pipe it through `scripts/format-verdict-comment.py` to see the rendered sticky.
+The adapter uses `PYTHON` as one executable path, then a repository `.venv`, then platform fallbacks. Missing prerequisites return `2` with repository-`.venv` repair guidance. Exit codes remain `0` clean, `1` advisory, `2` blocking.
 
 ## Updating agent-workflow on an installed repo
 
@@ -182,7 +181,7 @@ The vendored scripts are checked in; updating means re-vendoring. From the agent
 bash scripts/build-vendored-checker.sh /path/to/your-repo/scripts/agent-workflow-check.py
 ```
 
-Then re-copy `scripts/format-verdict-comment.py` and `core/agent-redline/core/reporter/reporter.py` (→ `scripts/agent-redline-report.py`) the same way. Commit the diff.
+Then re-copy `scripts/agent-workflow-runtime.py/.sh/.ps1`, `scripts/format-verdict-comment.py`, and `core/agent-redline/core/reporter/reporter.py` (→ `scripts/agent-redline-report.py`). Run the adapter check above and commit the diff.
 
 For skill source updates, use operating mode to copy the refreshed `dist/agent-workflow/` into both target skill directories. Preserve config, third-party hooks, and historical Work Records; verify both manifests after the update.
 

@@ -32,17 +32,21 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-- Discovery, clean-context Redline classification, and clean-context plan review completed before implementation; no code edits started.
+- Added a no-stdin `check` action to the existing shell and PowerShell adapters. It honors one executable-path `PYTHON`, repository virtualenvs, and platform fallbacks; forwards arguments; preserves `0/1/2`; and blocks missing prerequisites with recovery guidance while leaving hook `guard`/`seed` behavior intact.
+- Added vendored-checker startup handling for missing `PyYAML` or `jsonschema`, with separate platform-valid repository-`.venv` install commands and no traceback.
+- Routed bootstrap/local-check guidance and the packaged bootstrap probe through the adapters, documented existing-consumer refresh, regenerated `dist/` and both dogfood installs, and added focused cross-platform regression coverage.
 
 ## Evidence
 
-- Reproduced current packaged-checker startup under `.venv\Scripts\python.exe -S`: exit 1 with raw `ModuleNotFoundError: jsonschema`.
-- Verified upstream `main` is `8b0f7161bf131856836b18f10caa9df0bda0c808`.
+- Reproduced the original packaged-checker failure under `.venv\Scripts\python.exe -S`: exit `1` with raw `ModuleNotFoundError: jsonschema`.
+- Focused `tests/hooks/test_runtime_check.py` passed under native WSL Python and native Windows PowerShell 5.1: separate missing-`yaml`/missing-`jsonschema` cases, no traceback or false success, deterministic no-Python/invalid-`PYTHON` blocking, real virtualenv paths with spaces, argument preservation, and advisory exit `1`.
+- Native PowerShell review probes preserved live-stdin behavior and checker exits `0/1/2`, normalized unexpected exit `7` to `2`, and returned one resolver JSON line with empty stderr.
+- `tests/run-all.sh` passed budget, schema, work-record, checker, redline, tuner, hooks, and links; final `tests/package/run.sh` passed separately, including install probe, package drift, and bootstrap E2E. `git diff --check` and Python compile checks passed.
 
 ## Plan review
 
@@ -50,4 +54,4 @@ The reviewer approved extending the existing adapters as the smallest design aft
 
 ## Result review
 
-The reviewer approved extending the existing adapters as the smallest design after requiring a separate no-stdin `check` path, exact `0/1/2` preservation, executable-only `PYTHON`, explicit resolver-output treatment, native PowerShell coverage, separate missing-dependency cases, deterministic PATH tests, and a corrected bootstrap fixture. The revised Plan and Verification plan incorporate every finding. No architectural objection remains.
+Clean-context final review by `/root/runtime_prereq_final_review` found two P2 recovery-message defects: recreating an already-running Windows `.venv`, and non-actionable missing-interpreter output. Both were fixed and pinned in regression assertions. The reviewer re-read the final snapshot and reported no remaining correctness, security, portability, stdin, exit-code, resolver-contract, or consumer-update findings.

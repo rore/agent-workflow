@@ -205,6 +205,8 @@ if [[ -d "$DIST" ]]; then
   printf '{}' | PYTHON="$FAILDIR/python-fail" bash scripts/agent-workflow-runtime.sh claude guard 2>"$FAILDIR/error"
   [[ $? == 2 ]] && grep -q 'DENY: runtime adapter failed with exit 7' "$FAILDIR/error" && echo "  ok: shell wrapper fails closed on evaluator errors" || { echo "  FAIL: shell wrapper evaluator failure"; fail=1; }
   rm -rf "$FAILDIR"
+  "$PY" tests/hooks/test_runtime_check.py \
+    || { echo "  FAIL: runtime check entrypoints"; fail=1; }
   # installer wires the packaged gate into a consumer-shaped settings.json
   E2E="$(mktemp -d)"; mkdir -p "$E2E/.claude/hooks"; cp "$DIST"/* "$E2E/.claude/hooks/"
   "$PY" "$DIST/install-settings.py" --settings "$E2E/.claude/settings.json" >/dev/null 2>&1
