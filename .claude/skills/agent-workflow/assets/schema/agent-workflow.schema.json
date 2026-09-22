@@ -68,32 +68,8 @@
       "description": "Path the CI checker reads to find redline's verdict artifact. Repo-relative or absolute. Default when omitted: 'build/redline-verdict.json'."
     },
     "behaviorContracts": {
-      "type": "object",
-      "description": "Optional repository-designated behavioral contract paths, their existing required CI surface, and the authority allowed to approve product-wide requirement changes.",
-      "required": ["paths", "verification", "approvalAuthority"],
-      "properties": {
-        "paths": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^/*?\\[\\]{}]+(?:/[^/*?\\[\\]{}]+)*(?:/\\*\\*)?$"
-          }
-        },
-        "verification": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Identifier of an existing required CI check or verification surface that runs the configured contracts."
-        },
-        "approvalAuthority": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Repository-defined authority allowed to approve a requirement change to configured contracts."
-        }
-      },
-      "additionalProperties": false
+      "not": {},
+      "description": "Invalid legacy field. Configure behaviorContracts in agent-redline-policy.yaml so paths, CODEOWNERS authority, and review routing have one source."
     },
     "hooks": {
       "type": "object",

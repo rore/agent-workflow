@@ -82,13 +82,13 @@ for fragment in (
     "Behavior-contract candidates",
     "Report none when absent and unresolved when evidence is missing.",
     "live required-status evidence",
-    "repository-authority evidence covering the path",
+    "last-match CODEOWNERS tokens covering the path",
     "select or reject each",
-    "Selection is not authority approval.",
-    "one existing required-CI identifier and one covering repository authority",
-    "split/defer or omit incompatible or unresolved candidates",
-    "Missing or unavailable required-CI/authority evidence leaves the block out",
-    "never protect automatically",
+    "Selection does not authorize a requirement change.",
+    "live evidence that Code Owner review is required",
+    "Use a dedicated CODEOWNER-only checkpoint",
+    "Do not put behavior-contract paths or authority in `agent-workflow.yaml`.",
+    "Missing, conflicting, or unavailable required-CI, CODEOWNERS, or required-review evidence leaves the block out",
 ):
     assert fragment in bootstrap, fragment
 PYEOF
@@ -194,13 +194,15 @@ PYEOF
 # 2b. .agent-workflow/tasks/ skeleton.
 mkdir -p .agent-workflow/tasks
 
-# 2c. agent-redline-policy.yaml from the redline template. We
-# do not exercise the policy here — the workflow checker only needs
-# it absent or syntactically present, and the file is part of the
-# install surface.
+# 2c. Redline policy and its vendored schema. The reporter resolves the
+# consumer schema from .agent-redline/ and validates every generated policy.
+mkdir -p .agent-redline
 cp "$SKILL/agent-redline/assets/templates/agent-policy.yaml.template" \
    agent-redline-policy.yaml \
   || { echo "FAIL: could not copy agent-policy.yaml.template" >&2; exit 2; }
+cp "$SKILL/agent-redline/assets/schema/agent-policy.schema.json" \
+   .agent-redline/agent-policy.schema.json \
+  || { echo "FAIL: could not copy agent-policy.schema.json" >&2; exit 2; }
 
 # 2d. Vendored checker + reporter. These are the same scripts the
 # install probe already exercised; here we make sure they live at the
@@ -214,6 +216,8 @@ cp "$SKILL/agent-redline/scripts/agent-redline-report.py" scripts/agent-redline-
 mkdir -p .github/workflows
 cp "$SKILL/templates/.github/workflows/agent-workflow.yml.template" \
    .github/workflows/agent-workflow.yml
+grep -Fq 'pull_request_review:' .github/workflows/agent-workflow.yml
+grep -Fq 'types: [submitted, dismissed]' .github/workflows/agent-workflow.yml
 
 # --- Step 3: Phase 6 self-probe. Write a minimal compact-shape Work
 # Record at _probe slug and run the vendored checker against it.
@@ -341,7 +345,9 @@ Path("agent-redline-policy.yaml").write_text(
     "  blue:\n    - path: docs/**\n      reason: documentation\n"
     "    - path: README.md\n      reason: repository overview\n"
     "boundaryAdapter: {outputFormat: none}\napi: {type: none}\n"
-    "checkpoints:\n  architecture-review:\n    description: review\n"
+    "checkpoints:\n  behavior-review:\n    description: behavior review\n"
+    "    satisfiedBy: [codeownerApproval]\n"
+    "  architecture-review:\n    description: review\n"
     "    satisfiedBy: [{label: architecture-reviewed}]\n"
     "modes: {default: binding}\n",
     encoding="utf-8",
@@ -383,6 +389,106 @@ if (( NESTED_EXIT != 2 )); then
   exit 2
 fi
 
+# A selected behavior contract is written only to Redline. It overrides the
+# broad tests/** blue zone, resolves authority from CODEOWNERS, and drives the
+# packaged Agent Workflow semantic gate.
+mkdir -p tests/contracts .github
+printf 'tests/contracts/** @contract-owner\n' > .github/CODEOWNERS
+cp .github/CODEOWNERS base-CODEOWNERS
+"$PY" - <<'PYEOF'
+from pathlib import Path
+policy = Path("agent-redline-policy.yaml").read_text(encoding="utf-8")
+policy = policy.replace(
+    "    - path: README.md\n      reason: repository overview\n",
+    "    - path: README.md\n      reason: repository overview\n"
+    "    - path: tests/**\n      reason: ordinary tests\n",
+)
+policy = policy.replace(
+    "boundaryAdapter: {outputFormat: none}\n",
+    "behaviorContracts:\n"
+    "  paths: [tests/contracts/**]\n"
+    "  verification: behavior-contracts\n"
+    "  checkpoint: behavior-review\n"
+    "excludes: [tests/contracts/**]\n"
+    "boundaryAdapter: {outputFormat: none}\n",
+)
+policy = policy.replace(
+    "checkpoints:\n",
+    "checkpoints:\n"
+    "  behavior-review:\n"
+    "    description: behavior review\n"
+    "    satisfiedBy: [codeownerApproval]\n",
+)
+Path("agent-redline-policy.yaml").write_text(policy, encoding="utf-8")
+PYEOF
+cat > .agent-workflow/tasks/contract.md <<'EOF'
+<!-- agent-workflow:start -->
+**Outcome:** Preserve repository behavior while reorganizing its contract test.
+
+**Target:** consumer-repo
+
+**Scope:** Contract test mechanics only.
+
+**Constraints:** Required behavior remains unchanged.
+
+**Completion criteria:** The behavior-contracts check covers the same behavior.
+
+**Requirement baseline:** {"source":"bootstrap-e2e","outcome":"Preserve repository behavior while reorganizing its contract test.","scope":"Contract test mechanics only.","constraints":"Required behavior remains unchanged.","completion_criteria":"The behavior-contracts check covers the same behavior."}
+
+**Risk:** High
+
+**Complexity:** Moderate
+
+**Reason:** A protected repository contract changes.
+
+**Discovery:** Redline reported tests/contracts/wake.md with @contract-owner authority.
+
+**Material assumptions:** Existing required CI and Code Owner review were verified during bootstrap.
+
+**Plan:** Reorganize the contract without changing required behavior.
+
+**Verification plan:** When the contract changes, the behavior-contracts check shall cover the same behavior → behavior-contracts.
+
+**Plan review:** clean-context review bootstrap-e2e-review.
+
+**Approvals:** Approved by user 2026-09-22: "Approve bootstrap E2E fixture."
+
+**Behavior changes:** [{"target":"repository-contract","path":"tests/contracts/wake.md","classification":"coverage-only","before":"Original contract mechanics.","after":"Reorganized contract mechanics.","reason":"Preserve behavior while reorganizing verification."}]
+
+**Exceptions:** —
+
+**State:** Ready for review
+<!-- agent-workflow:end -->
+EOF
+printf '.agent-workflow/tasks/contract.md\0tests/contracts/wake.md\0' > changed.z
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed.z --codeowners-file base-CODEOWNERS \
+  --codeowner-approvals contract-owner \
+  --json-out redline-verdict.json >/dev/null
+"$PY" scripts/agent-workflow-check.py --repo-root . --slug contract \
+  --changed-files-z changed.z --redline-verdict redline-verdict.json \
+  > behavior-contract-output.json
+"$PY" - <<'PYEOF' || { echo "FAIL: packaged behavior-contract flow disagreed" >&2; exit 2; }
+import json
+from pathlib import Path
+redline = json.loads(Path("redline-verdict.json").read_text(encoding="utf-8"))
+assert redline["zones"]["red"] == ["tests/contracts/wake.md"]
+assert redline["behaviorContractChanges"] == {
+    "version": 1,
+    "detected": True,
+    "paths": [{
+        "path": "tests/contracts/wake.md",
+        "owners": ["@contract-owner"],
+    }],
+    "verification": "behavior-contracts",
+    "checkpoint": "behavior-review",
+}
+payload = json.loads(Path("behavior-contract-output.json").read_text(encoding="utf-8"))
+contract = next(r for r in payload["records"] if r["slug"] == "<behavior-contracts>")
+assert contract["status"] == "clean"
+assert all(p["passed"] for p in contract["predicates"])
+PYEOF
+
 # --- Step 5: second consumer layout. The same production approval CLI and
 # both packaged callers use noncanonical paths and a relocated Work Record.
 printf 'handbook/\0plans/\0' > proposal.z
@@ -413,8 +519,14 @@ Path("agent-redline-policy.yaml").write_text(
     "zones:\n  red:\n    - path: agent-redline-policy.yaml\n"
     "      reason: governance\n      checkpoint: architecture-review\n"
     "  blue:\n    - path: handbook/**\n      reason: documentation\n"
+    "    - path: .work/**\n      reason: task records\n"
+    "    - path: quality/**\n      reason: ordinary quality assets\n"
+    "behaviorContracts:\n  paths: [quality/scenarios/**]\n"
+    "  verification: scenario-contracts\n  checkpoint: behavior-review\n"
     "boundaryAdapter: {outputFormat: none}\napi: {type: none}\n"
-    "checkpoints:\n  architecture-review:\n    description: review\n"
+    "checkpoints:\n  behavior-review:\n    description: behavior review\n"
+    "    satisfiedBy: [codeownerApproval]\n"
+    "  architecture-review:\n    description: review\n"
     "    satisfiedBy: [{label: architecture-reviewed}]\n"
     "modes: {default: binding}\n",
     encoding="utf-8",
@@ -425,6 +537,43 @@ PYEOF
   --changed-files-z changed.z --json-out redline-verdict.json >/dev/null
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null
+
+# The relocated Work Record and a different contract root exercise the same
+# generated Redline → checker flow in the second repository layout.
+mkdir -p quality/scenarios .work/items
+printf 'quality/scenarios/** @scenario-owner\n' >> .github/CODEOWNERS
+printf 'quality/scenarios/** @scenario-owner\n' >> base-CODEOWNERS
+"$PY" - <<'PYEOF'
+from pathlib import Path
+record = Path(".agent-workflow/tasks/contract.md").read_text(encoding="utf-8")
+record = record.replace("tests/contracts/wake.md", "quality/scenarios/flow.md")
+record = record.replace("behavior-contracts", "scenario-contracts")
+record = record.replace("@contract-owner", "@scenario-owner")
+Path(".work/items/layout-contract.record.md").write_text(record, encoding="utf-8")
+Path("changed.z").write_bytes(
+    b".work/items/layout-contract.record.md\0quality/scenarios/flow.md\0"
+)
+PYEOF
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed.z --codeowners-file base-CODEOWNERS \
+  --codeowner-approvals scenario-owner --json-out redline-verdict.json >/dev/null
+"$PY" scripts/agent-workflow-check.py --repo-root . \
+  --changed-files-z changed.z --redline-verdict redline-verdict.json \
+  > second-contract-output.json
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+redline = json.loads(Path("redline-verdict.json").read_text(encoding="utf-8"))
+assert redline["zones"]["red"] == ["quality/scenarios/flow.md"]
+assert redline["behaviorContractChanges"]["paths"] == [{
+    "path": "quality/scenarios/flow.md",
+    "owners": ["@scenario-owner"],
+}]
+payload = json.loads(Path("second-contract-output.json").read_text(encoding="utf-8"))
+contract = next(r for r in payload["records"] if r["slug"] == "<behavior-contracts>")
+assert contract["status"] == "clean"
+assert all(p["passed"] for p in contract["predicates"])
+PYEOF
 
 # The packaged resolver uses the configured non-default path, preserves a supplied
 # identity, and does not mutate the consumer record.

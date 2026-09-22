@@ -32,19 +32,27 @@ After Phase 4, you have a normal-looking PR with new committed files. Review and
 
 ### Optional behavior contracts
 
-Bootstrap may propose exact repository-relative paths or boundary-safe `dir/**` patterns for acceptance, E2E, contract, or regression assets. Each candidate must have evidence that one named CI identifier is currently required and that one repository authority covers the path. You explicitly select or reject every candidate; bootstrap never protects one automatically.
+Bootstrap may propose exact repository-relative paths or boundary-safe `dir/**` patterns for acceptance, E2E, contract, or regression assets. Each candidate needs live evidence for one required-CI identifier, path-covering base-branch last-match CODEOWNERS tokens, and required Code Owner review. You explicitly select or reject every candidate; bootstrap never protects one automatically.
 
-One `behaviorContracts` block represents one compatible path set:
+GitHub evaluates CODEOWNERS from the PR base branch. The selected ownership rules must already be present there before a contract-changing PR can rely on them; stage initial ownership first when bootstrap is delivered through a PR.
+
+One `behaviorContracts` block in `agent-redline-policy.yaml` represents one compatible path set:
 
 ```yaml
 behaviorContracts:
   paths:
     - "tests/contracts/**"
   verification: behavior-contracts
-  approvalAuthority: "@product-owners"
+  checkpoint: behavior-review
+
+checkpoints:
+  behavior-review:
+    description: Review authoritative behavior-contract changes
+    satisfiedBy:
+      - codeownerApproval
 ```
 
-All paths in the block share that verification identifier and authority. Missing, unavailable, or conflicting evidence leaves candidates unresolved and out of the block. Path protection provides mutation integrity; the required CI surface provides regression enforcement. The checker validates the reference, not whether that external check is required or passed.
+All paths share that verification identifier and canonical owner set. Missing, unavailable, or conflicting evidence leaves candidates unresolved and out of the block. Redline classifies affected paths red even under broader blue rules or excludes and emits their canonical owners. Agent Workflow consumes that evidence for semantic change records. Path protection provides mutation integrity; required CI provides regression enforcement.
 
 ### B. Manual install
 
@@ -152,7 +160,7 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 | A required field for every non-exempt task | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
 | `Risk` and `Complexity` in the Work Record | Mandatory. Determine the record's shape and the controls applied. |
 | `Requirement baseline` in the Work Record | Preserves the Task Context implementation started with; later behavioral edits use ordered `Behavior changes`. |
-| Optional `behaviorContracts` in `agent-workflow.yaml` | Protects explicitly selected repository contracts; its named required CI check still owns regression execution. |
+| Optional `behaviorContracts` in `agent-redline-policy.yaml` | Makes explicitly selected contracts red, routes CODEOWNER review, and names the required CI surface; Agent Workflow validates semantic change records from Redline evidence. |
 | `shadow` in `agent-redline-policy.yaml` | Zone classification is advisory until you flip it. Boundary violations still block. |
 | `redline: required` in `agent-workflow.yaml` | The checker treats a missing classifier verdict as a CI configuration error. Default; leave it. |
 

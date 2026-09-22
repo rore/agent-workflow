@@ -8,6 +8,16 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-22 — Redline owns repository behavior contracts
+
+**Decision:** Define repository behavior-contract paths, required-CI verification, and review checkpoint only in `agent-redline-policy.yaml`. Redline makes affected paths red ahead of excludes and blue zones, resolves canonical owners from the last matching CODEOWNERS rule, and emits versioned per-path facts. Agent Workflow consumes those facts for its global semantic-change gate; it does not carry a second path or authority configuration. Checkpoint routing, repository authority, exact behavioral approval, and required CI remain distinct controls.
+
+Bootstrap proposes one compatible set only after explicit human selection and live evidence for required CI, path-covering CODEOWNERS, and required Code Owner review. It never protects candidates automatically. Legacy `agent-workflow.yaml` behavior-contract configuration fails loudly.
+
+**Alternatives considered:** Keep paths in Agent Workflow and mirror them into Redline; represent protected tests as ordinary red-zone entries; use the checkpoint ID as authority; add a separate approver registry; infer semantic changes in Redline; add a new top-level verdict.
+
+**Rationale:** Redline already owns structural path classification, CODEOWNERS, checkpoints, and modes. A second path and authority model can disagree and lets protected tests remain blue. Per-path CODEOWNERS facts let Agent Workflow validate exact authority references without reimplementing repository governance. Keeping semantic classification in the Work Record avoids pretending a path classifier can judge behavioral meaning.
+
 ## 2026-09-20 — Baseline task intent and configured behavior contracts
 
 **Decision:** Capture Outcome, Scope, Constraints, and Completion criteria before

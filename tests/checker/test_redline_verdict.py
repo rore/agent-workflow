@@ -11,6 +11,7 @@ fixtures.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -276,3 +277,76 @@ def test_applicability_risk_rejects_partial_verdict_shape() -> None:
     verdict = _applicability_verdict(["docs/guide.md"])
     del verdict.raw["schemaChanges"]
     assert verdict.applicability_risk_status(["docs/guide.md"]) == "unavailable"
+
+def test_behavior_contract_detail_parses_and_detects_high_risk(
+    tmp_path: Path,
+) -> None:
+    payload = {
+        "behaviorContractChanges": {
+            "version": 1,
+            "detected": True,
+            "paths": [
+                {
+                    "path": "tests/contracts/wake.md",
+                    "owners": ["@org/product-owners"],
+                }
+            ],
+            "verification": "behavior-contracts",
+            "checkpoint": "behavior-review",
+        }
+    }
+    path = tmp_path / "behavior.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    verdict = load_redline_verdict(path)
+    assert verdict is not None
+    assert verdict.behavior_contract_changes == payload["behaviorContractChanges"]
+    assert verdict.detected_risk() == "High"
+
+
+@pytest.mark.parametrize(
+    "detail",
+    [
+        {
+            "version": 2,
+            "detected": True,
+            "paths": [{"path": "x", "owners": ["@owner"]}],
+            "verification": "check",
+            "checkpoint": "review",
+        },
+        {
+            "version": 1,
+            "detected": False,
+            "paths": [{"path": "x", "owners": ["@owner"]}],
+            "verification": "check",
+            "checkpoint": "review",
+        },
+        {
+            "version": 1,
+            "detected": True,
+            "paths": [
+                {"path": "x", "owners": ["@owner"]},
+                {"path": "x", "owners": ["@owner"]},
+            ],
+            "verification": "check",
+            "checkpoint": "review",
+        },
+        {
+            "version": 1,
+            "detected": True,
+            "paths": [{"path": "x", "owners": ["@owner", "@owner"]}],
+            "verification": "check",
+            "checkpoint": "review",
+        },
+    ],
+)
+def test_behavior_contract_detail_rejects_malformed_or_stale_shape(
+    tmp_path: Path,
+    detail: dict,
+) -> None:
+    path = tmp_path / "behavior.json"
+    path.write_text(
+        json.dumps({"behaviorContractChanges": detail}),
+        encoding="utf-8",
+    )
+    with pytest.raises(RedlineVerdictError, match="behaviorContractChanges"):
+        load_redline_verdict(path)

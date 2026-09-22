@@ -11,6 +11,7 @@ Profile-specific mapping of the workflow and harness contract (`SPEC.md`) to Git
 - **Repository guidance:** `AGENTS.md` or existing repository documentation
 - **Implementation diff and review discussion:** GitHub pull request
 - **Risk and policy findings:** Agent Redline (bundled and non-optional; installed by bootstrap as part of the agent-workflow install, not as a separate step)
+- **Repository behavior contracts:** optional `agent-redline-policy.yaml` paths backed by required CI and required Code Owner review; Redline owns classification and canonical CODEOWNERS authority, while Agent Workflow owns semantic change records
 - **Verification:** repository commands and GitHub CI
 - **Approval and merge enforcement:** GitHub required reviewers, required checks, and branch protection
 - **Exceptions:** recorded in the Work Record's structured block (the marker-bounded Markdown section), approved under team policy
