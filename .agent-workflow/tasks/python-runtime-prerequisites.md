@@ -44,9 +44,9 @@
 ## Evidence
 
 - Reproduced the original packaged-checker failure under `.venv\Scripts\python.exe -S`: exit `1` with raw `ModuleNotFoundError: jsonschema`.
-- Focused `tests/hooks/test_runtime_check.py` passed under native WSL Python and native Windows PowerShell 5.1: separate missing-`yaml`/missing-`jsonschema` cases, no traceback or false success, deterministic no-Python/invalid-`PYTHON` blocking, real virtualenv paths with spaces, argument preservation, and advisory exit `1`.
-- Native PowerShell review probes preserved live-stdin behavior and checker exits `0/1/2`, normalized unexpected exit `7` to `2`, and returned one resolver JSON line with empty stderr.
-- `tests/run-all.sh` passed budget, schema, work-record, checker, redline, tuner, hooks, and links; final `tests/package/run.sh` passed separately, including install probe, package drift, and bootstrap E2E. `git diff --check` and Python compile checks passed.
+- Focused `tests/hooks/test_runtime_check.py` passed under WSL/POSIX Python, native Git Bash, PowerShell 7, and Windows PowerShell 5.1. It covers separate missing-`yaml`/missing-`jsonschema` cases, no traceback or false success, missing and non-Python `PYTHON` executables returning either failure or success, real virtualenv paths with spaces, argument preservation, and checker exits `0/1/2`.
+- Native PowerShell review probes preserved live-stdin behavior, normalized unexpected exit `7` to `2`, and returned one resolver JSON line with empty stderr. `guard` and `seed` remain unchanged.
+- Current native-Windows runs passed budget, schema, work-record, checker, redline, tuner, hooks, and links. WSL `tests/package/run.sh` passed package drift, committed-skill parity, references, install probe, and bootstrap E2E. `git diff --check` passed.
 
 ## Plan review
 
@@ -54,4 +54,4 @@ The reviewer approved extending the existing adapters as the smallest design aft
 
 ## Result review
 
-Clean-context final review by `/root/runtime_prereq_final_review` found two P2 recovery-message defects: recreating an already-running Windows `.venv`, and non-actionable missing-interpreter output. Both were fixed and pinned in regression assertions. The reviewer re-read the final snapshot and reported no remaining correctness, security, portability, stdin, exit-code, resolver-contract, or consumer-update findings.
+Clean-context final review by `/root/runtime_prereq_final_review` first found two P2 recovery-message defects: recreating an already-running Windows `.venv`, and non-actionable missing-interpreter output. Both were fixed and pinned in regression assertions. CodeRabbit then found that an existing non-Python executable returning `1` could escape as an advisory result; marker-based interpreter validation fixed both failing and successful impostors. Astra found and verified the final Windows PowerShell 5.1 quoting correction. Its closing review reported no findings across Git Bash, PowerShell 7, PowerShell 5.1, checker `0/1/2`, missing/fake interpreters, or unchanged `guard`/`seed` behavior.

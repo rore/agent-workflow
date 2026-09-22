@@ -53,6 +53,10 @@ $OutputEncoding = $utf8
 
 if ($Action -eq "check") {
     try {
+        $probe = @(& $command @prefix -c "import sys; assert sys.version_info >= (3, 11); print('agent-workflow-python-3.11')" 2>$null)
+        if ($LASTEXITCODE -ne 0 -or $probe.Count -ne 1 -or $probe[0].Trim() -ne "agent-workflow-python-3.11") {
+            Exit-Unavailable "selected Python unavailable or older than 3.11: $command; install or select Python 3.11+, or set PYTHON to one executable path"
+        }
         & $command @prefix $script @CheckerArgs
         $childExit = $LASTEXITCODE
     } catch {

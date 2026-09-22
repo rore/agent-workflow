@@ -257,9 +257,8 @@ Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summ
 Before writing the summary's "Backend reachability probe" section, actually run the probe:
 
 1. Write a temporary Work Record at `.agent-workflow/tasks/_probe.md` — minimal compact-shape with `**State:** Ready for review`.
-2. Run the checker through the installed runtime adapter so interpreter selection and dependency validation are identical: POSIX `bash scripts/agent-workflow-runtime.sh codex check --repo-root . --slug _probe`; PowerShell `& scripts/agent-workflow-runtime.ps1 codex check --repo-root . --slug _probe`.
-   The checker should exit clean or advisory (`redline: required` without a local verdict is advisory).
-   Missing Python, `PyYAML`, or `jsonschema` is blocking: present the emitted repository-`.venv` repair command and get approval before installing.
+2. Run through the installed runtime adapter: POSIX `bash scripts/agent-workflow-runtime.sh codex check --repo-root . --slug _probe`; PowerShell `& scripts/agent-workflow-runtime.ps1 codex check --repo-root . --slug _probe`.
+   Clean or advisory is expected. Missing Python, `PyYAML`, or `jsonschema` blocks; show its repository-`.venv` repair command and get approval before installing.
 3. Record the outcome in the self-summary.
 4. Delete the probe file.
 

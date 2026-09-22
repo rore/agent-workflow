@@ -75,11 +75,25 @@ def assert_adapter(command: list[str], repo: Path, env: dict[str, str]) -> None:
     assert json.loads(Path(env["AW_ARGS_OUT"]).read_text()) == expected
     env["AW_EXIT"] = "1"
     assert run(command + expected, repo, env).returncode == 1
-    env["PYTHON"] = str(repo / "missing python")
-    result = run(command + expected, repo, env)
-    assert result.returncode == 2
-    assert "Python 3.11+" in result.stderr and "set PYTHON" in result.stderr
-    assert "DEGRADED:" not in result.stderr
+    git = Path(shutil.which("git") or "git")
+    non_python_success = (
+        git.parent.parent / "usr/bin/true.exe"
+        if os.name == "nt"
+        else Path(shutil.which("true") or "")
+    )
+    for invalid in (
+        Path(repo / "missing python"),
+        Path(shutil.which("where.exe") or "")
+        if os.name == "nt"
+        else Path(shutil.which("false") or ""),
+        non_python_success,
+    ):
+        assert invalid and (not invalid.exists() or invalid.is_file())
+        env["PYTHON"] = str(invalid)
+        result = run(command + expected, repo, env)
+        assert result.returncode == 2
+        assert "Python 3.11+" in result.stderr and "set PYTHON" in result.stderr
+        assert "DEGRADED:" not in result.stderr
 
 
 def test_adapters() -> None:
@@ -97,10 +111,10 @@ def test_adapters() -> None:
         else:
             print("skip: no same-filesystem Bash")
 
-        powershell = shutil.which("pwsh")
+        powershells = [shutil.which("pwsh")]
         if os.name == "nt":
-            powershell = powershell or shutil.which("powershell.exe")
-        if powershell:
+            powershells.append(shutil.which("powershell.exe"))
+        for powershell in dict.fromkeys(p for p in powershells if p):
             commands.append(
                 [
                     powershell,
@@ -113,7 +127,7 @@ def test_adapters() -> None:
                     "check",
                 ]
             )
-        else:
+        if not any(powershells):
             print("skip: native PowerShell unavailable")
 
         assert commands

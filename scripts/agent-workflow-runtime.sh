@@ -34,6 +34,8 @@ if [[ "$ACTION" == "seed" ]]; then
   exec "$PY" "$SCRIPT" --runtime "$RUNTIME" --seed
 fi
 if [[ "$ACTION" == "check" ]]; then
+  PROBE="$("$PY" -c 'import sys; assert sys.version_info >= (3, 11); print("agent-workflow-python-3.11")' 2>/dev/null)"
+  [[ $? -eq 0 && "$PROBE" == "agent-workflow-python-3.11" ]] || unavailable "selected Python unavailable or older than 3.11: $PY; install or select Python 3.11+, or set PYTHON to one executable path"
   "$PY" "$SCRIPT" "$@"
   STATUS=$?
   if [[ $STATUS -eq 0 || $STATUS -eq 1 || $STATUS -eq 2 ]]; then exit $STATUS; fi
