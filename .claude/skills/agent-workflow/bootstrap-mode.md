@@ -145,7 +145,7 @@ After candidate selection, explain and ask which protection to use:
 | `repository` (default) | Branch-required verification, compatible base-branch CODEOWNERS, required Code Owner review, dedicated CODEOWNER-only checkpoint | Hosting platform enforces approval/merge. |
 | `workflow` | Named verification and combined harness run on PRs; no behavior checkpoint or CODEOWNERS requirement | Agent Workflow blocks readiness, but approval is unauthenticated repository authority and the platform may allow manual merge. |
 
-Both keep paths red and require classification, exact approval, and verification linkage. Write `protection` explicitly; repository includes `checkpoint`, workflow omits it. Never downgrade. Missing PR execution defers both; missing repository governance permits workflow only after explicit selection. Proposal-only defers.
+Both stay red. Every change needs classification and verification linkage; only `requirement-change` needs mode-specific approval. Set `protection` explicitly; only repository has `checkpoint`. Never downgrade. Missing PR execution defers both. Missing governance allows workflow only by explicit choice. Proposal-only defers.
 
 Present both drafts. State the ask:
 

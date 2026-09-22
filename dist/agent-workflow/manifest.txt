@@ -33,7 +33,7 @@ agent-redline/references/per-checkpoint/red-zone-change.md	1902
 agent-redline/references/per-checkpoint/security-change-checkpoint.md	2171
 agent-redline/scripts/agent-redline-report.py	87836
 assets/schema/agent-workflow.schema.json	5067
-bootstrap-mode.md	25911
+bootstrap-mode.md	25913
 hooks/check-plan.py	4854
 hooks/check-plan.sh	888
 hooks/install-settings.py	7942

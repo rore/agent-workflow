@@ -63,7 +63,7 @@ behaviorContracts:
   verification: behavior-contracts
 ```
 
-Both modes make affected paths red, require one semantic classification per changed path, and link the same PR verification. Repository protection authenticates repository authority and can prevent merge. Workflow protection records exact task-owner/user approval and fails the Agent Workflow PR check when its evidence is missing, but GitHub may still permit a manual merge.
+Both modes make affected paths red, require one semantic classification per changed path, and link the same PR verification. For a `requirement-change`, repository protection authenticates repository authority and can prevent merge; workflow protection records exact task-owner/user approval and fails the Agent Workflow PR check when that evidence is missing, but GitHub may still permit a manual merge.
 
 If the named verification or combined harness does not run on pull requests, bootstrap leaves the block unresolved. If CI installation remains proposal-only, it defers the block rather than claiming protection that is not running.
 

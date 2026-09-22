@@ -21,7 +21,7 @@ agent-workflow makes that state durable, uses risk to focus reviewer attention, 
 ## What you get
 
 - **Durable task state** — scope, assumptions, decisions, and verification live in the committed Work Record, so work can be reviewed and resumed rather than lost in a chat log.
-- **Behavioral integrity** — the Work Record preserves the requirements implementation started with, and selected behavior-contract paths stay red, classified, approved, and linked to PR verification—even in solo repositories without CODEOWNERS or branch protection.
+- **Behavioral integrity** — the Work Record preserves the requirements implementation started with, and selected behavior-contract paths stay red, classified, and linked to PR verification. Requirement changes also need approval under the selected protection—even in solo repositories without CODEOWNERS or branch protection.
 - **Risk-aware visibility** — the risk classification decides where a reviewer's attention goes, and what the agent decided and verified is on the record.
 - **Objective CI gates** — mechanically detectable violations fail CI, so they don't depend on the agent reporting itself correctly.
 
@@ -64,7 +64,7 @@ An agent can produce a green change by quietly changing the promise: narrowing s
 | Protection | What is preserved | What happens when it changes |
 |---|---|---|
 | **Task requirements** | The Outcome, Scope, Constraints, and Completion criteria that implementation started with. | The agent records the exact before/after meaning. A real requirement change needs explicit task-owner approval; otherwise the task stays blocked. |
-| **Repository behavior contracts** | Selected acceptance, contract, E2E, or regression paths declared in Agent Redline and exercised by a named PR check. | Redline treats the path as red and Agent Workflow requires semantic classification plus verification linkage. Choose repository protection for CODEOWNERS/branch-enforced approval, or workflow protection for explicit task-owner approval without claiming merge enforcement. |
+| **Repository behavior contracts** | Selected acceptance, contract, E2E, or regression paths declared in Agent Redline and exercised by a named PR check. | Redline treats the path as red and Agent Workflow requires semantic classification plus verification linkage. For requirement changes, choose repository protection for CODEOWNERS/branch-enforced approval, or workflow protection for explicit task-owner approval without claiming merge enforcement. |
 
 This does not make requirements or tests immutable. Equivalent rewrites and coverage improvements remain possible and visible. Product obligations may change too, but only as an explicit, approved decision—not as an implementation shortcut.
 
@@ -116,7 +116,7 @@ The checker reads the Work Record and the classifier's verdict — it does not r
 
 - The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
 - Its Requirement baseline and any ordered Behavior changes are complete, consistent, and authorized.
-- Every changed configured behavior-contract path is classified and approved under its selected protection mode; at least one affected Work Record references its PR verification identifier.
+- Every changed configured behavior-contract path is classified; each `requirement-change` is approved under its selected protection mode; at least one affected Work Record references its PR verification identifier.
 - Declared risk is not below what the classifier detected on the diff.
 - No architectural-boundary violation.
 - Required reviews/approvals are recorded for Elevated/High work. (Once the classifier is in binding mode, any triggered review checkpoint must also be satisfied.)
