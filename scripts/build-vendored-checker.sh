@@ -104,8 +104,21 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Literal, NotRequired, Protocol, TypedDict, runtime_checkable
 
-import jsonschema
-import yaml
+try:
+    import jsonschema
+    import yaml
+except ModuleNotFoundError as exc:
+    dependency = {{"yaml": "PyYAML", "jsonschema": "jsonschema"}}.get(
+        exc.name or "", exc.name or "unknown"
+    )
+    sys.stderr.write(
+        f"agent-workflow: missing Python dependency {{dependency}} for {{sys.executable}}. "
+        "Create a repository .venv if absent. Install with "
+        '".venv/bin/python" -m pip install pyyaml jsonschema (POSIX) or '
+        '& ".venv/Scripts/python.exe" -m pip install pyyaml jsonschema (PowerShell); '
+        "set PYTHON to that executable, and retry.\\n"
+    )
+    raise SystemExit(2)
 
 # Inlined from core/schema/agent-workflow.schema.json at build time.
 _INLINED_SCHEMA = {_schema_text}

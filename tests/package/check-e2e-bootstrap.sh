@@ -94,6 +94,7 @@ for fragment in (
 PYEOF
 
 cd "$CONSUMER"
+git init -q
 
 # --- Step 2: Phase 4 writes — perform mechanical equivalents of what
 # Concrete runtime install operations documented by bootstrap.
@@ -158,7 +159,8 @@ assert "Root prose before." in t and "Root prose after." in t and "STALE BODY" n
 assert "verified requires a denied operation with unchanged target" in t
 assert "Record every other combination as degraded." in t
 assert "Evaluator failure returns deny; native prevention requires that evidence." in t
-assert "If `python` is unavailable, use repository/runtime-provided Python and record the complete invocation." in t
+assert "bash scripts/agent-workflow-runtime.sh codex check" in t
+assert "scripts/agent-workflow-runtime.ps1 codex check" in t
 PYEOF
 
 # bootstrap-mode would do conversationally. Each write uses a file the
@@ -210,6 +212,9 @@ cp "$SKILL/agent-redline/assets/schema/agent-policy.schema.json" \
 mkdir -p scripts
 cp "$SKILL/scripts/agent-workflow-check.py" scripts/agent-workflow-check.py
 cp "$SKILL/agent-redline/scripts/agent-redline-report.py" scripts/agent-redline-report.py
+cp "$SKILL/scripts/agent-workflow-runtime.py" scripts/agent-workflow-runtime.py
+cp "$SKILL/scripts/agent-workflow-runtime.sh" scripts/agent-workflow-runtime.sh
+cp "$SKILL/scripts/agent-workflow-runtime.ps1" scripts/agent-workflow-runtime.ps1
 
 # 2e. CI workflow. Just confirm we can lay it down — the template
 # contains the workflow YAML.
@@ -251,7 +256,8 @@ cat > .agent-workflow/tasks/_probe.md <<'EOF'
 EOF
 
 set +e
-"$PY" scripts/agent-workflow-check.py --repo-root . --slug _probe > probe-output.txt 2>&1
+PYTHON="$PY" bash scripts/agent-workflow-runtime.sh codex check \
+  --repo-root . --slug _probe > probe-output.txt 2>&1
 PROBE_EXIT=$?
 set -e
 
