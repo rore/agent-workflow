@@ -57,6 +57,21 @@ The checkpoints, in order:
 
 Each checkpoint has a readiness gate; the skill requires the agent to satisfy it before advancing, and CI independently enforces the subset it can verify. Full spec: [`docs/SPEC.md`](docs/SPEC.md).
 
+## Protecting intended behavior
+
+An agent can produce a green change by quietly changing the promise: narrowing scope, weakening completion criteria, or editing a regression test to accept less. agent-workflow protects against both forms of drift:
+
+| Protection | What is preserved | What happens when it changes |
+|---|---|---|
+| **Task requirements** | The Outcome, Scope, Constraints, and Completion criteria that implementation started with. | The agent records the exact before/after meaning. A real requirement change needs explicit task-owner approval; otherwise the task stays blocked. |
+| **Repository behavior contracts** | Selected acceptance, contract, E2E, or regression paths declared in Agent Redline and backed by required CI. | Redline treats the path as red, CODEOWNERS supplies repository authority, and Agent Workflow requires a semantic classification plus verification linkage. |
+
+This does not make requirements or tests immutable. Equivalent rewrites and coverage improvements remain possible and visible. Product obligations may change too, but only as an explicit, approved decision—not as an implementation shortcut.
+
+For example, if a task promises delivery while a recipient is offline but the implementation can only deliver after the recipient restarts, the agent cannot silently rewrite the completion criteria or weaken the protected test. It must propose the exact requirement change and remain blocked until the appropriate owner approves it.
+
+Developer guide: [`docs/BEHAVIORAL_INTEGRITY.md`](docs/BEHAVIORAL_INTEGRITY.md).
+
 ## The Work Record
 
 The central artifact: one file per task at `.agent-workflow/tasks/<slug>.md`, committed with the code and updated as work proceeds. A simplified example:
@@ -133,6 +148,6 @@ On an internal repository, agent-workflow has governed its own development acros
 | Predicate-by-predicate reference of what CI blocks on | [`docs/ENFORCEMENT.md`](docs/ENFORCEMENT.md) |
 | The normative workflow + harness contract | [`docs/SPEC.md`](docs/SPEC.md) |
 | Default profile mapping (risk triggers, GitHub, CI) | [`docs/DEFAULT_PROFILE.md`](docs/DEFAULT_PROFILE.md) |
-| Requirement baselines, behavior changes, and protected contracts | [`docs/agent-workflow/behavioral-integrity.md`](docs/agent-workflow/behavioral-integrity.md) |
+| Why and how requirements and behavior contracts are protected | [`docs/BEHAVIORAL_INTEGRITY.md`](docs/BEHAVIORAL_INTEGRITY.md) |
 | Publishing the skill | [`docs/PACKAGING.md`](docs/PACKAGING.md) |
 | Working on agent-workflow itself | [`AGENTS.md`](AGENTS.md), [`CONTRIBUTING.md`](CONTRIBUTING.md) |
