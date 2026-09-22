@@ -1945,3 +1945,60 @@ class TestBehaviorContracts:
         policy.write_text(yaml.safe_dump(data), encoding="utf-8")
         with pytest.raises(SystemExit, match="must be dedicated"):
             load_policy(policy)
+
+class TestBehaviorContractProtection:
+    @staticmethod
+    def policy(protection=None, checkpoint=True):
+        behavior = {"paths": ["contracts/**"], "verification": "contract-ci"}
+        if protection is not None:
+            behavior["protection"] = protection
+        if checkpoint:
+            behavior["checkpoint"] = "behavior-review"
+        return {
+            "version": 1,
+            "project": {"name": "test"},
+            "zones": {"red": [{"path": "src/**", "reason": "red", "checkpoint": "architecture-review"}]},
+            "behaviorContracts": behavior,
+            "checkpoints": {
+                "behavior-review": {"satisfiedBy": ["codeownerApproval"]},
+                "architecture-review": {"satisfiedBy": [{"label": "arch-reviewed"}]},
+            },
+            "modes": {"default": "binding"},
+        }
+
+    def test_omitted_and_repository_emit_exact_v1(self):
+        diff = Diff(["contracts/a.yaml"], 1, 1)
+        expected = {"version": 1, "detected": True, "paths": [{"path": "contracts/a.yaml", "owners": []}], "verification": "contract-ci", "checkpoint": "behavior-review"}
+        assert classify(self.policy(), diff).behavior_contract_changes == expected
+        assert classify(self.policy("repository"), diff).behavior_contract_changes == expected
+
+    def test_workflow_is_red_without_codeowners_and_has_no_behavior_checkpoint(self):
+        v = classify(self.policy("workflow", checkpoint=False), Diff(["contracts/a.yaml"], 1, 1))
+        assert v.verdict == "RED"
+        assert v.checkpoints == []
+        assert v.behavior_contract_changes == {"version": 2, "protection": "workflow", "detected": True, "paths": ["contracts/a.yaml"], "verification": "contract-ci"}
+
+    def test_workflow_preserves_unrelated_checkpoint_and_detected_false(self):
+        policy = self.policy("workflow", checkpoint=False)
+        v = classify(policy, Diff(["src/a.py"], 1, 1))
+        assert v.behavior_contract_changes["detected"] is False
+        assert [c.id for c in v.checkpoints] == ["architecture-review"]
+
+    def test_workflow_markdown_warns_no_merge_enforcement(self):
+        from core.reporter.reporter import render_markdown
+        v = classify(self.policy("workflow", checkpoint=False), Diff(["contracts/a.yaml"], 1, 1))
+        assert "does not block merge" in render_markdown(v)
+
+    def test_workflow_checkpoint_is_rejected(self, tmp_path):
+        policy = self.policy("workflow")
+        p = tmp_path / "policy.yaml"
+        p.write_text(yaml.safe_dump(policy), encoding="utf-8")
+        with pytest.raises(SystemExit, match="invalid against"):
+            load_policy(p)
+
+    def test_unknown_protection_is_rejected_by_schema(self, tmp_path):
+        policy = self.policy("sidecar", checkpoint=True)
+        p = tmp_path / "policy.yaml"
+        p.write_text(yaml.safe_dump(policy), encoding="utf-8")
+        with pytest.raises(SystemExit, match="invalid against"):
+            load_policy(p)

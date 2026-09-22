@@ -31,7 +31,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -41,15 +41,29 @@
 - Architecture checkpoint: add explicit workflow-only behavior-contract protection while preserving repository protection as the compatible default; migration risk is high because incorrect defaults could silently weaken governance. Verification is the compatibility/malformed-evidence matrix, packaged two-layout E2E, generated-package parity, and full suite.
 - Normative phase complete: SPEC and decision log now define repository versus workflow protection, version-mode evidence separation, task-scoped unauthenticated approval, PR-execution prerequisites, and no manual-merge claim.
 
+- Redline implementation updated `core/agent-redline/core/schema/agent-policy.schema.json`, `core/agent-redline/core/reporter/reporter.py`, and focused reporter tests; `156` reporter tests and the schema fixture checker pass.
+- Bootstrap phase complete: inspection separates PR execution from branch-required governance, proposal asks explicitly between repository and workflow protection, persistence waits for the combined harness, and the packaged two-layout E2E passes with workflow protection and no CODEOWNERS.
+- Checker phase complete: verdict parsing accepts only v1/repository and v2/workflow, policy correlation rejects cross-mode/stale evidence, and workflow requirement changes reuse exact task-owner/user evidence while disclosing no authentication or merge enforcement; 74 focused checker tests passed.
+- Documentation phase complete: README, behavioral-integrity guide, integration, Redline, enforcement, default profile, and operational checkpoint now explain both choices consistently. Bootstrap prose was compressed to the existing 4,600-token ceiling rather than raising the budget.
+- Packaging phase complete: source regenerated into dist and local installs; packaged E2E passes for strict repository protection and workflow protection without CODEOWNERS, including an exact approved requirement change and PR warning.
+
 ## Evidence
 
 - Clean checkout on `feat/workflow-only-behavior-contracts` from `ff081714806504284c61051594103145ca7bfd88`.
 - Clean-context pre-edit Redline review: RED/SCHEMA_CHANGE, architecture-review, no boundary violation, High risk floor.
+- Focused implementation tests: `266 passed in 8.09s` for reporter, verdict, behavioral-integrity, and applicability coverage.
+- Schema tests: `20 passed in 0.44s`.
+- Skill budget check: all 20 agent-loaded files remain within budget; bootstrap stays at the existing 4,600-token ceiling.
+- Packaged bootstrap E2E: strict repository mode and workflow mode without CODEOWNERS both pass across two layouts; the workflow case exercises an approved requirement change and the no-merge-enforcement warning.
+- Required repository suite: `bash tests/run-all.sh` passed every layer (`budget`, `schema`, `work-record`, `checker`, `redline`, `tuner`, `hooks`, `links`, `package`) in Windows Git Bash with the repository virtual environment.
+- `git diff --check` passed.
+- Fresh branch-wide Redline verdict plus local Agent Workflow checker passed with the architecture checkpoint satisfied.
+- Post-review regression: malformed unhashable contract paths now produce blocking JSON instead of crashing; 5 focused adjacent tests and the complete repository suite pass after the fix.
 
 ## Plan review
 
-Pending.
+Approved by clean-context reviewer /root/workflow_mode_plan_review; user High-risk approval recorded above.
 
 ## Result review
 
-Pending.
+Clean-context reviewer `/root/workflow_mode_result_review` found one P2 malformed-policy crash: a non-string path could reach `set(paths)`. The checker now validates path element types first and emits its normal blocking JSON evidence verdict; a focused regression test passes. The reviewer confirmed the fix resolved the finding and reported no remaining issue.

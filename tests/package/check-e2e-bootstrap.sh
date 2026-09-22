@@ -80,15 +80,18 @@ for rel in files(left):
 bootstrap = (left/"bootstrap-mode.md").read_text(encoding="utf-8")
 for fragment in (
     "Behavior-contract candidates",
-    "Report none when absent and unresolved when evidence is missing.",
-    "live required-status evidence",
-    "last-match CODEOWNERS tokens covering the path",
-    "select or reject each",
-    "Selection does not authorize a requirement change.",
-    "live evidence that Code Owner review is required",
-    "Use a dedicated CODEOWNER-only checkpoint",
+    "Propose only; missing evidence is unresolved.",
+    "named verification and combined harness PR-execution evidence",
+    "branch-required status, base-branch CODEOWNERS, and required review",
+    "PR verification + harness evidence",
+    "Missing PR execution defers both",
+    "select/reject, choose `repository` or `workflow`",
+    "Selection is not requirement-change approval.",
+    "`repository` (default)",
+    "`workflow`",
+    "Never downgrade.",
+    "Proposal-only defers.",
     "Do not put behavior-contract paths or authority in `agent-workflow.yaml`.",
-    "Missing, conflicting, or unavailable required-CI, CODEOWNERS, or required-review evidence leaves the block out",
 ):
     assert fragment in bootstrap, fragment
 PYEOF
@@ -216,6 +219,11 @@ cp "$SKILL/scripts/agent-workflow-runtime.py" scripts/agent-workflow-runtime.py
 cp "$SKILL/scripts/agent-workflow-runtime.sh" scripts/agent-workflow-runtime.sh
 cp "$SKILL/scripts/agent-workflow-runtime.ps1" scripts/agent-workflow-runtime.ps1
 
+# Bootstrap guidance exposes both protection choices and never persists a
+# workflow-only claim when the PR harness remains proposal-only.
+grep -Fq '`repository` (default)' "$SKILL/bootstrap-mode.md"
+grep -Fq '`workflow`' "$SKILL/bootstrap-mode.md"
+grep -Fq 'Proposal-only defers.' "$SKILL/bootstrap-mode.md"
 # 2e. CI workflow. Just confirm we can lay it down — the template
 # contains the workflow YAML.
 mkdir -p .github/workflows
@@ -223,6 +231,7 @@ cp "$SKILL/templates/.github/workflows/agent-workflow.yml.template" \
    .github/workflows/agent-workflow.yml
 grep -Fq 'pull_request_review:' .github/workflows/agent-workflow.yml
 grep -Fq 'types: [submitted, dismissed]' .github/workflows/agent-workflow.yml
+grep -Fq 'checked in PR CI, but GitHub does not require it for merge' .github/workflows/agent-workflow.yml
 
 # --- Step 3: Phase 6 self-probe. Write a minimal compact-shape Work
 # Record at _probe slug and run the vendored checker against it.
@@ -527,12 +536,11 @@ Path("agent-redline-policy.yaml").write_text(
     "  blue:\n    - path: handbook/**\n      reason: documentation\n"
     "    - path: .work/**\n      reason: task records\n"
     "    - path: quality/**\n      reason: ordinary quality assets\n"
-    "behaviorContracts:\n  paths: [quality/scenarios/**]\n"
-    "  verification: scenario-contracts\n  checkpoint: behavior-review\n"
+    "behaviorContracts:\n  protection: workflow\n"
+    "  paths: [quality/scenarios/**]\n"
+    "  verification: scenario-contracts\n"
     "boundaryAdapter: {outputFormat: none}\napi: {type: none}\n"
-    "checkpoints:\n  behavior-review:\n    description: behavior review\n"
-    "    satisfiedBy: [codeownerApproval]\n"
-    "  architecture-review:\n    description: review\n"
+    "checkpoints:\n  architecture-review:\n    description: review\n"
     "    satisfiedBy: [{label: architecture-reviewed}]\n"
     "modes: {default: binding}\n",
     encoding="utf-8",
@@ -544,25 +552,47 @@ PYEOF
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json >/dev/null
 
+rm -f .github/CODEOWNERS base-CODEOWNERS
+
 # The relocated Work Record and a different contract root exercise the same
 # generated Redline → checker flow in the second repository layout.
 mkdir -p quality/scenarios .work/items
-printf 'quality/scenarios/** @scenario-owner\n' >> .github/CODEOWNERS
-printf 'quality/scenarios/** @scenario-owner\n' >> base-CODEOWNERS
 "$PY" - <<'PYEOF'
+import json
 from pathlib import Path
 record = Path(".agent-workflow/tasks/contract.md").read_text(encoding="utf-8")
 record = record.replace("tests/contracts/wake.md", "quality/scenarios/flow.md")
 record = record.replace("behavior-contracts", "scenario-contracts")
-record = record.replace("@contract-owner", "@scenario-owner")
+record = record.replace(
+    "Existing required CI and Code Owner review were verified during bootstrap.",
+    "PR execution of the named verification and combined harness was verified; merge enforcement is intentionally absent.",
+)
+lines = record.splitlines()
+index = next(i for i, line in enumerate(lines) if line.startswith("**Behavior changes:** "))
+lines[index] = "**Behavior changes:** " + json.dumps([{
+    "target": "repository-contract",
+    "path": "quality/scenarios/flow.md",
+    "classification": "requirement-change",
+    "before": "Deliver while unloaded.",
+    "after": "Deliver on next resume.",
+    "reason": "Exercise exact workflow-protection approval.",
+    "impact": "Repository behavior changes.",
+    "alternatives": "Keep the unloaded-delivery contract.",
+    "authority": {"scope": "task", "name": "task-owner"},
+    "approval": {
+        "by": "user",
+        "reference": "bootstrap-e2e-approval",
+        "verbatim": "Approve delivery on next resume for this exact contract change.",
+    },
+}], separators=(",", ":"))
+record = "\n".join(lines) + "\n"
 Path(".work/items/layout-contract.record.md").write_text(record, encoding="utf-8")
 Path("changed.z").write_bytes(
     b".work/items/layout-contract.record.md\0quality/scenarios/flow.md\0"
 )
 PYEOF
 "$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
-  --changed-files-z changed.z --codeowners-file base-CODEOWNERS \
-  --codeowner-approvals scenario-owner --json-out redline-verdict.json >/dev/null
+  --changed-files-z changed.z --json-out redline-verdict.json >/dev/null
 "$PY" scripts/agent-workflow-check.py --repo-root . \
   --changed-files-z changed.z --redline-verdict redline-verdict.json \
   > second-contract-output.json
@@ -571,14 +601,21 @@ import json
 from pathlib import Path
 redline = json.loads(Path("redline-verdict.json").read_text(encoding="utf-8"))
 assert redline["zones"]["red"] == ["quality/scenarios/flow.md"]
-assert redline["behaviorContractChanges"]["paths"] == [{
-    "path": "quality/scenarios/flow.md",
-    "owners": ["@scenario-owner"],
-}]
+assert redline["behaviorContractChanges"] == {
+    "version": 2,
+    "protection": "workflow",
+    "detected": True,
+    "paths": ["quality/scenarios/flow.md"],
+    "verification": "scenario-contracts",
+}
 payload = json.loads(Path("second-contract-output.json").read_text(encoding="utf-8"))
 contract = next(r for r in payload["records"] if r["slug"] == "<behavior-contracts>")
 assert contract["status"] == "clean"
 assert all(p["passed"] for p in contract["predicates"])
+assert "merge is not enforced" in next(
+    p["detail"] for p in contract["predicates"]
+    if p["name"] == "behavior_contracts.requirement_changes_authorized"
+)
 PYEOF
 
 # The packaged resolver uses the configured non-default path, preserves a supplied

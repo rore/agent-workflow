@@ -238,6 +238,7 @@ def _contract_config(
     pattern: str,
     task_path: str = ".agent-workflow/tasks/{slug}.md",
     applicability: bool = False,
+    protection: str = "repository",
 ) -> None:
     app = (
         "applicability:\n"
@@ -248,15 +249,20 @@ def _contract_config(
         if applicability
         else ""
     )
+    control = (
+        "  checkpoint: behavior-review\n"
+        "checkpoints:\n  behavior-review:\n"
+        "    satisfiedBy: [codeownerApproval]\n"
+        if protection == "repository"
+        else "  protection: workflow\n"
+    )
     (repo / "agent-redline-policy.yaml").write_text(
         "version: 1\nproject: {name: relay}\n"
         "zones:\n  blue:\n    - path: src/**\n      reason: source\n"
         "behaviorContracts:\n"
         f"  paths: [{pattern}]\n"
         "  verification: relay-behavior-contracts\n"
-        "  checkpoint: behavior-review\n"
-        "checkpoints:\n  behavior-review:\n"
-        "    satisfiedBy: [codeownerApproval]\n",
+        f"{control}",
         encoding="utf-8",
     )
     (repo / "agent-workflow.yaml").write_text(
@@ -276,9 +282,30 @@ def _write_contract_redline(
     *,
     owners: list[str] | None = None,
     red_paths: list[str] | None = None,
+    protection: str = "repository",
 ) -> None:
     owners = ["@relay-owners"] if owners is None else owners
     red_paths = contract_paths if red_paths is None else red_paths
+    behavior_detail = (
+        {
+            "version": 1,
+            "detected": bool(contract_paths),
+            "paths": [
+                {"path": path, "owners": owners}
+                for path in contract_paths
+            ],
+            "verification": "relay-behavior-contracts",
+            "checkpoint": "behavior-review",
+        }
+        if protection == "repository"
+        else {
+            "version": 2,
+            "protection": "workflow",
+            "detected": bool(contract_paths),
+            "paths": contract_paths,
+            "verification": "relay-behavior-contracts",
+        }
+    )
     payload = {
         "verdict": "RED" if contract_paths else "BLUE",
         "summary": "Behavior contract changed." if contract_paths else "No contract changed.",
@@ -298,7 +325,7 @@ def _write_contract_redline(
                     "satisfy_by": ["CODEOWNER approval"],
                 }
             ]
-            if contract_paths
+            if contract_paths and protection == "repository"
             else []
         ),
         "apiChanges": {"detected": False},
@@ -310,16 +337,7 @@ def _write_contract_redline(
         "recommendedAction": "none",
         "modes": {"default": "shadow", "perCheck": {}},
         "suppressions": [],
-        "behaviorContractChanges": {
-            "version": 1,
-            "detected": bool(contract_paths),
-            "paths": [
-                {"path": path, "owners": owners}
-                for path in contract_paths
-            ],
-            "verification": "relay-behavior-contracts",
-            "checkpoint": "behavior-review",
-        },
+        "behaviorContractChanges": behavior_detail,
     }
     build = repo / "build"
     build.mkdir(exist_ok=True)
@@ -362,6 +380,7 @@ def _run_contract(
     trusted: bool = True,
     owners: list[str] | None = None,
     red_paths: list[str] | None = None,
+    protection: str = "repository",
 ) -> tuple[int, dict]:
     for relative, text in record_paths.items():
         _write_record(repo, relative, text)
@@ -370,6 +389,7 @@ def _run_contract(
         contract_paths,
         owners=owners,
         red_paths=red_paths,
+        protection=protection,
     )
     changed = repo / ("changed.z" if trusted else "changed.txt")
     if trusted:
@@ -391,6 +411,27 @@ def _run_contract(
         ]
     )
     return code, json.loads(capsys.readouterr().out)
+
+
+def test_malformed_unhashable_contract_path_blocks_without_crashing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = _repo(tmp_path)
+    (repo / "agent-redline-policy.yaml").write_text(
+        "behaviorContracts:\n"
+        "  paths:\n"
+        "    - bad: path\n"
+        "  verification: relay-behavior-contracts\n"
+        "  checkpoint: behavior-review\n",
+        encoding="utf-8",
+    )
+    _write_record(repo, ".agent-workflow/tasks/demo.md", _record())
+    code = main(["--repo-root", str(repo), "--slug", "demo"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 2
+    predicate = _predicate(payload, "behavior_contracts.redline_evidence_complete")
+    assert predicate["passed"] is False
+    assert "malformed" in predicate["detail"]
 
 
 @pytest.mark.parametrize(
@@ -443,6 +484,103 @@ def test_contract_gate_handles_exact_and_descendant_layouts_rename_delete_unicod
     assert contract["status"] == "clean"
     assert all(predicate["passed"] for predicate in contract["predicates"])
 
+
+def test_workflow_contract_gate_uses_task_owner_approval_and_discloses_limits(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = "contracts/wake.md"
+    _contract_config(tmp_path, pattern="contracts/**", protection="workflow")
+    change = _contract_change(path, classification="requirement-change")
+    change["authority"] = {"scope": "task", "name": "task-owner"}
+    change["approval"] = {
+        "by": "user",
+        "reference": "task-approval-9",
+        "verbatim": "Approved this exact workflow-protected contract change.",
+    }
+    record_path = ".agent-workflow/tasks/demo.md"
+    _, payload = _run_contract(
+        tmp_path,
+        capsys,
+        record_paths={
+            record_path: _record(
+                changes=[change],
+                verification="relay-behavior-contracts",
+            )
+        },
+        changed_paths=[record_path, path],
+        contract_paths=[path],
+        protection="workflow",
+    )
+    contract = next(
+        record for record in payload["records"]
+        if record["slug"] == "<behavior-contracts>"
+    )
+    assert contract["status"] == "clean"
+    detail = next(
+        predicate["detail"] for predicate in contract["predicates"]
+        if predicate["name"] == "behavior_contracts.requirement_changes_authorized"
+    )
+    assert "not authenticated as repository authority" in detail
+    assert "merge is not enforced" in detail
+
+
+def test_workflow_contract_gate_rejects_repository_approval(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = "contracts/wake.md"
+    _contract_config(tmp_path, pattern="contracts/**", protection="workflow")
+    record_path = ".agent-workflow/tasks/demo.md"
+    _, payload = _run_contract(
+        tmp_path,
+        capsys,
+        record_paths={
+            record_path: _record(
+                changes=[_contract_change(path, classification="requirement-change")],
+                verification="relay-behavior-contracts",
+            )
+        },
+        changed_paths=[record_path, path],
+        contract_paths=[path],
+        protection="workflow",
+    )
+    assert _predicate(
+        payload, "behavior_contracts.requirement_changes_authorized"
+    )["passed"] is False
+
+
+@pytest.mark.parametrize(
+    "policy_protection,verdict_protection",
+    [("workflow", "repository"), ("repository", "workflow")],
+)
+def test_contract_gate_rejects_cross_mode_verdict(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    policy_protection: str,
+    verdict_protection: str,
+) -> None:
+    path = "contracts/wake.md"
+    record_path = ".agent-workflow/tasks/demo.md"
+    _contract_config(
+        tmp_path,
+        pattern="contracts/**",
+        protection=policy_protection,
+    )
+    _, payload = _run_contract(
+        tmp_path,
+        capsys,
+        record_paths={
+            record_path: _record(
+                changes=[_contract_change(path)],
+                verification="relay-behavior-contracts",
+            )
+        },
+        changed_paths=[record_path, path],
+        contract_paths=[path],
+        protection=verdict_protection,
+    )
+    assert _predicate(
+        payload, "behavior_contracts.redline_evidence_complete"
+    )["passed"] is False
 
 @pytest.mark.parametrize("case", ["missing", "wrong-authority", "wrong-codeowner", "verification-substring"])
 def test_contract_gate_blocks_missing_classification_authority_or_verification(
