@@ -31,7 +31,7 @@ agent-redline/references/per-checkpoint/persistence-change-checkpoint.md	2673
 agent-redline/references/per-checkpoint/pr-discipline.md	2367
 agent-redline/references/per-checkpoint/red-zone-change.md	1902
 agent-redline/references/per-checkpoint/security-change-checkpoint.md	2171
-agent-redline/scripts/agent-redline-report.py	89960
+agent-redline/scripts/agent-redline-report.py	87836
 assets/schema/agent-workflow.schema.json	5067
 bootstrap-mode.md	25911
 hooks/check-plan.py	4854

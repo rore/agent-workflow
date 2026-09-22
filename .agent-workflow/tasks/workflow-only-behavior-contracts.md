@@ -59,6 +59,7 @@
 - `git diff --check` passed.
 - Fresh branch-wide Redline verdict plus local Agent Workflow checker passed with the architecture checkpoint satisfied.
 - Post-review regression: malformed unhashable contract paths now produce blocking JSON instead of crashing; 5 focused adjacent tests and the complete repository suite pass after the fix.
+- PR CI exposed CRLF-sensitive manifest bytes for the vendored reporter. Packaging now normalizes that copied script to LF, matching the packager's existing deterministic-newline pattern; the complete suite passes after regeneration.
 
 ## Plan review
 

@@ -346,8 +346,8 @@ cp "$REPO_ROOT/core/agent-redline/core/schema/boundary-violations.schema.json" "
 cp "$REPO_ROOT/core/agent-redline/core/schema/suppressions.schema.json"        "$TARGET/agent-redline/assets/schema/"
 
 # 5e. Reporter — vendored as user-facing scripts/agent-redline-report.py.
-cp "$REPO_ROOT/core/agent-redline/core/reporter/reporter.py" \
-   "$TARGET/agent-redline/scripts/agent-redline-report.py"
+sed 's/\r$//' "$REPO_ROOT/core/agent-redline/core/reporter/reporter.py" \
+  > "$TARGET/agent-redline/scripts/agent-redline-report.py"
 chmod +x "$TARGET/agent-redline/scripts/agent-redline-report.py" 2>/dev/null || true
 
 # 5f. Extensions — self-contained folders with markdown, adapter.yaml,
