@@ -11,12 +11,12 @@ Profile-specific mapping of the workflow and harness contract (`SPEC.md`) to Git
 - **Repository guidance:** `AGENTS.md` or existing repository documentation
 - **Implementation diff and review discussion:** GitHub pull request
 - **Risk and policy findings:** Agent Redline (bundled and non-optional; installed by bootstrap as part of the agent-workflow install, not as a separate step)
-- **Repository behavior contracts:** optional `agent-redline-policy.yaml` paths backed by required CI and required Code Owner review; Redline owns classification and canonical CODEOWNERS authority, while Agent Workflow owns semantic change records
+- **Repository behavior contracts:** optional `agent-redline-policy.yaml` paths backed by a named PR check. Redline owns classification; Agent Workflow owns semantic change records. For requirement changes, `repository` protection adds branch-required CI, CODEOWNERS authority, and required Code Owner review; `workflow` protection uses task-owner approval without claiming merge enforcement.
 - **Verification:** repository commands and GitHub CI
-- **Approval and merge enforcement:** GitHub required reviewers, required checks, and branch protection
+- **Approval and merge enforcement:** GitHub required reviewers, required checks, and branch protection for repository protection; explicit but unauthenticated task-owner evidence and no technical merge guarantee for workflow protection
 - **Exceptions:** recorded in the Work Record's structured block (the marker-bounded Markdown section), approved under team policy
 - **Applicability:** an optional, bootstrap-approved documentation-only rule may omit the Work Record. Mixed, protected, risky, or uncertain changes use the normal workflow; direct-default work additionally requires live proof that the branch is unprotected.
-- **Behavioral integrity:** each new Work Record baselines Task Context before discovery. Repositories may explicitly protect behavior-contract paths only when an existing required CI surface and repository approval authority are recorded.
+- **Behavioral integrity:** each new Work Record baselines Task Context before discovery. Repositories may explicitly protect behavior-contract paths when the named verification and combined harness run on PRs; repository protection additionally requires repository authority and branch enforcement.
 - **External post-merge follow-up:** separate linked issue or task accepted by its delivery or operational owner
 
 ### Repository Delivery Guidance

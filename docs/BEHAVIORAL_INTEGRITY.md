@@ -24,23 +24,48 @@ Until a requirement change is approved, the Work Record stays `Blocked`. Plan ap
 
 Task requirements protect what the current task promised. Repositories may also have long-lived behavior that every future task must preserve, such as acceptance tests, protocol fixtures, or end-to-end scenarios.
 
-Those paths are configured once in `agent-redline-policy.yaml`:
+Those paths are configured once in `agent-redline-policy.yaml`. Every mode has the same core behavior:
+
+- `paths` identifies authoritative contract files. Redline classifies every changed match as red, even under a broader blue rule or exclude.
+- `verification` names an existing check that exercises the behavior on pull requests. An affected Work Record must reference it.
+- Every changed protected path needs exactly one `equivalent`, `coverage-only`, or `requirement-change` entry.
+- A requirement change needs exact approval bound to its before and after values.
+
+`protection` chooses who enforces that approval boundary:
+
+| Protection | Use it when | Additional controls | Important limit |
+|---|---|---|---|
+| `repository` | The repository has shared governance and GitHub should prevent an unapproved merge. | Branch-required verification, compatible base-branch CODEOWNERS, required Code Owner review, and a dedicated CODEOWNER-only checkpoint. | Repository setup and permissions are required. |
+| `workflow` | A solo developer or lightweight repository wants the semantic safeguards without CODEOWNERS or branch protection. | The named verification and the combined Redline/Agent Workflow harness still run on pull requests. Requirement changes use exact task-owner/user approval evidence. | The checker does not authenticate repository authority, and GitHub may still allow a manual merge. |
+
+Repository protection is the compatible default when `protection` is omitted:
 
 ```yaml
 behaviorContracts:
+  protection: repository
   paths:
     - "tests/contracts/**"
   verification: behavior-contracts
   checkpoint: behavior-review
+
+checkpoints:
+  behavior-review:
+    description: Review authoritative behavior-contract changes
+    satisfiedBy:
+      - codeownerApproval
 ```
 
-- `paths` identifies the authoritative contract files. Agent Redline always classifies a changed matching path as red, even if a broader rule calls the surrounding test directory blue.
-- `verification` names the existing required CI check that exercises the behavior. Agent Workflow requires an affected Work Record to reference it.
-- `checkpoint` routes the change for review. It must use CODEOWNER approval; the last matching base-branch CODEOWNERS rule determines who has repository authority.
+Workflow protection is explicit and has no behavior checkpoint:
 
-There is no separate approver list in Agent Workflow. CODEOWNERS remains the repository source of truth, and GitHub's required Code Owner review authenticates the approval.
+```yaml
+behaviorContracts:
+  protection: workflow
+  paths:
+    - "tests/contracts/**"
+  verification: behavior-contracts
+```
 
-Every changed protected path needs one `equivalent`, `coverage-only`, or `requirement-change` entry in a changed Work Record. A repository-level requirement change also needs exact approval from one of the CODEOWNERS tokens reported for that path.
+Under repository protection, a `requirement-change` names one CODEOWNERS token reported for the path and records approval by the same token. Under workflow protection it records `authority.scope: task`, `authority.name: task-owner`, and `approval.by: user`. That second shape is deliberate approval evidence for the workflow; it is not authenticated repository authority.
 
 ## How the two protections work together
 
@@ -60,24 +85,20 @@ The requirement may still change. The feature makes that change visible, attribu
 
 ## What bootstrap configures
 
-Bootstrap does not guess which tests are authoritative. It proposes a behavior-contract path only when it can verify:
+Bootstrap does not guess which tests are authoritative. It first identifies candidates and proves that the named verification runs on pull requests. It then explains both protection choices and asks the developer to select or reject each candidate and choose a mode.
 
-- an existing required CI check;
-- matching CODEOWNERS on the base branch; and
-- required Code Owner review in repository governance.
-
-A human explicitly selects or rejects each candidate. Missing or conflicting evidence leaves the path unconfigured.
+Repository protection is offered only with live evidence for branch-required status, compatible base-branch CODEOWNERS, and required Code Owner review. Workflow protection needs no CODEOWNERS or branch protection, but it still requires the named verification and combined harness to run on pull requests. Bootstrap never silently downgrades repository protection. If the harness remains proposal-only or required evidence is missing, it leaves the block unconfigured and reports the decision as unresolved.
 
 ## What this does not prove
 
-The checker validates structure and consistency. It cannot decide whether `equivalent` is semantically honest, prove that a test fully captures the requirement, authenticate a reviewer, or replace GitHub's required-check and Code Owner enforcement.
+The checker validates structure and consistency. It cannot decide whether `equivalent` is semantically honest, prove that a test fully captures the requirement, authenticate a reviewer, prove the named check ran or passed, or prevent a hosting-platform merge. Repository protection delegates authentication and merge enforcement to GitHub; workflow protection states plainly that those controls are absent.
 
 That separation is intentional:
 
 - Agent Workflow preserves task intent and records semantic changes.
-- Agent Redline protects configured repository paths and routes review.
-- Required CI runs the regression checks.
-- GitHub governance authenticates repository approval.
+- Agent Redline protects configured repository paths and routes repository-mode review.
+- The named PR check runs regression verification; repository protection also makes it branch-required.
+- GitHub governance authenticates repository approval only under repository protection.
 - Human reviewers judge whether the claimed meaning is true.
 
 ## Related documentation

@@ -337,8 +337,20 @@ def _behavior_contract_changes(data: dict[str, Any]) -> dict[str, Any] | None:
         return None
     if not isinstance(raw, dict):
         raise RedlineVerdictError("behaviorContractChanges must be an object")
-    required = {"version", "detected", "paths", "verification", "checkpoint"}
-    if set(raw) != required or raw.get("version") != 1:
+    version = raw.get("version")
+    if version == 1:
+        required = {"version", "detected", "paths", "verification", "checkpoint"}
+    elif version == 2:
+        required = {"version", "protection", "detected", "paths", "verification"}
+        if raw.get("protection") != "workflow":
+            raise RedlineVerdictError(
+                "behaviorContractChanges version 2 requires workflow protection"
+            )
+    else:
+        raise RedlineVerdictError(
+            "behaviorContractChanges has an unsupported or malformed shape"
+        )
+    if set(raw) != required:
         raise RedlineVerdictError(
             "behaviorContractChanges has an unsupported or malformed shape"
         )
@@ -348,7 +360,9 @@ def _behavior_contract_changes(data: dict[str, Any]) -> dict[str, Any] | None:
         raise RedlineVerdictError(
             "behaviorContractChanges.verification must contain text"
         )
-    if not isinstance(raw["checkpoint"], str) or not raw["checkpoint"].strip():
+    if version == 1 and (
+        not isinstance(raw["checkpoint"], str) or not raw["checkpoint"].strip()
+    ):
         raise RedlineVerdictError(
             "behaviorContractChanges.checkpoint must contain text"
         )
@@ -356,32 +370,48 @@ def _behavior_contract_changes(data: dict[str, Any]) -> dict[str, Any] | None:
     if not isinstance(entries, list):
         raise RedlineVerdictError("behaviorContractChanges.paths must be an array")
     seen: set[str] = set()
-    normalized: list[dict[str, Any]] = []
+    normalized: list[Any] = []
     for entry in entries:
-        if not isinstance(entry, dict) or set(entry) != {"path", "owners"}:
-            raise RedlineVerdictError(
-                "behaviorContractChanges path entries require path and owners"
-            )
-        path = entry["path"]
-        owners = entry["owners"]
-        if not isinstance(path, str) or not path or path in seen:
-            raise RedlineVerdictError(
-                "behaviorContractChanges paths must be unique non-empty strings"
-            )
-        if (
-            not isinstance(owners, list)
-            or any(not isinstance(owner, str) or not owner for owner in owners)
-            or len(owners) != len(set(owners))
-        ):
-            raise RedlineVerdictError(
-                "behaviorContractChanges owners must be unique non-empty strings"
-            )
+        if version == 2:
+            if not isinstance(entry, str) or not entry or entry in seen:
+                raise RedlineVerdictError(
+                    "behaviorContractChanges paths must be unique non-empty strings"
+                )
+            path = entry
+            normalized.append(path)
+        else:
+            if not isinstance(entry, dict) or set(entry) != {"path", "owners"}:
+                raise RedlineVerdictError(
+                    "behaviorContractChanges path entries require path and owners"
+                )
+            path = entry["path"]
+            owners = entry["owners"]
+            if not isinstance(path, str) or not path or path in seen:
+                raise RedlineVerdictError(
+                    "behaviorContractChanges paths must be unique non-empty strings"
+                )
+            if (
+                not isinstance(owners, list)
+                or any(not isinstance(owner, str) or not owner for owner in owners)
+                or len(owners) != len(set(owners))
+            ):
+                raise RedlineVerdictError(
+                    "behaviorContractChanges owners must be unique non-empty strings"
+                )
+            normalized.append({"path": path, "owners": list(owners)})
         seen.add(path)
-        normalized.append({"path": path, "owners": list(owners)})
     if raw["detected"] != bool(normalized):
         raise RedlineVerdictError(
             "behaviorContractChanges.detected must match affected paths"
         )
+    if version == 2:
+        return {
+            "version": 2,
+            "protection": "workflow",
+            "detected": raw["detected"],
+            "paths": normalized,
+            "verification": raw["verification"],
+        }
     return {
         "version": 1,
         "detected": raw["detected"],

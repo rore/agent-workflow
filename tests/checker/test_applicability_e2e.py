@@ -201,6 +201,14 @@ def test_ci_uses_one_lossless_path_contract_and_validates_outputs(workflow: Path
     assert "redline did not produce valid verdict JSON" in text
     assert "checker did not produce valid verdict JSON" in text
 
+
+def test_ci_template_discloses_workflow_only_behavior_protection() -> None:
+    text = Path(
+        "core/templates/.github/workflows/agent-workflow.yml.template"
+    ).read_text(encoding="utf-8")
+    assert 'behavior.get("protection") == "workflow"' in text
+    assert "checked in PR CI, but GitHub does not require it for merge" in text
+
 @pytest.mark.parametrize(
     "status,direct_allowed",
     [("unprotected", True), ("protected", False), ("unavailable", False)],

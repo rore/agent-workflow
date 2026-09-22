@@ -21,25 +21,24 @@ Bootstrap is a six-phase conversation. You stay in the loop the whole time.
 
 | Phase | What happens | Your decision |
 |---|---|---|
-| 1. Inspect | The agent discovers documentation/applicability paths and behavior-contract candidates, then records each candidate's required-CI and path-authority evidence or marks it unresolved. | Confirm or correct the finding. |
-| 2. Propose | The agent drafts both configs — inert. Applicability paths are discovered, not assumed; unresolved behavior contracts stay out. | Read both drafts. |
-| 3. Adapt | The agent calibrates zones and asks you to select or reject each behavior-contract candidate. Selection is not authority approval; incompatible checks or authorities are split, deferred, or omitted. | Sign off explicitly to advance. |
+| 1. Inspect | The agent discovers documentation/applicability paths and behavior-contract candidates, separates PR-running verification from branch-required status, and records whether the combined harness already runs on PRs. | Confirm or correct the finding. |
+| 2. Propose | The agent drafts both configs — inert. For eligible behavior contracts it explains repository and workflow protection and shows the selected mode explicitly. | Read both drafts and choose the protection level. |
+| 3. Adapt | The agent calibrates zones and asks you to select or reject each candidate and confirm its protection mode. Selection is not approval of a later requirement change; incompatible candidates are split, deferred, or omitted. | Sign off explicitly to advance. |
 | 4. Write | The agent writes identical dual skill installs, runtime adapters/settings, configs, vendored scripts, the owned root `AGENTS.md` marker, docs, and task skeleton. | None — but review the diff afterwards. |
-| 5. Confirm CI | The agent always writes `docs/agent-workflow-ci-proposal.md`. It then asks whether to install the workflow file at `.github/workflows/agent-workflow.yml` directly or leave it in the proposal doc only. | **Decide.** This is the integration point that gates every future PR. |
+| 5. Confirm CI | The agent always writes `docs/agent-workflow-ci-proposal.md` and asks whether to install the workflow. A pending behavior-contract block is persisted only after the harness and named verification both run on PRs; proposal-only defers it. | **Decide.** This is the integration point that gates every future PR. |
 | 6. Self-summary | The agent writes `docs/agent-workflow-bootstrap-summary.md`, runs a local probe of the checker, and reports what's installed, what's proposed, and what still needs human action. | Read it. Branch protection and CODEOWNERS additions need you. |
 
 After Phase 4, you have a normal-looking PR with new committed files. Review and merge it as you would any PR.
 
 ### Optional behavior contracts
 
-Bootstrap may propose exact repository-relative paths or boundary-safe `dir/**` patterns for acceptance, E2E, contract, or regression assets. Each candidate needs live evidence for one required-CI identifier, path-covering base-branch last-match CODEOWNERS tokens, and required Code Owner review. You explicitly select or reject every candidate; bootstrap never protects one automatically.
+Bootstrap may propose exact repository-relative paths or boundary-safe `dir/**` patterns for acceptance, E2E, contract, or regression assets. It first verifies that the named check exercises them on pull requests and that the combined Redline/Agent Workflow harness runs there. You explicitly select or reject every candidate and choose its protection; bootstrap never protects or downgrades one automatically.
 
-GitHub evaluates CODEOWNERS from the PR base branch. The selected ownership rules must already be present there before a contract-changing PR can rely on them; stage initial ownership first when bootstrap is delivered through a PR.
-
-One `behaviorContracts` block in `agent-redline-policy.yaml` represents one compatible path set:
+**Repository protection** adds hosting-platform enforcement. The verification check must be branch-required, every path must share compatible base-branch CODEOWNERS, Code Owner review must be required, and the policy uses a dedicated CODEOWNER-only checkpoint:
 
 ```yaml
 behaviorContracts:
+  protection: repository
   paths:
     - "tests/contracts/**"
   verification: behavior-contracts
@@ -52,7 +51,21 @@ checkpoints:
       - codeownerApproval
 ```
 
-All paths share that verification identifier and canonical owner set. Missing, unavailable, or conflicting evidence leaves candidates unresolved and out of the block. Redline classifies affected paths red even under broader blue rules or excludes and emits their canonical owners. Agent Workflow consumes that evidence for semantic change records. Path protection provides mutation integrity; required CI provides regression enforcement.
+GitHub evaluates CODEOWNERS from the PR base branch. Required ownership rules must already be present there before a contract-changing PR can rely on them; stage initial ownership first when bootstrap is delivered through a PR.
+
+**Workflow protection** keeps the Agent Workflow safeguards but intentionally omits CODEOWNERS, a behavior checkpoint, and branch-required status:
+
+```yaml
+behaviorContracts:
+  protection: workflow
+  paths:
+    - "tests/contracts/**"
+  verification: behavior-contracts
+```
+
+Both modes make affected paths red, require one semantic classification per changed path, and link the same PR verification. For a `requirement-change`, repository protection authenticates repository authority and can prevent merge; workflow protection records exact task-owner/user approval and fails the Agent Workflow PR check when that evidence is missing, but GitHub may still permit a manual merge.
+
+If the named verification or combined harness does not run on pull requests, bootstrap leaves the block unresolved. If CI installation remains proposal-only, it defers the block rather than claiming protection that is not running.
 
 ### B. Manual install
 
@@ -160,7 +173,7 @@ The tuner can be re-run any time the policy feels wrong. Bootstrap runs it from 
 | A required field for every non-exempt task | The Work Record at `.agent-workflow/tasks/<slug>.md`. The slug is derived from the branch name. |
 | `Risk` and `Complexity` in the Work Record | Mandatory. Determine the record's shape and the controls applied. |
 | `Requirement baseline` in the Work Record | Preserves the Task Context implementation started with; later behavioral edits use ordered `Behavior changes`. |
-| Optional `behaviorContracts` in `agent-redline-policy.yaml` | Makes explicitly selected contracts red, routes CODEOWNER review, and names the required CI surface; Agent Workflow validates semantic change records from Redline evidence. |
+| Optional `behaviorContracts` in `agent-redline-policy.yaml` | Makes explicitly selected contracts red and names their PR verification. `repository` adds CODEOWNER/branch enforcement; `workflow` keeps task-owner approval and visible CI without claiming merge enforcement. |
 | `shadow` in `agent-redline-policy.yaml` | Zone classification is advisory until you flip it. Boundary violations still block. |
 | `redline: required` in `agent-workflow.yaml` | The checker treats a missing classifier verdict as a CI configuration error. Default; leave it. |
 

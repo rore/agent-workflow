@@ -21,7 +21,7 @@ agent-workflow makes that state durable, uses risk to focus reviewer attention, 
 ## What you get
 
 - **Durable task state** — scope, assumptions, decisions, and verification live in the committed Work Record, so work can be reviewed and resumed rather than lost in a chat log.
-- **Behavioral integrity** — the Work Record preserves the requirements implementation started with, and repositories can protect selected behavior-contract paths from silent weakening.
+- **Behavioral integrity** — the Work Record preserves the requirements implementation started with, and selected behavior-contract paths stay red, classified, and linked to PR verification. Requirement changes also need approval under the selected protection—even in solo repositories without CODEOWNERS or branch protection.
 - **Risk-aware visibility** — the risk classification decides where a reviewer's attention goes, and what the agent decided and verified is on the record.
 - **Objective CI gates** — mechanically detectable violations fail CI, so they don't depend on the agent reporting itself correctly.
 
@@ -64,7 +64,7 @@ An agent can produce a green change by quietly changing the promise: narrowing s
 | Protection | What is preserved | What happens when it changes |
 |---|---|---|
 | **Task requirements** | The Outcome, Scope, Constraints, and Completion criteria that implementation started with. | The agent records the exact before/after meaning. A real requirement change needs explicit task-owner approval; otherwise the task stays blocked. |
-| **Repository behavior contracts** | Selected acceptance, contract, E2E, or regression paths declared in Agent Redline and backed by required CI. | Redline treats the path as red, CODEOWNERS supplies repository authority, and Agent Workflow requires a semantic classification plus verification linkage. |
+| **Repository behavior contracts** | Selected acceptance, contract, E2E, or regression paths declared in Agent Redline and exercised by a named PR check. | Redline treats the path as red and Agent Workflow requires semantic classification plus verification linkage. For requirement changes, choose repository protection for CODEOWNERS/branch-enforced approval, or workflow protection for explicit task-owner approval without claiming merge enforcement. |
 
 This does not make requirements or tests immutable. Equivalent rewrites and coverage improvements remain possible and visible. Product obligations may change too, but only as an explicit, approved decision—not as an implementation shortcut.
 
@@ -106,7 +106,7 @@ Adopt agent-workflow on a repo:
 5. Review the integration PR it proposes.
 ```
 
-Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. Bootstrap asks before installing the CI workflow; branch-protection and CODEOWNERS changes are proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
+Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, write, confirm CI, self-summary — and you stay in the loop throughout. For behavior contracts, bootstrap explains repository versus workflow protection and asks you to choose; it never silently downgrades. Bootstrap also asks before installing the CI workflow, while branch-protection and CODEOWNERS changes remain proposal-only — you apply them yourself. Full walkthrough: [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
 **Runtime limits.** OpenCode 1.x plugin callback loading and denial are tested, but the existing evidence does not record an exact runtime version, native tool, and unchanged target, so native coverage is degraded under this standard. On the tested Windows host, Codex 0.153.4 desktop `apply_patch` did not enter `PreToolUse`; CLI `bypassPermissions` entered the hook but ignored its exit-2 denial. Claude Code's seed ran, but mutation denial could not be tested because its API credential was unavailable to the CLI process. Treat every unverified runtime/version/surface/tool combination as degraded. Installed or trusted hooks and direct evaluator tests do not prove interception; CI remains authoritative.
 
@@ -116,7 +116,7 @@ The checker reads the Work Record and the classifier's verdict — it does not r
 
 - The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
 - Its Requirement baseline and any ordered Behavior changes are complete, consistent, and authorized.
-- Every changed configured behavior-contract path is classified and repository-authorized when required; at least one affected Work Record references its configured verification identifier.
+- Every changed configured behavior-contract path is classified; each `requirement-change` is approved under its selected protection mode; at least one affected Work Record references its PR verification identifier.
 - Declared risk is not below what the classifier detected on the diff.
 - No architectural-boundary violation.
 - Required reviews/approvals are recorded for Elevated/High work. (Once the classifier is in binding mode, any triggered review checkpoint must also be satisfied.)

@@ -303,6 +303,47 @@ def test_behavior_contract_detail_parses_and_detects_high_risk(
     assert verdict.detected_risk() == "High"
 
 
+def test_workflow_behavior_contract_detail_parses_and_detects_high_risk(
+    tmp_path: Path,
+) -> None:
+    detail = {
+        "version": 2,
+        "protection": "workflow",
+        "detected": True,
+        "paths": ["tests/contracts/wake.md"],
+        "verification": "behavior-contracts",
+    }
+    path = tmp_path / "behavior-workflow.json"
+    path.write_text(
+        json.dumps({"behaviorContractChanges": detail}),
+        encoding="utf-8",
+    )
+    verdict = load_redline_verdict(path)
+    assert verdict is not None
+    assert verdict.behavior_contract_changes == detail
+    assert verdict.detected_risk() == "High"
+
+
+def test_workflow_behavior_contract_detail_allows_detected_false(
+    tmp_path: Path,
+) -> None:
+    detail = {
+        "version": 2,
+        "protection": "workflow",
+        "detected": False,
+        "paths": [],
+        "verification": "behavior-contracts",
+    }
+    path = tmp_path / "behavior-workflow-empty.json"
+    path.write_text(
+        json.dumps({"behaviorContractChanges": detail}),
+        encoding="utf-8",
+    )
+    verdict = load_redline_verdict(path)
+    assert verdict is not None
+    assert verdict.behavior_contract_changes == detail
+
+
 @pytest.mark.parametrize(
     "detail",
     [
@@ -334,6 +375,27 @@ def test_behavior_contract_detail_parses_and_detects_high_risk(
             "version": 1,
             "detected": True,
             "paths": [{"path": "x", "owners": ["@owner", "@owner"]}],
+            "verification": "check",
+            "checkpoint": "review",
+        },        {
+            "version": 2,
+            "protection": "repository",
+            "detected": True,
+            "paths": ["x"],
+            "verification": "check",
+        },
+        {
+            "version": 2,
+            "protection": "workflow",
+            "detected": True,
+            "paths": ["x", "x"],
+            "verification": "check",
+        },
+        {
+            "version": 2,
+            "protection": "workflow",
+            "detected": True,
+            "paths": ["x"],
             "verification": "check",
             "checkpoint": "review",
         },

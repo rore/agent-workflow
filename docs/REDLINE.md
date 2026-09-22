@@ -41,7 +41,7 @@ And one terminal state:
 
 The combined verdict the reporter posts is one of `BLUE`, `GRAY`, `RED`, `MIXED`, or `BOUNDARY_VIOLATION` — the most-restrictive applicable signal wins.
 
-`behaviorContracts` is a protected path class, not another top-level verdict. Matching paths are red even when `zones.blue` or `excludes` also matches. The reporter emits versioned `behaviorContractChanges` detail with exact affected paths, their last-match CODEOWNERS tokens from the PR base revision, the required-CI identifier, and checkpoint. Agent Workflow consumes that detail; it does not carry a second path list.
+`behaviorContracts` is a protected path class, not another top-level verdict. Matching paths are red even when `zones.blue` or `excludes` also matches. Repository protection emits version-1 `behaviorContractChanges` detail with exact paths, base-branch CODEOWNERS tokens, verification, and checkpoint. Workflow protection emits version 2 with explicit protection, exact paths, and verification but no repository-owner or behavior-checkpoint fields. Agent Workflow consumes that detail; it does not carry a second path list.
 
 ## Checkpoints
 
@@ -110,8 +110,8 @@ runtimeConfig:                          # optional
 behaviorContracts:                      # optional; one compatible set
   paths:                                # exact paths or boundary-safe dir/**
     - "tests/contracts/**"
-  verification: behavior-contracts      # existing required CI identifier
-  checkpoint: behavior-review           # must be CODEOWNER-only
+  verification: behavior-contracts      # existing PR check; branch-required for repository
+  checkpoint: behavior-review           # repository only; must be CODEOWNER-only
 
 prRules:                                # optional; defaults shown
   maxChangedFiles: { warn: 50, fail: 100 }
@@ -123,7 +123,7 @@ checkpoints:                            # required if any zone references one
     satisfiedBy:
       - codeownerApproval
       - label: architecture-reviewed
-  behavior-review:                      # required with behaviorContracts
+  behavior-review:                      # required with repository protection
     description: <string>
     satisfiedBy:
       - codeownerApproval               # no label alternative
@@ -165,9 +165,12 @@ A policy is invalid if:
 8. A glob is malformed.
 9. A non-empty `boundaries:` block exists without an explicit `boundaryAdapter:` block.
 10. `behaviorContracts.paths` contains anything except a unique safe exact path or `dir/**` pattern.
-11. `behaviorContracts.checkpoint` is missing, undefined, reused by another Redline signal, or satisfiable by anything except `codeownerApproval`.
+11. Repository protection has a missing, undefined, reused, or non-CODEOWNER-only `behaviorContracts.checkpoint`.
+12. Workflow protection defines a behavior checkpoint, uses an unknown protection value, or otherwise mixes repository-only controls into its block.
 
 Bootstrap produces a valid policy. The reporter refuses to run on an invalid policy with a clear error.
+
+Omitting `protection` preserves repository protection and the version-1 verdict shape. Explicit `workflow` keeps red classification and verification identity while removing only behavior-specific CODEOWNERS/checkpoint routing; unrelated Redline checkpoints still apply.
 
 ### Glob syntax
 
@@ -186,7 +189,7 @@ Standard shell globs: `*`, `**`, `?`, `[abc]`, `[!abc]`. **Brace expansion is no
 
 Important: `modes.default: shadow` does **not** downgrade `boundary_violation` or `suppression` — only an explicit `modes.perCheck.<rule>: shadow` flips those.
 
-Behavior-contract classifications and Agent Workflow's semantic predicates remain visible and non-waivable regardless of shadow mode. Shadow/binding controls whether an unmet Redline checkpoint itself fails this job; required Code Owner review remains the authority-enforcement layer.
+Behavior-contract classifications and Agent Workflow's semantic predicates remain blocking and non-waivable regardless of Redline shadow mode. For repository protection, shadow/binding controls whether the behavior checkpoint itself fails the Redline job while required Code Owner review remains the authority-enforcement layer. Workflow protection has no behavior checkpoint; its Agent Workflow predicates still fail the PR check when evidence is missing.
 
 The recommended rollout is:
 
@@ -292,6 +295,8 @@ The CI workflow runs the reporter and posts a sticky comment per PR (`marocchino
 ```
 
 A boundary violation looks the same shape with the `Boundary check` line listing the violated rule and the failing class — and CI exits non-zero so the PR cannot merge.
+
+When a workflow-protected behavior contract changes, the sticky names the affected paths and verification and says that the protection is checked in PR CI but is not required for merge. Repository protection instead names its checkpoint.
 
 The agent-workflow CI workflow posts a *second* sticky (header `agent-workflow`) covering the Work Record predicates. The two stay independently legible.
 
