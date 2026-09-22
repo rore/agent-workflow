@@ -25,18 +25,20 @@
 
 **Verification plan:** Existing repository protection shall remain schema-valid, emit byte-for-shape version-1 behavior detail, and enforce CODEOWNERS/checkpoint authorization → schema, reporter, verdict-parser, checker, and packaged strict E2E assertions. Explicit workflow protection shall require paths plus a nonempty PR-CI verification identifier, reject a behavior checkpoint, classify matching excluded/blue paths red, emit version-2 evidence without owner/checkpoint ceremony, require exactly one semantic entry per path, require exact task-owner/user approval only for `requirement-change`, require the verification identifier in an affected Work Record, and render the no-merge-enforcement warning → focused unit/integration tests. Bootstrap shall show both choices, distinguish a running PR check from a branch-required check, require explicit selection, and generate a working policy in a second repository layout → packaged bootstrap E2E. Generated sources shall match dist/install outputs → package checks. Entire repository remains green → `bash tests/run-all.sh`.
 
-**Plan review:** Approved on re-review by clean-context High-risk reviewer `/root/workflow_mode_plan_review`. The revision closed bootstrap sequencing, unauthenticated task-scoped approval semantics, the actual shipped sticky-renderer surface, and assumption-specific stop conditions. The reviewer found no remaining plan blockers; human High-risk plan approval remains pending.
+**Plan review:** Approved on re-review by clean-context High-risk reviewer `/root/workflow_mode_plan_review`. The revision closed bootstrap sequencing, unauthenticated task-scoped approval semantics, the actual shipped sticky-renderer surface, and assumption-specific stop conditions. The reviewer found no remaining plan blockers; the user approval is recorded below.
 
-**Approvals:** Pending explicit human plan approval.
+**Approvals:** Approved by user 2026-09-22: "Yes"
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
 - Established Task Context and pre-edit classification before implementation. The change is not documentation-only because schema, reporter, checker, bootstrap, and normative specification are in scope.
+- Plan approved; implementation targets are `docs/SPEC.md`, `docs/DECISIONS.md`, behavior-contract public/reference docs, Redline policy schema and reporter, checker/verdict parsing, bootstrap instructions, the shipped PR workflow template, focused tests, and generated install artifacts. No unrelated policy or workflow behavior is in scope.
+- Architecture checkpoint: add explicit workflow-only behavior-contract protection while preserving repository protection as the compatible default; migration risk is high because incorrect defaults could silently weaken governance. Verification is the compatibility/malformed-evidence matrix, packaged two-layout E2E, generated-package parity, and full suite.
 
 ## Evidence
 
