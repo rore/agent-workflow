@@ -137,7 +137,7 @@ By design — these stay reviewer judgments the checker never touches:
 
 ## Evidence from use
 
-On an internal repository, agent-workflow has governed its own development across dozens of pull requests, and it has since been used on real application code in another project. In that use it has surfaced correctness, scope, verification, and risk issues before merge — in some cases changing the engineering decision, not just documenting it. The signal isn't any single review step but the combination: risk decides when stronger review is required, findings and decisions are preserved in the Work Record, and CI independently checks the agent's declarations against the final diff. This isn't yet evidence of lower defect rates or ROI — it's evidence the workflow acts as an engineering control rather than just producing paperwork.
+Agent-workflow has now governed its own development and substantial development in Pallium across many pull requests. In our use, it has repeatedly surfaced correctness, scope, verification, and risk issues before merge — sometimes changing the engineering decision, not just documenting it. The strongest signal remains the combination: risk determines when stronger review is required, findings and decisions survive in the Work Record, and CI checks the agent's declarations against the final change. That is not evidence of lower defect rates or ROI, but it is evidence that the workflow changes how work is planned, reviewed, and completed rather than merely adding paperwork.
 
 ## Documentation
 
