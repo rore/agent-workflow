@@ -170,6 +170,8 @@ For Moderate and Large tasks, the Work Record **MUST** be updated at checkpoint 
 
 A handoff **MUST** carry the exact source-item identity, Work Record identity, and resolved repository-relative location when known. `Ready for review` describes workflow readiness only; it **MUST NOT** be represented as merged, released, or otherwise delivered without evidence from the system that owns that state.
 
+For an in-scope task with an applicable canonical roadmap item, the agent **MUST** carry its exact reference and reconcile or report task progress at pickup, pause, resume, handoff, and completion under that roadmap's rules. If a designated owner controls the roadmap checkout, report to that owner without editing, committing, or cleaning it. Task completion **MUST NOT** imply completion of a broader item with remaining scope. No applicable item requires no roadmap action.
+
 A new engineer or agent **MUST** be able to resume the work from the Work Record and linked artifacts.
 
 There **MUST NOT** be multiple competing sources of truth.

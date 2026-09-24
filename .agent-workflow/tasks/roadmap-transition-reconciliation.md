@@ -42,18 +42,26 @@ The existing operating-mode transition instructions can carry one conditional re
 Approved by clean-context `/root/roadmap_transition_plan_review`; details below.
 
 **Approvals:**
-Pending user approval of the reviewed High-risk plan.
+Approved by user 2026-09-24 07:42:59 UTC: "Approve this plan"
 
 **Exceptions:**
 —
 
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Planning in isolated branch `feat/roadmap-transition-reconciliation`, based on `9daead3`. No source changes begun. Waiting for clean-context plan review and High-risk approval.
+Planning in isolated branch `feat/roadmap-transition-reconciliation`, based on `9daead3`. Clean-context plan review approved; user approved the exact plan.
+
+Implemented `docs/SPEC.md` §6, the one-sentence `core/skill/operating-mode.md` reminder, `docs/DECISIONS.md`, and the native roadmap item/board; regenerated `dist/` and both local skill installs. The existing §9.7/result-review rule already covers status, shipped scope, and remaining scope, so it stays unchanged. Minimap owns its item states, shared checkout procedure, and Pallium attachment.
 
 ## Plan review
 
 The independent reviewer approved the approach. It required naming all five transitions because State alone can remain unchanged; preserving the exact roadmap item in existing recovery prose; reporting progress to the designated owner without modifying, committing, or cleaning their checkout; and retaining remaining feature scope after a partial task completes. The no-item and standalone read-only cases are no-ops. The normative placement is SPEC §6, with §9.7 retaining completion detail. Operating-mode has 67 tokens of budget headroom and review-result has one, so replace redundant text if either must change.
+
+## Evidence
+
+- Verified the working diff atop planning commit `4fe920d`: budget (operating-mode 1882/1900), schema, Work Record, checker, Redline, tuner, hooks, and links passed under native Git Bash with the repository test venv. The OpenCode fixture required a temporary worktree `.venv` junction; it was removed after the pass and its target preserved.
+- WSL package layer passed: dist/source parity, committed skill parity, references, install probe, and bootstrap E2E in two layouts. `git diff --check` passed. PR CI remains the authoritative post-commit check.
+- Scenario review: no applicable item is a no-op; native roadmap rules own progress; partial task completion retains broader scope; a designated owner receives a progress report without another checkout mutation; standalone read-only work remains outside the workflow.
