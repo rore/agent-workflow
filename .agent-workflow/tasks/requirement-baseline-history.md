@@ -31,7 +31,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Plan review
@@ -46,7 +46,16 @@
 - Handoff: branch feat/requirement-baseline-history; last committed revision 2d200c9 established the untouched baseline. State remains Blocked for High-risk plan approval. Next action after approval: edit docs/SPEC.md first, then implement and test the gate. Source item user-request:0f7c016d-cad2-48ad-9f5f-330325cf69f2; Work Record agent-workflow:requirement-baseline-history at .agent-workflow/tasks/requirement-baseline-history.md.
 - User approved the reviewed plan on 2026-09-24. Human-authored non-exempt PRs without Work Records remain governed by the existing missing-record gate; no author-based exemption is in scope.
 - Implementation targets: docs/SPEC.md, docs/DECISIONS.md, core/work_record/parser.py, core/checker/{predicates,checker}.py, tests/checker/ fixtures and real-Git tests, tests/package/ E2E wiring, docs/{ENFORCEMENT,BEHAVIORAL_INTEGRITY}.md, minimal agent guidance, and regenerated dist/agent-workflow/ / local install. Scan README.md and docs/INTEGRATION.md for corrections before finalizing.
+- Added focused source and vendored real-Git CLI E2E coverage for baseline history anchors, legacy establishment, semantic JSON formatting, unusable refs, deleted/renamed records, multi-path NUL input, and synthetic merge heads in tests/checker/test_baseline_history_e2e.py.
 
 ## Evidence
 
 - Source request: user-request:0f7c016d-cad2-48ad-9f5f-330325cf69f2.
+- Verification on 2026-09-24 working tree: `bash tests/run-all.sh --verbose` passed all layers; checker 219 tests, work-record 80, schema 51, tuner 22, Redline, hooks, links, and package/bootstrap E2E. Focused real-Git source and vendored baseline-history CLI suite: 15 passed. `git diff --check` found no whitespace error.
+- Independent clean-context result review by /root/baseline_result_review found no actionable blockers after inspecting source, CI ref plumbing, custom paths, history failures, packaged parity, tests, and docs; this does not replace the High-risk human result review.
+- Public-doc scan: README.md, docs/BEHAVIORAL_INTEGRITY.md, docs/ENFORCEMENT.md, and the mirrored public checkpoint guide updated; docs/INTEGRATION.md and docs/DEFAULT_PROFILE.md needed no change. Roadmap feature `behavioral-requirement-integrity` is already shipped; this hardening does not change its status or broader scope.
+- Skill feedback trigger 3 dropped: the documented packaging command failed only because this machine's WindowsApps Python shim is unusable; a checkout-local Python runtime completed packaging. Cause is environment-owned, not an upstream instruction defect.
+
+## Result review
+
+- High-risk human review pending. Verify the initial baseline faithfully represented the request, semantic change classifications remain honest, and the PR's CI/Redline result before merging.

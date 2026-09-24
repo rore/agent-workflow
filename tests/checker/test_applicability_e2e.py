@@ -307,8 +307,7 @@ applicability:
     payload = json.loads(capsys.readouterr().out)
     assert code == 2
     names = [p["name"] for r in payload["records"] for p in r["predicates"]]
-    assert "workflow.applicability" in names
-    assert "workrecord.required_for_branch_changes" in names
+    assert "workrecord.exists" in names
 
 def test_local_actual_scope_includes_committed_staged_unstaged_and_untracked(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]

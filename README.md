@@ -115,7 +115,7 @@ Step 4 runs a six-phase bootstrap conversation — inspect, propose, adapt, writ
 The checker reads the Work Record and the classifier's verdict — it does not re-run your tests. It fails CI on blocking violations (and blocks merge where configured as a required check):
 
 - The Work Record exists, is well-formed, and its shape matches its `(Risk, Complexity)`.
-- Its Requirement baseline and any ordered Behavior changes are complete, consistent, and authorized.
+- Its Requirement baseline matches the first committed version visible to PR CI; any ordered Behavior changes are complete, consistent, and authorized.
 - Every changed configured behavior-contract path is classified; each `requirement-change` is approved under its selected protection mode; at least one affected Work Record references its PR verification identifier.
 - Declared risk is not below what the classifier detected on the diff.
 - No architectural-boundary violation.
@@ -130,7 +130,7 @@ By design — these stay reviewer judgments the checker never touches:
 
 - Whether the plan is sound, discovery thorough, or the code correct.
 - Whether the chosen verification method actually proves the criterion.
-- Whether a behavior-change classification is semantically honest or the stored baseline was never rewritten.
+- Whether the first committed baseline faithfully captured the request, a behavior-change classification is semantically honest, or branch history was rewritten before CI checked it.
 - Whether a configured contract check is actually required or passed; bootstrap/review validates required-check status and CI reports execution.
 - Whether the tests pass — GitHub already knows that.
 - Whether a human genuinely approved. The checker confirms approval-shaped text exists, not who wrote it; this "cheating window" is acknowledged openly. Its answer is visibility — the recorded approvals, classifications, and claims land in the PR conversation and the reviewer's notification, where a human can see them and object.

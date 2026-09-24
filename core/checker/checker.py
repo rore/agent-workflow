@@ -449,7 +449,7 @@ def discover_slugs_from_changed_files(
     changed_paths: list[str] | None = None,
     nul_delimited: bool = False,
 ) -> list[str]:
-    """Return existing changed Work Record slugs for the configured taskPath."""
+    """Return changed Work Record slugs, including deleted/renamed-old paths."""
     paths = changed_paths
     if paths is None:
         paths = read_changed_paths(changed_files_path, nul_delimited=nul_delimited)
@@ -467,8 +467,6 @@ def discover_slugs_from_changed_files(
         slug = norm[len(prefix):end]
         name = f"{slug}{suffix}"
         if not slug or "/" in slug or name in _NON_TASK_FILENAMES or slug.startswith("."):
-            continue
-        if not (repo_root / norm).exists():
             continue
         if slug not in seen:
             seen.add(slug)

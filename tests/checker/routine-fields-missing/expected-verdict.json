@@ -68,6 +68,11 @@
           "blocking": true
         },
         {
+          "name": "requirements.baseline_unchanged",
+          "passed": true,
+          "blocking": true
+        },
+        {
           "name": "requirements.behavior_changes_well_formed",
           "passed": false,
           "blocking": true

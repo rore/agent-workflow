@@ -143,8 +143,8 @@ def test_discover_slugs_filters_readme_and_dotfiles(tmp_path: Path) -> None:
     assert discover_slugs_from_changed_files(tmp_path, changed) == ["alpha"]
 
 
-def test_discover_slugs_skips_deleted_files(tmp_path: Path) -> None:
-    """Deleted files appear in git diff output but should not be checked."""
+def test_discover_slugs_includes_deleted_files(tmp_path: Path) -> None:
+    """Deleted Work Records must reach the missing-record gate."""
     tasks = tmp_path / ".agent-workflow" / "tasks"
     tasks.mkdir(parents=True)
     (tasks / "alpha.md").write_text("placeholder", encoding="utf-8")
@@ -156,7 +156,7 @@ def test_discover_slugs_skips_deleted_files(tmp_path: Path) -> None:
         ".agent-workflow/tasks/bravo.md\n",
         encoding="utf-8",
     )
-    assert discover_slugs_from_changed_files(tmp_path, changed) == ["alpha"]
+    assert discover_slugs_from_changed_files(tmp_path, changed) == ["alpha", "bravo"]
 
 
 def test_discover_slugs_dedups(tmp_path: Path) -> None:

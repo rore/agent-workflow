@@ -57,6 +57,7 @@ from core.work_record import (
     WorkRecord,
     WorkRecordBackend,
     WorkRecordParseError,
+    extract_requirement_baseline,
     find_block_span,
     parse_exceptions,
 )
@@ -65,6 +66,7 @@ from .redline_verdict import RedlineVerdict, risk_at_least
 from .verdict import PredicateResult
 
 _WINDOWS_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+_GIT_TIMEOUT_SEC = 15  # Bound Git history subprocesses.
 
 # Allowed Work Record state values. Both shapes share the same allowed
 # states; routine fast-path lists three (SPEC §7), expanded uses the
@@ -699,6 +701,116 @@ def requirements_baseline_present(ctx: CheckerContext) -> PredicateResult:
     return PredicateResult(name, True, "Requirement baseline is present.", True)
 
 
+def _history_git(
+    ctx: CheckerContext, *args: str, allow_failure: bool = False
+) -> subprocess.CompletedProcess[bytes]:
+    assert ctx.repo_root is not None
+    result = subprocess.run(
+        ["git", *args],
+        cwd=str(ctx.repo_root),
+        capture_output=True,
+        timeout=_GIT_TIMEOUT_SEC,
+        creationflags=_WINDOWS_NO_WINDOW,
+    )
+    if result.returncode and not allow_failure:
+        raise ValueError(f"git {args[0]} could not read the supplied PR history")
+    return result
+
+
+def _history_commit(ctx: CheckerContext, ref: str) -> str:
+    raw = _history_git(
+        ctx, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}"
+    ).stdout.decode("ascii").strip()
+    if not re.fullmatch(r"[0-9a-f]{40,64}", raw):
+        raise ValueError(f"invalid commit resolved from history ref {ref!r}")
+    return raw
+
+
+def _history_blob(ctx: CheckerContext, sha: str, path: str) -> str | None:
+    blob = _history_git(ctx, "show", f"{sha}:{path}", allow_failure=True)
+    if blob.returncode:
+        tree = _history_git(ctx, "ls-tree", "-z", "--name-only", sha, "--", path)
+        if path.encode("utf-8") in tree.stdout.split(b"\x00"):
+            raise ValueError(f"committed Work Record {path!r} could not be read")
+        return None
+    return blob.stdout.decode("utf-8")
+
+
+def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
+    """Compare the checked baseline with the first authoritative Git snapshot."""
+    name = "requirements.baseline_unchanged"
+    base_ref = ctx.base_ref or os.environ.get("BASE_SHA")
+    head_ref = ctx.head_ref or os.environ.get("HEAD_SHA")
+    if base_ref is None and head_ref is None:
+        return PredicateResult(name, True, "skipped — no PR history supplied.", True)
+    if not base_ref or not head_ref or ctx.repo_root is None:
+        return PredicateResult(
+            name, False, "both PR base/head refs and a repository are required.", True
+        )
+    try:
+        base = _history_commit(ctx, base_ref)
+        head = _history_commit(ctx, head_ref)
+        merge_base = _history_git(ctx, "merge-base", base, head).stdout.decode(
+            "ascii"
+        ).strip()
+        if not re.fullmatch(r"[0-9a-f]{40,64}", merge_base):
+            raise ValueError("PR base/head refs have no usable shared ancestry")
+        path = ctx.backend.resolve_location(ctx.slug).replace("\\", "/")
+        base_blob = _history_blob(ctx, base, path)
+        anchor = (
+            extract_requirement_baseline(base_blob)
+            if base_blob is not None else None
+        )
+        existing = base_blob is not None
+        anchor_sha = base
+        if anchor is None and merge_base != base:
+            common_blob = _history_blob(ctx, merge_base, path)
+            if common_blob is not None:
+                existing = True
+                anchor = extract_requirement_baseline(common_blob)
+                if anchor is not None:
+                    anchor_sha = merge_base
+        if anchor is None:
+            log = _history_git(
+                ctx, "log", "--first-parent", "--reverse", "--format=%H",
+                f"{merge_base}..{head}", "--", path
+            )
+            commits = [sha for sha in log.stdout.decode("ascii").splitlines() if sha]
+            for sha in commits:
+                blob = _history_blob(ctx, sha, path)
+                if blob is None:
+                    continue
+                baseline = extract_requirement_baseline(blob)
+                if baseline is None:
+                    if not existing:
+                        raise ValueError(
+                            "new Work Record lacks a baseline in its first commit"
+                        )
+                    continue
+                anchor, anchor_sha = baseline, sha
+                break
+        if anchor is None:
+            raise ValueError("no committed Requirement baseline could be established")
+        head_blob = _history_blob(ctx, head, path)
+        if head_blob is not None and extract_requirement_baseline(head_blob) != anchor:
+            raise ValueError(
+                f"branch-head baseline differs from committed baseline at {anchor_sha[:8]}"
+            )
+        error = _integrity_error(ctx)
+        if error is not None:
+            raise ValueError(error)
+        assert ctx.record is not None
+        if ctx.record.get("requirement_baseline") != anchor:
+            raise ValueError(
+                f"checked baseline differs from committed baseline at {anchor_sha[:8]}"
+            )
+    except (OSError, subprocess.TimeoutExpired, UnicodeError, WorkRecordParseError, ValueError) as exc:
+        return PredicateResult(name, False, str(exc), True)
+    return PredicateResult(
+        name, True, f"Requirement baseline matches committed {anchor_sha[:8]}.", True
+    )
+
+
 def behavior_changes_well_formed(ctx: CheckerContext) -> PredicateResult:
     """Surface malformed optional integrity JSON as a named blocking rule."""
     name = "requirements.behavior_changes_well_formed"
@@ -829,6 +941,7 @@ _NON_WAIVABLE_PREDICATES: frozenset[str] = frozenset({
     "workrecord.shape_matches_classification",
     "workrecord.implementation_ready",
     "requirements.baseline_present",
+    "requirements.baseline_unchanged",
     "requirements.behavior_changes_well_formed",
     "requirements.task_context_traceable",
     "requirements.requirement_changes_authorized",
@@ -1472,6 +1585,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "evidence.failure_not_claimed_as_success": "core",
     "workrecord.commit_order": "core",
     "requirements.baseline_present": "core",
+    "requirements.baseline_unchanged": "core",
     "requirements.behavior_changes_well_formed": "core",
     "requirements.task_context_traceable": "core",
     "requirements.requirement_changes_authorized": "core",
@@ -1492,12 +1606,6 @@ PREDICATE_SOURCE: dict[str, str] = {
 # Work Record commit-order discipline (advisory)
 # ---------------------------------------------------------------------------
 
-
-# Consistent timeout for every git invocation in this layer. The
-# branch walk + per-commit `git show` calls all use this. Picked to
-# tolerate slow GHES clones without letting a wedged subprocess hang
-# the predicate indefinitely.
-_GIT_TIMEOUT_SEC = 15
 
 
 def workrecord_commit_order(ctx: CheckerContext) -> PredicateResult:
@@ -1731,6 +1839,7 @@ PREDICATES: tuple = (
     review_checkpoints_satisfied,
     # --- behavioral requirement integrity ---------------------------
     requirements_baseline_present,
+    requirements_baseline_unchanged,
     behavior_changes_well_formed,
     task_context_traceable,
     requirement_changes_authorized,

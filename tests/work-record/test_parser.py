@@ -27,6 +27,7 @@ from core.work_record import (
     RequirementBaseline,
     WorkRecord,
     WorkRecordParseError,
+    extract_requirement_baseline,
     parse,
     parse_behavior_changes,
     parse_record,
@@ -672,3 +673,24 @@ def test_requirement_change_approval_shape_is_checked_when_present() -> None:
     }
     with pytest.raises(WorkRecordParseError, match="missing required key"):
         parse_behavior_changes(json.dumps([entry]))
+
+def test_historical_baseline_reader_ignores_old_shape_but_not_bad_json() -> None:
+    baseline = {
+        "source": "fixture",
+        "outcome": "O",
+        "scope": "S",
+        "constraints": "C",
+        "completion_criteria": "D",
+    }
+    prefix = "<!-- agent-workflow:start -->\n**Old field:** kept\n"
+    suffix = "\n<!-- agent-workflow:end -->"
+    assert extract_requirement_baseline(prefix + suffix) is None
+    text = prefix + "**Requirement baseline:** " + json.dumps(baseline) + suffix
+    assert extract_requirement_baseline(text) == RequirementBaseline(
+        source="fixture", outcome="O", scope="S", constraints="C",
+        completion_criteria="D",
+    )
+    with pytest.raises(WorkRecordParseError, match="valid canonical JSON"):
+        extract_requirement_baseline(
+            prefix + '**Requirement baseline:** {"outcome":' + suffix
+        )
