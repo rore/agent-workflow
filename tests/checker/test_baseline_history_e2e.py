@@ -47,9 +47,14 @@ def _record(baseline: dict | str | None, *, context: dict | None = None) -> str:
 """
 
 
-def _commit(repo: Path, message: str) -> str:
+def _commit(repo: Path, message: str, *, when: str | None = None) -> str:
     _git(repo, "add", "-A")
-    _git(repo, "commit", "-qm", message)
+    env = dict(os.environ)
+    if when:
+        env.update(GIT_AUTHOR_DATE=when, GIT_COMMITTER_DATE=when)
+    subprocess.run(
+        [GIT, "commit", "-qm", message], cwd=repo, env=env, check=True, capture_output=True
+    )
     return _git(repo, "rev-parse", "HEAD")
 
 
@@ -291,6 +296,44 @@ def test_synthetic_merge_head_uses_explicit_pr_head(tmp_path: Path) -> None:
     code, payload = _check(repo, base, pr_head, [RECORD])
     assert code == 2
     assert _baseline_result(payload)["passed"] is False
+
+
+@pytest.mark.parametrize(
+    ("initial", "later", "valid"),
+    [
+        (None, OLD, False),
+        ("not-json", OLD, False),
+        (OLD, NEW, False),
+        (OLD, None, True),
+    ],
+)
+@pytest.mark.parametrize("vendored", [False, True])
+def test_merged_side_parent_preserves_first_baseline_commit(
+    tmp_path: Path,
+    initial: dict | str | None,
+    later: dict | None,
+    valid: bool,
+    vendored: bool,
+) -> None:
+    repo, _ = _repo(tmp_path)
+    main = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-qb", "side")
+    target = repo / RECORD
+    target.parent.mkdir(parents=True)
+    target.write_text(_record(initial), encoding="utf-8")
+    _commit(repo, "first record", when="2030-01-01T12:00:00 +0000")
+    if later is not None:
+        target.write_text(_record(later), encoding="utf-8")
+        _commit(repo, "later baseline", when="2020-01-01T12:00:00 +0000")
+    _git(repo, "checkout", main)
+    (repo / "main.txt").write_text("main\n", encoding="utf-8")
+    pr_base = _commit(repo, "main change")
+    _git(repo, "merge", "--no-ff", "-qm", "merge side", "side")
+    pr_head = _git(repo, "rev-parse", "HEAD")
+
+    code, payload = _check(repo, pr_base, pr_head, [RECORD], vendored=vendored)
+    assert _baseline_result(payload)["passed"] is valid, json.dumps(payload, indent=2)
+    assert (code in (0, 1)) is valid
 
 
 def test_nested_project_root_resolves_git_blob_relative_to_cwd(tmp_path: Path) -> None:
