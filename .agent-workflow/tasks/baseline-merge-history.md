@@ -65,4 +65,4 @@ The new real-Git cases reproduced six false passes before the fix; after the one
 
 ## Result review
 
-Independent final-diff review pending. No separate skill-feedback issue: the reported upstream defect is being corrected in this PR, so a second issue would duplicate the actionable work.
+Clean-context Astra result review of 81a84368f9010a0ee877b9bc9e916315521d8adb found no actionable findings. It checked merged-side-parent ordering, skewed timestamps, invalid and valid controls, legacy/no-ref behavior, generated parity, and scope. PR: https://github.com/rore/agent-workflow/pull/40. Final PR CI and review threads remain to verify before merge. No separate skill-feedback issue: this PR corrects the reported upstream defect, so another issue would duplicate the actionable work.
