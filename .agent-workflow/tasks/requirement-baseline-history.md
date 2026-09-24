@@ -27,11 +27,11 @@
 
 **Plan review:** Clean-context review by /root/baseline_plan_review; findings and disposition under ## Plan review.
 
-**Approvals:** Pending user plan approval.
+**Approvals:** Approved by user 2026-09-24: "yes"
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Plan review
@@ -44,6 +44,8 @@
 - Established initial Task Context before implementation. Scope is not documentation-only. Redline pre-edit classification is RED/architecture-review, with no boundary rule or API/schema/security path in the intended change.
 - Discovery found that the checker already receives the PR's real base/head SHAs and parses baseline values; no extra CI job or Work Record field is needed. Architecture checkpoint: add a non-waivable history check without changing semantic-approval authority or commit-order policy. Compatibility risk is high for legacy records, record deletion, and incomplete Git history; the test plan targets each.
 - Handoff: branch feat/requirement-baseline-history; last committed revision 2d200c9 established the untouched baseline. State remains Blocked for High-risk plan approval. Next action after approval: edit docs/SPEC.md first, then implement and test the gate. Source item user-request:0f7c016d-cad2-48ad-9f5f-330325cf69f2; Work Record agent-workflow:requirement-baseline-history at .agent-workflow/tasks/requirement-baseline-history.md.
+- User approved the reviewed plan on 2026-09-24. Human-authored non-exempt PRs without Work Records remain governed by the existing missing-record gate; no author-based exemption is in scope.
+- Implementation targets: docs/SPEC.md, docs/DECISIONS.md, core/work_record/parser.py, core/checker/{predicates,checker}.py, tests/checker/ fixtures and real-Git tests, tests/package/ E2E wiring, docs/{ENFORCEMENT,BEHAVIORAL_INTEGRITY}.md, minimal agent guidance, and regenerated dist/agent-workflow/ / local install. Scan README.md and docs/INTEGRATION.md for corrections before finalizing.
 
 ## Evidence
 
