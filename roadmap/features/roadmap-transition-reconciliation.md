@@ -1,7 +1,7 @@
 ---
 id: roadmap-transition-reconciliation
 title: 'Reconcile roadmap progress at task transitions'
-status: active
+status: done
 priority: medium
 commitment: committed
 ---

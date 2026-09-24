@@ -68,4 +68,4 @@ The independent reviewer approved the approach. It required naming all five tran
 
 ## Result review
 
-Clean-context Astra review of `origin/main..a22c55e` found no actionable issues. It checked all five transitions, exact identity, no-item/read-only behavior, native ownership, partial task scope, SPEC placement, and source/package parity. PR: https://github.com/rore/agent-workflow/pull/38. A separate human result review and post-commit CI remain required before merge.
+Clean-context Astra review of `origin/main..a22c55e` found no actionable issues. It checked all five transitions, exact identity, no-item/read-only behavior, native ownership, partial task scope, SPEC placement, and source/package parity. PR: https://github.com/rore/agent-workflow/pull/38. User approved the finished result at `d635c478` in this Codex task on 2026-09-24: "we approved this". The only post-approval edit reconciles this native roadmap item from Now/active to Done/done and records that approval; no guidance or implementation changed. Post-edit CI and final merge remain to verify.
