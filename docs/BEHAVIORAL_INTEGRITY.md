@@ -10,6 +10,8 @@ agent-workflow protects that promise at two levels.
 
 Before implementation, the Work Record copies its Outcome, Scope, Constraints, and Completion criteria into a Requirement baseline. The baseline records the behavior implementation started with and is never rewritten.
 
+On pull requests, the existing Agent Workflow check compares the parsed baseline with its committed version. A new Work Record must contain a valid baseline in its first commit; a legacy record already on the base branch may establish one from the task owner or another authoritative source. Later edits to the baseline fail CI even if the current Task Context and change log are rewritten to match. JSON formatting changes do not count as edits to the baseline values.
+
 Later behavioral edits are recorded with exact before and after values:
 
 | Classification | Meaning | Approval |
@@ -91,7 +93,7 @@ Repository protection is offered only with live evidence for branch-required sta
 
 ## What this does not prove
 
-The checker validates structure and consistency. It cannot decide whether `equivalent` is semantically honest, prove that a test fully captures the requirement, authenticate a reviewer, prove the named check ran or passed, or prevent a hosting-platform merge. Repository protection delegates authentication and merge enforcement to GitHub; workflow protection states plainly that those controls are absent.
+The checker validates structure, consistency, and the baseline against visible PR Git history. It cannot prove the first snapshot faithfully represented the request, detect force-pushed history rewrites, decide whether `equivalent` is semantically honest, prove that a test fully captures the requirement, authenticate a reviewer, prove the named check ran or passed, or prevent a hosting-platform merge. Repository protection delegates authentication and merge enforcement to GitHub; workflow protection states plainly that those controls are absent.
 
 That separation is intentional:
 

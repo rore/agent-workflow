@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-24 — PR history checks the committed requirement baseline
+
+**Decision:** The existing Agent Workflow PR check compares the parsed Requirement baseline, including its source, with the base revision or the first committed branch version. A new Work Record must include a valid baseline in its first commit; a legacy record already on the base branch may establish one from authority. Later edits to the baseline block, as do missing or unusable supplied history refs and deleted or renamed Work Record paths. Local runs without PR refs may skip this history predicate. The separate Work Record commit-order signal remains advisory.
+
+**Alternatives considered:** Keep historical immutability entirely for human review; use Git history as the source of requirements; require a separate snapshot artifact or CI job; make all commit ordering blocking; accept the first valid baseline from a branch-created record even if its first commit omitted one.
+
+**Rationale:** The existing exact change chain can be made internally consistent after a baseline rewrite. CI already has full PR history and real base/head SHAs, so a narrow comparison catches that accidental or quiet edit without another source of truth. It cannot verify that the first snapshot was faithful, classify semantic changes, or detect a force-pushed rewrite of branch history. This narrows, but does not overturn, the 2026-09-20 decision against using Git history as the baseline itself.
+
 ## 2026-09-24 — Roadmap progress follows task transitions
 
 **Decision:** For an in-scope task with an applicable canonical roadmap item, carry its exact reference and reconcile or report task progress at pickup, pause, resume, handoff, and completion under that roadmap's own rules. The existing result-review rule remains the detailed completion check. Report to a designated roadmap owner rather than modify that owner's checkout. Completing a task does not close a broader item with remaining scope; no applicable item requires no action.

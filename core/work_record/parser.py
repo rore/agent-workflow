@@ -604,6 +604,16 @@ def parse_requirement_baseline(text: str) -> RequirementBaseline:
     )
 
 
+def extract_requirement_baseline(text: str) -> RequirementBaseline | None:
+    """Read only the baseline from a historical Work Record version.
+
+    Older snapshots need not satisfy today's unrelated field schema.
+    """
+    fields = _extract_fields(_extract_block(text))
+    baseline = fields.get("Requirement baseline")
+    return None if baseline is None else parse_requirement_baseline(baseline)
+
+
 def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:
     label = f"Behavior changes entry #{index}"
     if not isinstance(value, dict):
