@@ -58,4 +58,6 @@
 
 ## Result review
 
-- High-risk human review pending. Verify the initial baseline faithfully represented the request, semantic change classifications remain honest, and the PR's CI/Redline result before merging.
+- High-risk result review approved by the user on 2026-09-24: "approve" in response to the PR #39 review handoff. This is task-owner approval, not a GitHub CODEOWNER approval or merge authorization.
+- CodeRabbit completed review on PR #39 with three actionable comments. Verified and addressed: nested project-root Git blob lookup, the missing enforcement predicate row, and a test branch-name collision with `init.defaultBranch=main`.
+- Follow-up verification: 16 real-Git E2E cases pass with `init.defaultBranch=main`; `bash tests/run-all.sh` passes every layer after package regeneration. PR CI and review threads must be rechecked on the follow-up commit.

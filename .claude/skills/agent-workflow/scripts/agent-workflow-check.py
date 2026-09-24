@@ -3317,7 +3317,7 @@ def _history_commit(ctx: CheckerContext, ref: str) -> str:
 
 
 def _history_blob(ctx: CheckerContext, sha: str, path: str) -> str | None:
-    blob = _history_git(ctx, "show", f"{sha}:{path}", allow_failure=True)
+    blob = _history_git(ctx, "show", f"{sha}:./{path}", allow_failure=True)
     if blob.returncode:
         tree = _history_git(ctx, "ls-tree", "-z", "--name-only", sha, "--", path)
         if path.encode("utf-8") in tree.stdout.split(b"\x00"):

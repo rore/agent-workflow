@@ -275,6 +275,7 @@ def test_vendored_checker_cli_detects_baseline_rewrite(tmp_path: Path) -> None:
 
 def test_synthetic_merge_head_uses_explicit_pr_head(tmp_path: Path) -> None:
     repo, base = _repo(tmp_path)
+    base_branch = _git(repo, "branch", "--show-current")
     _git(repo, "checkout", "-qb", "feature")
     target = repo / RECORD
     target.parent.mkdir(parents=True)
@@ -282,11 +283,32 @@ def test_synthetic_merge_head_uses_explicit_pr_head(tmp_path: Path) -> None:
     first = _commit(repo, "add record")
     target.write_text(_record(NEW), encoding="utf-8")
     pr_head = _commit(repo, "rewrite baseline")
-    _git(repo, "checkout", "-q", "-b", "main", base)
+    _git(repo, "checkout", "-q", base_branch)
     (repo / "main.txt").write_text("main\n", encoding="utf-8")
     _commit(repo, "main change")
     _git(repo, "merge", "--no-ff", "-qm", "synthetic merge", "feature")
 
     code, payload = _check(repo, base, pr_head, [RECORD])
+    assert code == 2
+    assert _baseline_result(payload)["passed"] is False
+
+
+def test_nested_project_root_resolves_git_blob_relative_to_cwd(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path)
+    nested = repo / "project"
+    nested.mkdir()
+    shutil.copyfile(repo / "agent-workflow.yaml", nested / "agent-workflow.yaml")
+    target = nested / RECORD
+    target.parent.mkdir(parents=True)
+    target.write_text(_record(OLD), encoding="utf-8")
+    first = _commit(repo, "add nested record")
+
+    code, payload = _check(nested, base, first, [RECORD])
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"] is True
+
+    target.write_text(_record(NEW), encoding="utf-8")
+    head = _commit(repo, "rewrite nested baseline")
+    code, payload = _check(nested, base, head, [RECORD])
     assert code == 2
     assert _baseline_result(payload)["passed"] is False
