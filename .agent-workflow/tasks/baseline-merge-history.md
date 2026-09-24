@@ -48,13 +48,21 @@ Not required at this risk level.
 **Exceptions:**
 —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Isolated branch `feat/baseline-merge-history` at `cef51bc9519ccb55dbd2a57fd8f3467b7b9e060c`. Initial planning committed before code as acdc3a5. Clean-context plan review approved the bounded change. No applicable native roadmap item was found.
+Isolated branch `feat/baseline-merge-history` at `cef51bc9519ccb55dbd2a57fd8f3467b7b9e060c`. Initial planning committed before code as acdc3a5. Clean-context plan review approved the bounded change. No applicable native roadmap item was found. Target files were core/checker/predicates.py, tests/checker/test_baseline_history_e2e.py, generated checker copies/manifests, and this record. Six invalid merged-parent cases exposed the old bypass; the shared walk now uses full history plus topological reverse order. No SPEC or migration semantics changed.
 
 ## Plan review
 
 The reviewer required --full-history --topo-order --reverse so path simplification and skewed commit timestamps cannot hide an ancestor. Tests must use the merge commit as PR head, cover missing/malformed/replaced initial baselines and a valid control, and run source and vendored checkers. This remains a bounded first-anchor fix; it does not claim to validate every intermediate snapshot or independently introduced sibling records.
+
+## Evidence
+
+The new real-Git cases reproduced six false passes before the fix; after the one-walk change, all eight merged-parent cases passed through source and packaged checkers. On the working tree atop 53f3a68, native test layers budget, schema, work-record, checker, redline, tuner, hooks, and links passed; the WSL package layer passed dist parity, committed-skill parity, references, install probe, and two-layout bootstrap E2E. The temporary test-venv junction was removed and its target preserved. git diff --check passed. Post-commit PR CI remains authoritative.
+
+## Result review
+
+Independent final-diff review pending. No separate skill-feedback issue: the reported upstream defect is being corrected in this PR, so a second issue would duplicate the actionable work.
