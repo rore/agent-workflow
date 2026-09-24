@@ -65,3 +65,7 @@ The independent reviewer approved the approach. It required naming all five tran
 - Verified the working diff atop planning commit `4fe920d`: budget (operating-mode 1882/1900), schema, Work Record, checker, Redline, tuner, hooks, and links passed under native Git Bash with the repository test venv. The OpenCode fixture required a temporary worktree `.venv` junction; it was removed after the pass and its target preserved.
 - WSL package layer passed: dist/source parity, committed skill parity, references, install probe, and bootstrap E2E in two layouts. `git diff --check` passed. PR CI remains the authoritative post-commit check.
 - Scenario review: no applicable item is a no-op; native roadmap rules own progress; partial task completion retains broader scope; a designated owner receives a progress report without another checkout mutation; standalone read-only work remains outside the workflow.
+
+## Result review
+
+Clean-context Astra review of `origin/main..a22c55e` found no actionable issues. It checked all five transitions, exact identity, no-item/read-only behavior, native ownership, partial task scope, SPEC placement, and source/package parity. PR: https://github.com/rore/agent-workflow/pull/38. A separate human result review and post-commit CI remain required before merge.
