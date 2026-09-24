@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-24 — Roadmap progress follows task transitions
+
+**Decision:** For an in-scope task with an applicable canonical roadmap item, carry its exact reference and reconcile or report task progress at pickup, pause, resume, handoff, and completion under that roadmap's own rules. The existing result-review rule remains the detailed completion check. Report to a designated roadmap owner rather than modify that owner's checkout. Completing a task does not close a broader item with remaining scope; no applicable item requires no action.
+
+**Alternatives considered:** Keep reconciliation only at result review; require a roadmap item or Work Record field for every task; add hooks or a tracker; encode Minimap commands and states in Agent Workflow; sync another owner's checkout automatically.
+
+**Rationale:** Long-running tasks can change roadmap progress before final review, and cross-tool handoffs need a stable item identity. One conditional reminder uses existing transitions and keeps each roadmap's native workflow authoritative without recurring machinery for repositories with no applicable item.
+
 ## 2026-09-22 — Behavior contracts separate workflow and repository protection
 
 **Decision:** Add optional `behaviorContracts.protection` in `agent-redline-policy.yaml`. Omitted or explicit `repository` preserves the existing branch-required CI, CODEOWNERS, dedicated CODEOWNER-only checkpoint, repository-authority approval for requirement changes, and version-1 verdict detail. Explicit `workflow` keeps Redline red classification, per-path semantic records, exact task-owner approval for requirement changes, and named PR verification, but has no behavior checkpoint or repository-authority claim and emits a distinct version-2 detail. Both the named verification and the combined Redline/Agent Workflow harness must run on pull requests before bootstrap persists either mode.
