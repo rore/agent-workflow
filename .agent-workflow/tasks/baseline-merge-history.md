@@ -31,16 +31,16 @@ The checker logs only the first-parent chain from merge-base to PR head, so a si
 Git's full-history topological traversal can expose ancestor commits before their merge snapshot for this path. Disproof: the synthetic merge regression or a valid merged baseline case fails; then adjust the history walk without changing the baseline rule.
 
 **Plan:**
-Add a failing real-Git merged-side-branch case (missing initial baseline and initial-baseline rewrite) plus a valid control in the existing E2E file; use the smallest Git history-walk change that makes the shared predicate inspect those commits; regenerate checker copies; run targeted and full tests, review the final diff, then PR and merge. Stop if the fix requires changing the SPEC or migration semantics.
+Add failing real-Git merged-side-branch cases (missing/malformed initial baseline and initial-baseline rewrite) plus a valid control, with a skewed ancestor timestamp; pass the merge commit as PR head. Replace the first-parent path walk with full-history, topological, reverse traversal; regenerate checker copies; run source and vendored E2E plus the full suite, review the final diff, then PR and merge. Stop if the fix requires changing the SPEC or migration semantics.
 
 **Verification plan:**
-- Invalid first side-parent commit remains blocked after merge -> real-Git checker E2E with missing/malformed baseline and rewritten baseline.
+- Invalid first side-parent commit remains blocked after merge -> real-Git source and vendored E2E with missing/malformed baseline and rewritten baseline, including skewed timestamps.
 - Valid first side-parent commit remains accepted -> real-Git positive merge control and existing linear/legacy tests.
-- Source and installed checker behavior agree -> packaged checker E2E and package parity checks.
+- Source and installed checker behavior agree -> same merged-history E2E through packaged checker and package parity checks.
 - Repository remains shippable -> full test suite, PR CI, and independent result review.
 
 **Plan review:**
-Pending clean-context review.
+Approved by clean-context /root/baseline_merge_plan_review; details below.
 
 **Approvals:**
 Not required at this risk level.
@@ -48,9 +48,13 @@ Not required at this risk level.
 **Exceptions:**
 —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Isolated branch `feat/baseline-merge-history` at `cef51bc9519ccb55dbd2a57fd8f3467b7b9e060c`. Planning only; implementation awaits clean-context plan review. No applicable native roadmap item was found.
+Isolated branch `feat/baseline-merge-history` at `cef51bc9519ccb55dbd2a57fd8f3467b7b9e060c`. Initial planning committed before code as acdc3a5. Clean-context plan review approved the bounded change. No applicable native roadmap item was found.
+
+## Plan review
+
+The reviewer required --full-history --topo-order --reverse so path simplification and skewed commit timestamps cannot hide an ancestor. Tests must use the merge commit as PR head, cover missing/malformed/replaced initial baselines and a valid control, and run source and vendored checkers. This remains a bounded first-anchor fix; it does not claim to validate every intermediate snapshot or independently introduced sibling records.
