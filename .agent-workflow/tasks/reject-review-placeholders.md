@@ -32,7 +32,7 @@
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -46,3 +46,9 @@ Regression was red before the parser change (4 failures for unknown / not provid
 ## Plan review
 
 Agent technical review: delegated Codex /root/upstream_review_plan, 2026-09-25. Reviewer inspected the shared parser, plan/result callers, regression, packaged checker and manifest, and corrected GRAY classification. No blocking code finding; verification adequate before CI. Process caveat: the review happened after implementation and cannot retroactively satisfy the pre-edit gate. Result review remains pending.
+
+## Result review
+
+Agent technical review: delegated Codex /root/upstream_result_review, 2026-09-25; no blocking code findings. The shared parser rejects both placeholders through plan and result gates, positive references remain accepted, and packaged copies match. The late plan-review caveat remains disclosed above.
+Reviewed revision: 7a847cec52c8a1e99a237a10ab156a072a70106b
+Verification adequacy: 27/27 focused tests, 414 Python tests, package drift/install/E2E bootstrap, Redline and local workflow checks adequately cover this narrow source fix before CI. One-shell full suite remains unverified because local Git Bash and WSL prerequisites are split; upstream PR CI is required.
