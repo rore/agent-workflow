@@ -1186,3 +1186,45 @@ def test_is_binding_boundary_violation_hardcoded_default() -> None:
         modes={"default": "shadow", "perCheck": {"boundary_violation": "shadow"}},
     )
     assert v_flipped.is_binding("boundary_violation") is False
+
+@pytest.mark.parametrize(
+    "kind,detected,basis",
+    [
+        ("blue", "Routine", ""),
+        ("gray", "Elevated", "provisional: unclassified gray paths"),
+        ("gray-runtime", "Elevated", "red, checkpoint, or operational signal"),
+        ("gray-checkpoint", "Elevated", "red, checkpoint, or operational signal"),
+        ("gray-red", "Elevated", "red, checkpoint, or operational signal"),
+        ("gray-schema", "High", ""),
+    ],
+)
+def test_risk_basis_distinguishes_unclassified_from_risk_signals(
+    kind: str, detected: str, basis: str,
+) -> None:
+    from core.checker.predicates import CheckerContext, risk_declared_not_below_detected
+    from core.checker.redline_verdict import RedlineVerdict
+
+    verdict = RedlineVerdict(
+        boundary_violations=[],
+        zones={
+            "blue": ["docs/README.md"] if kind == "blue" else [],
+            "gray": ["pkg/util.py"] if kind.startswith("gray") else [],
+            "red": ["pkg/contract.py"] if kind == "gray-red" else [],
+            "watch": [],
+        },
+        checkpoints=[{"id": "architecture-review"}] if kind == "gray-checkpoint" else [],
+        api_changed=False,
+        schema_changed=kind == "gray-schema",
+        security_changed=False,
+        runtime_config_changed=kind == "gray-runtime",
+    )
+    assert verdict.detected_risk() == detected
+    for declared in ("Routine", detected):
+        ctx = CheckerContext(
+            backend=None, slug="basis", record={"risk": declared}, shape=None,
+            parse_error=None, raw_text="", redline_verdict=verdict,
+            redline_required=True, redline_verdict_parse_error=None,
+        )
+        result = risk_declared_not_below_detected(ctx)
+        assert result.passed is (declared == detected)
+        assert (basis in result.detail) if basis else ("provisional" not in result.detail)

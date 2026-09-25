@@ -82,7 +82,7 @@ The "redline" prefix in these predicate names is the literal identifier in the v
 |---|---|---|---|
 | `risk.redline_findings_available` | The classifier's verdict artifact is present and parsed. | Blocking under `redline: required`; advisory under `redline: optional`. Always blocking when the file exists but failed to parse. | Check the classifier CI job. A missing artifact under `redline: required` is a CI configuration error. |
 | `risk.boundary_violation_absent` | No architectural-boundary violation was flagged on the diff. | Blocking, non-waivable | A boundary violation stops the workflow. Either remove the offending change or change the governing policy through its own reviewed change. Boundary-violation findings are **never** waivable through a task exception (SPEC §11). |
-| `risk.declared_not_below_detected` | The declared Risk meets the minimum the classifier detected on the diff. | Blocking | Re-classify upward in the Work Record. Migrate the record's shape if it crosses the `(Routine, Simple)` boundary. |
+| `risk.declared_not_below_detected` | The declared Risk meets the minimum the classifier detected on the diff. Its detail distinguishes provisional gray-only uncertainty from red, checkpoint, or operational signals; gray still has an Elevated floor until policy approval. | Blocking | Re-classify upward in the Work Record. Migrate the record's shape if it crosses the `(Routine, Simple)` boundary. |
 
 ### Review — are the right reviews recorded
 
