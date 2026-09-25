@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # scripts/install-skill-locally.sh
 #
-# Install agent-workflow's skill into .claude/skills/ at the repo root
-# so Claude Code activates it for this project. Run after checkout, and
+# Install agent-workflow's skill into both native skill directories at the repo root
+# so Claude Code and Codex activate it for this project. Run after checkout, and
 # after edits to core/skill/* or core/templates/checkpoints/*.
 #
-# .claude/skills/ is gitignored — every developer regenerates locally.
+# Both native install directories are gitignored — every developer regenerates locally.
 # The target name matches the SKILL.md frontmatter `name:` field, which
 # is what Claude Code uses for slash-command and discovery.
 #
@@ -27,7 +27,6 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLAUDE_TARGET="$REPO_ROOT/.claude/skills/agent-workflow"
 AGENTS_TARGET="$REPO_ROOT/.agents/skills/agent-workflow"
 
-bash "$REPO_ROOT/scripts/package-skill.sh" --dest "$CLAUDE_TARGET"
-bash "$REPO_ROOT/scripts/package-skill.sh" --dest "$AGENTS_TARGET"
+bash "$REPO_ROOT/scripts/package-skill.sh"
 
 echo "installed agent-workflow skill at $CLAUDE_TARGET and $AGENTS_TARGET"

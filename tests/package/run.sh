@@ -24,6 +24,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 bash "$HERE/check-package.sh"
+bash "$HERE/check-install-sync.sh"
 bash "$HERE/check-committed-skill.sh"
 bash "$HERE/check-references.sh"
 bash "$HERE/check-install-probe.sh"

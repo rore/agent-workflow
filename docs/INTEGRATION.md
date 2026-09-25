@@ -75,7 +75,7 @@ You can install agent-workflow without the conversational bootstrap. Useful when
 2. Write `agent-workflow.yaml` and the risk-classification policy; vendor the checker, reporter, and `scripts/agent-workflow-runtime.py/.sh/.ps1` adapters.
 3. Merge Claude settings and `.codex/hooks.json` without removing third-party hooks; record Codex project trust. Install the stable OpenCode 1.x plugin with its structured-mutation guard; OpenCode 2 beta is excluded.
 4. Create `.agent-workflow/tasks/` with a `README.md` explaining the `{slug}.md` convention.
-5. Create or reconcile only the owned marker in root `AGENTS.md`; preserve all other instruction files. Copy per-checkpoint docs to `docs/agent-workflow/` and `docs/agent-redline/skills/`.
+5. Create or reconcile only the owned marker in root `AGENTS.md`; preserve all other instruction files. Read workflow checkpoint docs from the installed skill; copy Redline docs to `docs/agent-redline/skills/`. Leave any existing `docs/agent-workflow/` mirror and links intact on upgrades.
 6. Install the CI workflow: copy [`core/templates/.github/workflows/agent-workflow.yml.template`](../core/templates/.github/workflows/agent-workflow.yml.template) to `.github/workflows/agent-workflow.yml`.
 
 Bootstrap mode does all eight steps for you and inspects the repo first so the drafts fit. **Skip manual install if you can.** The conversational path's value is in Phase 3 — calibrating the risk policy against your codebase. A copy-pasted policy without that step almost always over-classifies.

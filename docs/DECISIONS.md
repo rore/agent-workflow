@@ -8,6 +8,13 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-25 — Proportionate classification and one canonical skill install
+
+**Decision:** Keep unclassified gray paths at a provisional Elevated floor, but distinguish that uncertainty from proven red or operational risk. Persist an evidenced blue/red correction only through a separate human-approved policy change; proposed relaxation never changes the current task. Mechanical pre-edit classification needs no dedicated agent, while consequential reviews retain their independent and human gates. Bootstrap proposes narrow zones from inspected repository evidence. Package once and copy the identical skill to Claude and Codex installs; new consumers read workflow checkpoints from the installed skill, while existing mirrors remain untouched.
+
+**Alternatives considered:** Make gray automatically low risk; let a stale-policy objection demote red in the current task; require a classifier agent for every change; copy broad extension defaults without inspecting the repo; rebuild each native install or keep a third workflow-docs mirror for new consumers.
+
+**Rationale:** Uncertainty needs a conservative gate but should not be confused with danger. Learning across tasks must not become a self-waiver. Deterministic work and duplicate artifacts add cost without improving review, while a single generated artifact and narrow evidence-based proposals preserve the existing safety and compatibility boundaries.
 ## 2026-09-24 — PR history checks the committed requirement baseline
 
 **Decision:** The existing Agent Workflow PR check compares the parsed Requirement baseline, including its source, with the base revision or the first committed branch version. A new Work Record must include a valid baseline in its first commit; a legacy record already on the base branch may establish one from authority. Later edits to the baseline block, as do missing or unusable supplied history refs and deleted or renamed Work Record paths. Local runs without PR refs may skip this history predicate. The separate Work Record commit-order signal remains advisory.
