@@ -60,7 +60,7 @@ Approved by user 2026-09-25T10:32:24Z: "i approve"
 **Exceptions:**
 —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 ## Plan review
 
@@ -80,3 +80,9 @@ Human approval was verified directly in coordinator task 01a0d7cd-696b-76a0-8f2f
 - 2026-09-25: Consolidated workflow checkpoint guidance into the installed skill package; installer now builds once and copies to both native installs.
 - 2026-09-25: SPEC contract committed first at f246de7. Propagated deterministic-first risk guidance, removed Redline red-to-gray stale-policy instruction, added provisional-gray checker detail and six-case matrix, and aligned enforcement docs. Focused checker suites: 122 passed. Bootstrap and package slices are in separate disjoint-file implementation; State remains Ready to implement.
 - 2026-09-25: Bootstrap slice inspects tracked paths, layout, tests, and representative code before narrowing zone proposals; protected contract/governance and uncertain paths stay gated. Two flat/nested approved-policy reporter cases passed. Packaging slice builds once and copies identical artifacts to Claude/Codex installs, stops creating the extra workflow-doc mirror for new consumers, and preserves legacy mirrors. Focused install-sync and budget checks passed. Lead reviewed both slices and narrowed the bootstrap test fixture.
+
+## Evidence
+
+Commit a5fb5f2 contains the reviewed source and generated package changes. At that content revision, bash tests/run-all.sh passed every layer: budget, schema, work-record, checker (234), redline, tuner, hooks, links, and package, including the two-layout packaged bootstrap simulation. The focused bootstrap calibration tests passed (2). The earlier local full-suite failures were environment setup (an absent worktree virtualenv and a Git Bash Python 3 shim) or the public guide mirror before sync; all were corrected and the final full run passed. The local checker with the actual Redline verdict has no blocking findings; architecture-review remains shadow/advisory until PR review or label. No applicable roadmap item was found.
+
+Skill-feedback triggers 2 and 4 dropped: the stale Redline classification instruction and reviewer-caught plan contradiction are corrected in this change; no outstanding upstream defect remains.
