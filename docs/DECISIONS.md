@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-09-25 — Agent technical review is additive to human review
+
+**Decision:** Elevated and High plans and results require a clean-context non-implementer agent technical review that independently assesses risk and verification adequacy, records a source reference and reviewed revision, and exposes findings and expertise limits. Keep existing High human plan review/approval and separate human result review, plus external specialist requirements. Human review, approval, or a checkpoint label cannot replace the agent review. The checker gates only structural evidence in existing Work Record fields/prose; it cannot authenticate reviewers or judge review quality. Routine remains unchanged.
+
+**Alternatives considered:** Treat High human review as sufficient technical assurance; replace human review with agents; add an identity service, schema migration, or blanket multiple reviewers.
+
+**Rationale:** Human approval often signals authorization rather than code inspection. Requiring source-backed agent review makes technical assurance explicit without weakening additive human attention or pretending an attestation proves review quality.
+
 ## 2026-09-25 — Proportionate classification and one canonical skill install
 
 **Decision:** Keep unclassified gray paths at a provisional Elevated floor, but distinguish that uncertainty from proven red or operational risk. Persist an evidenced blue/red correction only through a separate human-approved policy change; proposed relaxation never changes the current task. Mechanical pre-edit classification needs no dedicated agent, while consequential reviews retain their independent and human gates. Bootstrap proposes narrow zones from inspected repository evidence. Package once and copy the identical skill to Claude and Codex installs; new consumers read workflow checkpoints from the installed skill, while existing mirrors remain untouched.

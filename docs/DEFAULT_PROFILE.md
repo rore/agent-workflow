@@ -97,11 +97,9 @@ Repositories **MAY** add stronger triggers and identify repository-specific sens
 
 **Definition of Done.** Existing project Definition of Done requirements apply through this workflow. Applicable requirements are represented as task completion criteria, verification requirements, approvals, or group and repository rules. The Work Record links to their authoritative evidence and does not duplicate the Definition of Done.
 
-### Elevated review controls
+### Agent technical review controls
 
-The portable spec (`SPEC.md` §9.4) treats clean-context plan review as **SHOULD** for Elevated tasks. Within the default profile this is tightened to **required presence**: an Elevated Work Record **MUST** record a clean-context plan review reference before implementation begins, and the harness CI checker enforces presence.
-
-This is presence, not quality — consistent with the Judgment Boundary in `SPEC.md` §5. Whether the clean-context review was thorough remains a reviewer judgment; whether it happened at all is enforced.
+SPEC §§9.4 and 9.7 require clean-context non-implementer agent technical reviews of Elevated/High plans and results. The default checker requires an explicit `Agent technical review: <source ref>` in Plan review and, at `Ready for review`, a `## Result review` section with that reference, reviewed revision, and verification-adequacy assessment. It checks structure, not reviewer identity, competence, or review quality. Existing High human plan/result reviews and PR checkpoints are additive; approval or a label cannot satisfy an absent agent review.
 
 ## 4. Default Routine Work Record Example
 
@@ -194,7 +192,7 @@ Verification:
 - Persistence guarantee: constraint inspection and test
 
 Plan review:
-Clean-context agent review <link>
+Agent technical review: <source review link>
 
 Approvals:
 None required
@@ -206,7 +204,9 @@ Evidence:
 CI <link>
 
 Result review:
-Separate reviewer <link>
+Agent technical review: <source review link>
+Reviewed revision: <revision>
+Verification adequacy: <assessment>
 
 State:
 Ready for review.

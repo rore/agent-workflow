@@ -53,7 +53,7 @@ The agent role may be fulfilled by one agent or by a coordinated set of agents. 
 
 Evaluates a proposed plan or completed result.
 
-A **clean-context agent review** is performed without the implementation conversation. It reduces anchoring, but it is not an independent assurance mechanism.
+A **clean-context agent review** is performed without the implementation conversation. It reduces anchoring, but does not guarantee independent assurance or remove shared-model blind spots.
 
 A **separate human review** provides independent judgment. Specialist review may be required for high-risk changes.
 
@@ -245,9 +245,8 @@ A change with meaningful behavioral impact, uncertainty, or sensitive surfaces.
 Typical controls:
 
 - explicit discovery and Verification Plan
-- clean-context plan review
+- non-implementer clean-context agent plan and result reviews
 - additional risk-specific checks
-- separate result review
 
 #### High
 
@@ -255,8 +254,9 @@ A change where failure could materially affect security, tenant isolation, finan
 
 Typical controls:
 
-- human-approved plan
-- separate human result review
+- non-implementer clean-context agent plan and result reviews
+- human-reviewed and approved plan
+- separate human result review, additive to agent review
 - specialist expertise where required
 - explicit assumptions, invalidation conditions, and stop conditions
 
@@ -483,10 +483,10 @@ Delegation and review **SHOULD** use the least costly capable reviewer for the a
 #### Plan Review
 
 - **Routine:** agent self-review may be sufficient
-- **Elevated:** clean-context agent review **SHOULD** be used
-- **High:** a human reviewer **MUST** review the plan, and material decisions **MUST** receive human approval
+- **Elevated:** a non-implementer clean-context agent **MUST** technically review the plan
+- **High:** a non-implementer clean-context agent **MUST** technically review the plan; a human reviewer **MUST** also review it, and material decisions **MUST** receive human approval
 
-Required approvals **MUST** be recorded in the Work Record before implementation begins.
+The agent reviewer **MUST** assess risk and planned verification adequacy with appropriate expertise, identify the reviewed plan revision and source evidence, and record findings and disposition. A human review or approval is additive, not a substitute for this agent review. Required approvals **MUST** be recorded in the Work Record before implementation begins.
 
 **Gate:** Implementation **MUST NOT** begin until required reviews are complete, approvals are recorded, and blocking findings are resolved.
 
@@ -562,8 +562,10 @@ The review **MUST** check:
 Review depth depends on risk:
 
 - **Routine:** normal pull-request review may be sufficient; reviewer judges verification adequacy as part of normal review.
-- **Elevated:** result review **MUST** be performed by someone other than the implementing agent. The reviewer **MAY** be a human or a clean-context agent, subject to repository and organizational policy. The reviewer **MUST** assess whether the recorded Verification Record is adequate to the criterion. Human review remains mandatory where required by policy or by the affected risk surface.
-- **High:** a separate human reviewer **MUST** review the result, with specialist expertise where necessary. Verification adequacy assessment is part of the specialist review obligation.
+- **Elevated:** a non-implementer clean-context agent **MUST** technically review the result and independently assess whether the recorded Verification Record is adequate to each criterion. Human review remains mandatory where required by policy or by the affected risk surface.
+- **High:** a non-implementer clean-context agent **MUST** technically review the result and independently assess verification adequacy. A separate human reviewer **MUST** also review the result, with specialist expertise where necessary; this review adds to, and cannot replace, the agent review.
+
+The agent reviewer **MUST** identify the final revision, inspected source and verification evidence, expertise limits, findings, and disposition. An absent or inadequate agent review **MUST NOT** be treated as satisfied by human review, approval, or a checkpoint label.
 
 **Gate:** The change **MUST NOT** be accepted while blocking findings remain unresolved or unapproved.
 
@@ -723,7 +725,7 @@ The harness validates the **presence and structural well-formedness** of the Ver
 
 A generic “CI passed” statement is insufficient unless the referenced CI checks directly cover the criterion or risk. Passing CI does not by itself prove that the selected checks are sufficient.
 
-For Elevated and High work, the result reviewer **MUST** assess whether the proposed Verification Record is adequate to the criterion. This is a review obligation, not a harness gate.
+For Elevated and High work, the required agent result reviewer **MUST** independently assess whether the Verification Record is adequate to the criterion. Any additionally required human reviewer also assesses it. This is a review obligation, not a harness judgment of adequacy.
 
 ### 13.4 Findings, Checkpoints, and Approvals
 
@@ -738,7 +740,7 @@ The harness **MUST** preserve:
 
 Checkpoint satisfaction, plan approval, task-local behavioral authority, and repository contract authority **MUST** remain distinct.
 
-A clean-context agent review **MUST NOT** satisfy a human-approval requirement. Behavioral approvals **MUST** be scoped to the exact recorded before and after behavior and authority domain.
+A clean-context agent review **MUST NOT** satisfy a human-approval requirement. Human review, approval, or a checkpoint label **MUST NOT** satisfy a required agent technical review; approval alone is not evidence that either review occurred. Behavioral approvals **MUST** be scoped to the exact recorded before and after behavior and authority domain.
 
 ### 13.5 Missing Evidence, Unavailable Systems, and Resumability
 

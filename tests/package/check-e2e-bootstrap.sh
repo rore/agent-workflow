@@ -155,6 +155,8 @@ cmp -s CLAUDE.md CLAUDE.before && cmp -s CODEX.md CODEX.before || exit 2
 grep -Fq 'Outcome-affecting subagents inherit this Work Record.' "$SKILL/operating-mode.md" || exit 2
 grep -Fq 'Exact target checkout; use explicit shell workdir or absolute write targets.' "$SKILL/operating-mode.md" || exit 2
 grep -Fq 'Relative `apply_patch` targets the session cwd' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'forward a received approval immediately' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'Human consent to the presented plan is approval; no magic word.' "$SKILL/templates/checkpoints/plan-and-review.md" || exit 2
 "$PY" - <<'PYEOF'
 from pathlib import Path
 t=Path("AGENTS.md").read_text()
@@ -464,7 +466,7 @@ cat > .agent-workflow/tasks/contract.md <<'EOF'
 
 **Verification plan:** When the contract changes, the behavior-contracts check shall cover the same behavior → behavior-contracts.
 
-**Plan review:** clean-context review bootstrap-e2e-review.
+**Plan review:** Agent technical review: bootstrap-e2e-review of fixture plan and verification.
 
 **Approvals:** Approved by user 2026-09-22: "Approve bootstrap E2E fixture."
 
@@ -474,6 +476,11 @@ cat > .agent-workflow/tasks/contract.md <<'EOF'
 
 **State:** Ready for review
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: bootstrap-e2e-result-review
+Reviewed revision: fixture-contract-revision
+Verification adequacy: behavior-contracts covers the same behavior; fixture evidence inspected.
 EOF
 printf '.agent-workflow/tasks/contract.md\0tests/contracts/wake.md\0' > changed.z
 "$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \

@@ -25,9 +25,14 @@
 
 **Verification plan:** Concurrent-retry behaviour → `WalletConcurrentRetryTest`. Row-count assertion → inside that test. Restart between retries → `WalletRestartIdempotencyTest`. Tenant isolation → existing `WalletTenantIsolationTest` re-run.
 
-**Plan review:** Clean-context agent review (Elevated path).
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** Not required at Elevated risk level.
 
 **State:** Ready for review
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: fixture/session-result
+Reviewed revision: abc1234
+Verification adequacy: fixture checks cover the completion criteria.

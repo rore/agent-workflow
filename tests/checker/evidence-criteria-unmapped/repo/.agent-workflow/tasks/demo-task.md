@@ -25,9 +25,14 @@
 
 **Verification plan:** Will run all the tests and confirm concurrent retries pass. Plus check tenant isolation. Manual review of the diff.
 
-**Plan review:** clean-context session 2026-06-24/concurrency-review
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** —
 
 **State:** Ready for review.
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: fixture/session-result
+Reviewed revision: abc1234
+Verification adequacy: fixture checks cover the completion criteria.
