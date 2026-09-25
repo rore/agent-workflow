@@ -49,13 +49,13 @@ Not required at this risk level. User authorized delivery: "Okay, so let's make 
 **Exceptions:**
 —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
 - 2026-09-25: Isolated branch feat/update-history-guidance from current main. Non-exempt agent-loaded guidance selected; planning/review remains before implementation. No source edit yet.
-- 2026-09-25: Clean-context plan review approved; moved to Ready to implement. Added one pickup rule and clarified completed, active, and unavailable update cases in Integration. Regenerated dist/native installs; source/package parity and skill budget (1896/1900) passed. The first package attempt hit this machine's broken python3 alias; a process-local Python function repaired the run without product changes. Full nine-layer suite passed after an ignored .venv junction supplied the Windows OpenCode fixture interpreter; focused OpenCode test passed. No product runtime changed. Next: independent result review.
+- 2026-09-25: Clean-context plan review approved; moved to Ready to implement. Added one pickup rule and clarified completed, active, and unavailable update cases in Integration. Regenerated dist/native installs; source/package parity and skill budget (1896/1900) passed. The first package attempt hit this machine's broken python3 alias; a process-local Python function repaired the run without product changes. Full nine-layer suite passed after an ignored .venv junction supplied the Windows OpenCode fixture interpreter; focused OpenCode test passed. No product runtime changed. Independent Astra result review approved revision 0887bbde62142eed6784016a0cf02d2e6d696b60 with no blocking findings.
 
 ## Evidence
 
@@ -63,3 +63,14 @@ Not required at this risk level. User authorized delivery: "Okay, so let's make 
 - Confirmed active: Integration retains first-commit baseline migration safeguards and requires real evidence for new agent-review gates.
 - Status unavailable: operating guidance leaves it unresolved; Integration asks the owner before migration and forbids inferred activity or backfilled evidence.
 - Source, dist, Claude, and Codex installed operating guidance match. Budget is 1896/1900. The full tests/run-all.sh suite passed all nine layers after the environment-only interpreter fix.
+- The tested worktree content was committed unchanged as 0887bbde62142eed6784016a0cf02d2e6d696b60; the worktree was clean afterward. Local Redline reported GRAY/watch (shadow advisory), with no checkpoint or boundary violation.
+- Skill-feedback triggers (human correction and missing guidance) are addressed by this fix itself; a separate defect issue would duplicate the PR.
+
+## Result review
+
+Agent technical review: /root/update_guidance_plan_review (independent gpt-6-astra high review)
+Reviewed revision: 0887bbde62142eed6784016a0cf02d2e6d696b60
+Verification adequacy: Source/dist/Claude/Codex guidance parity, all 20 budgets, diff check, nine-layer suite, and direct completed/active/unavailable-status review are sufficient for this guidance-only change.
+Inspected evidence: SPEC delivery and baseline rules, operating-mode and Integration diff, Work Record, package/native manifests, reviewer-computed identical guidance hashes, and recorded full-suite result.
+Findings: No blocking product findings. Reviewer requested a pinned tested revision; recorded above. Final risk Elevated/Simple, scope unchanged, assumptions resolved.
+Limits: Reviewer did not rerun the full suite. Guidance cannot authenticate external delivery state; the updater must check the owning source system.
