@@ -27,7 +27,7 @@ Simple
 Agent-loaded operating guidance and generated copies are Redline gray/watch; documentation is blue. One coherent instruction change, no contract or checker change.
 
 **Discovery:**
-SPEC §9 already says Ready for review is not merged/delivered. docs/INTEGRATION.md tells updaters to preserve historical Work Records but starts its migration instructions with "in-flight branches" without requiring a live PR/task status check. docs/INTEGRATION.md explicitly routes installed-skill updates through operating mode, whose pickup rule lacks that check. A reported consumer PR was already merged; its old checkout's Ready for review marker caused an unnecessary migration stop. No applicable roadmap item remains open for this update. Current operating-mode budget is 1868/1900 tokens; package script mirrors source into dist and native installs.
+SPEC §6 already says Ready for review is not merged/delivered. docs/INTEGRATION.md tells updaters to preserve historical Work Records but starts its migration instructions with "in-flight branches" without requiring a live PR/task status check. docs/INTEGRATION.md explicitly routes installed-skill updates through operating mode, whose pickup rule lacks that check. A reported consumer PR was already merged; its old checkout's Ready for review marker caused an unnecessary migration stop. No applicable roadmap item remains open for this update. Current operating-mode budget is 1868/1900 tokens; package script mirrors source into dist and native installs.
 
 **Material assumptions:**
 The existing SPEC covers delivery-state truth; if the intended wording creates a new normative gate, return to planning and edit SPEC first. If package output does not mirror the source sentence, stop and inspect the packager.
@@ -38,10 +38,10 @@ The existing SPEC covers delivery-state truth; if the intended wording creates a
 3. Regenerate dist/native copies; check source/package parity, token budget, links, and the full suite. Do not change checker, schema, SPEC, or consumer repos. Stop if an active-record checker defect is found.
 
 **Verification plan:**
-When an update encounters an existing Work Record, the agent checks live delivery state and does not migrate completed history → inspect operating-mode source and packaged copy plus docs/INTEGRATION.md; run budget, package/link checks, and full tests/run-all.sh.
+When an update encounters an existing Work Record, the agent checks live delivery state and preserves completed history; active work meets current gates; unavailable status triggers no inferred completion or speculative migration → review all three cases in operating-mode source, packaged copy, and docs/INTEGRATION.md; run budget, package/link checks, and full tests/run-all.sh.
 
 **Plan review:**
-Pending independent review.
+Agent technical review: /root/update_guidance_plan_review (gpt-6-astra high; reviewed 332c078ac760567d1b1c3220b7769cc8c764eb95; approved with no blocking findings). Inspected SPEC §6, operating-mode pickup, Integration update procedure, Redline, and budget. Requested explicit completed/active/unavailable-status result review and citation correction.
 
 **Approvals:**
 Not required at this risk level. User authorized delivery: "Okay, so let's make sure this doesn't happen again. Do what you need to do. I approve getting it till the end."
@@ -49,7 +49,7 @@ Not required at this risk level. User authorized delivery: "Okay, so let's make 
 **Exceptions:**
 —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
