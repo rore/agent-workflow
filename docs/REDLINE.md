@@ -262,6 +262,8 @@ Skipping these is the most common adoption failure. A copy-pasted default policy
 | A red zone never fires | Glob is probably wrong. Run `git ls-files <glob>` to confirm. |
 | Boundary violation fires on legitimate refactoring | The boundary rule is wrong or the refactor is the wrong shape. Address it in a separate change that touches **only** the boundary policy; never weaken the policy in the same PR as the violation. |
 
+Gray means unclassified, not demonstrated danger. It still carries a provisional Elevated workflow floor. During ordinary work, propose a precise red or blue policy correction only with observed path/code/test evidence, the affected controls, and human approval; batch nonurgent suggestions and do not repeat a rejected proposal without new evidence. Make an approved policy change in its own reviewed PR. The current task keeps its existing floor and checkpoints, while newly discovered danger raises its risk immediately. A stale-looking red rule is not permission to treat that path as gray. Optional future-policy proposals do not block otherwise-ready work.
+
 The tuner is re-runnable any time the policy feels wrong. Bootstrap invokes it from agent-redline's source tree; you can run it the same way after install.
 
 ### What NOT to do

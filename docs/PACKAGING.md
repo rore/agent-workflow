@@ -108,13 +108,12 @@ There is **no separate skill version** — the skill ships at whatever shape `co
 
 ## Re-installing the skill in the dev repo
 
-The dev repo dogfoods the skill on itself. After editing anything under `core/skill/` or `core/templates/checkpoints/`, the source no longer matches the committed `dist/`. Re-run both:
+The dev repo dogfoods the skill on itself. After editing anything under `core/skill/` or `core/templates/checkpoints/`, the source no longer matches the committed `dist/`. Run:
 
 ```bash
-bash scripts/package-skill.sh         # refresh dist/agent-workflow/
-bash scripts/install-skill-locally.sh # refresh .claude/skills/agent-workflow/
+bash scripts/install-skill-locally.sh # refresh dist/ and both local installs
 ```
 
-The install script delegates to the package script, so the two targets always match — there's one file list, in `package-skill.sh`. `git add dist/agent-workflow/` before pushing; `tests/package/check-package.sh` runs on every PR and blocks merges when sources have drifted from the committed tree.
+The install script runs the package script once. The packager builds `dist/agent-workflow/` and copies that exact tree to both local native installs, so manifests and contents match without rebuilding. `git add dist/agent-workflow/` before pushing; `tests/package/check-package.sh` runs on every PR and blocks merges when sources have drifted from the committed tree.
 
 Your current Claude Code session is using the previously-installed copy until you re-install.

@@ -6,7 +6,7 @@
 #   1. The committed dist/agent-workflow/ in this repo (checked in;
 #      a visitor can install by copying the directory).
 #   2. The local dogfood install via scripts/install-skill-locally.sh
-#      (gitignored target under .claude/skills/agent-workflow/).
+#      (gitignored targets under .claude/skills/ and .agents/skills/).
 #
 # The packaged tree is self-contained: every reference inside skill
 # markdown resolves inside the package. Source markdown uses repo-root
@@ -396,13 +396,15 @@ echo "files: $(find "$TARGET" -type f | wc -l | tr -d ' ')"
 ) > "$TARGET/manifest.txt"
 echo "manifest: $(wc -l < "$TARGET/manifest.txt" | tr -d ' ') entries"
 
-# When building the default dist (not a --dest invocation), also sync the
-# local dogfood install so it stays in step with the committed dist.
-# Keep both native skill locations synchronized for runtime-parity dogfood.
+# Build once into dist, then copy that exact artifact to both native
+# dogfood installs. Explicit --dest builds are standalone (used by checks).
 if [[ "$EXPLICIT_DEST" -eq 0 ]]; then
   CLAUDE_LOCAL="$REPO_ROOT/.claude/skills/agent-workflow"
   CODEX_LOCAL="$REPO_ROOT/.agents/skills/agent-workflow"
-  bash "$0" --dest "$CLAUDE_LOCAL"
-  bash "$0" --dest "$CODEX_LOCAL"
+  for local_target in "$CLAUDE_LOCAL" "$CODEX_LOCAL"; do
+    rm -rf "$local_target"
+    mkdir -p "$(dirname "$local_target")"
+    cp -r "$TARGET" "$local_target"
+  done
   echo "synced local installs at $CLAUDE_LOCAL and $CODEX_LOCAL"
 fi

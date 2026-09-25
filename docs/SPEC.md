@@ -268,6 +268,8 @@ A boundary violation **MUST** stop the workflow.
 
 A boundary-violation finding **MUST NOT** be waived in place. If the underlying action should become permitted, the governing policy must be changed through its own reviewed change, after which the original change is reassessed.
 
+An unclassified path is not proof of intrinsic danger. An effective policy MAY apply a provisional Elevated floor to such a path until it is classified; that floor and any stronger contract, security, persistence, financial, operational, checkpoint, or boundary control **MUST** remain effective for the current task. An agent **MUST NOT** demote a red path to gray because a policy seems stale, or treat a proposed relaxation as an approved current-task classification. Explicitly authorized task exceptions under §11 are separate from unilateral reclassification.
+
 ### 8.2 Complexity Levels
 
 #### Simple
@@ -300,6 +302,10 @@ Risk and complexity **MUST** be reassessed:
 Newly detected risk **MUST** trigger the required checks, approvals, and reviews.
 
 Automated findings **SHOULD** contribute where reliable rules exist, but **MUST NOT** replace engineering judgment about impact, uncertainty, or task coherence.
+
+Classification policy **SHOULD** learn from ordinary work: when evidence shows a precise path or narrow set is over- or under-classified, the agent **SHOULD** present the observed paths, evidence, proposed red/blue change, and consequences for human approval. Only an approved, separately reviewed governance change may persist a relaxation. A newly discovered danger raises the current task risk immediately; a proposed relaxation cannot bypass its existing gates. Batch nonurgent suggestions, do not repeat a rejected proposal without new evidence, and do not block otherwise-ready work on an optional future-policy proposal.
+
+Bootstrap **SHOULD** inspect the actual repository layout and evidence before proposing narrow low-risk zones. Protected, mixed, or genuinely uncertain paths remain conservative. Missing history alone is not a safety finding when inspected code and layout supply sufficient evidence.
 
 ## 9. Workflow Checkpoints
 
@@ -393,6 +399,8 @@ When repository guidance, durable documentation, requirements, and observed syst
 
 Before detailed planning or implementation, the task **MUST** receive an initial Risk and Complexity Decision using the shared model and effective group or repository rules.
 
+A mechanical pre-edit classification **MAY** use the effective deterministic policy and ordinary engineering judgment without a separate classification-only agent. Invoke an independent classifier when uncertainty is material. Planned-path classification is provisional; the final diff and CI checks remain authoritative.
+
 The decision **MUST** record:
 
 - risk level and reasons
@@ -469,6 +477,8 @@ wallet-service CI job for the final revision.
 The Verification Plan **MAY** evolve during implementation. Removing or weakening required verification **MUST** receive the required approval.
 
 Plan review or approval **MUST** be repeated only when scope, assumptions, approach, or risk materially change.
+
+Delegation and review **SHOULD** use the least costly capable reviewer for the actual consequence and uncertainty, while preserving required non-implementer, human, and specialist reviews and user-selected model settings. Reuse still-valid review and verification evidence; do not repeat broad reviews for unchanged material.
 
 #### Plan Review
 

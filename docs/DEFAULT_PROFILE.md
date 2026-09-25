@@ -76,6 +76,8 @@ The following are **at least Elevated**:
 - third-party integration contracts, authentication, or request and response construction
 - changes to CI, architecture rules, risk policy, or verification controls
 
+Redline gray paths also carry a provisional Elevated floor because they are unclassified, not because danger has been demonstrated. A narrow human-approved policy change can classify an evidenced path blue for future work; it cannot relax the current task. Independent red, contract, checkpoint, and boundary findings still win.
+
 The following are **High** unless prohibited:
 
 - destructive or difficult-to-reverse database, infrastructure, or deployment changes
@@ -220,7 +222,7 @@ The point is not to stand up a dashboard before the pilot. It is to make explici
 
 These need no additional instrumentation; the Work Records already carry them:
 
-- **Risk-classification overrides** — agent declared a different Risk than the structural minimum redline detected, in either direction.
+- **Risk-classification mismatches** — justified upward judgment, failed downward declarations, and approved policy corrections resolving previously gray paths.
 - **Shape mismatches caught by the checker** — task declared `(Routine, Simple)` but used the expanded shape, or vice versa.
 - **Blocking findings by predicate** — which CI predicates fire most often, and on which kinds of tasks.
 - **Re-planning rate** — Work Records that moved from `Ready to implement` back to `Blocked or returned to planning` after material change.
