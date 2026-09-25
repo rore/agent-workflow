@@ -49,10 +49,8 @@ Checker predicates: `workrecord.routine_fields_present` (compact) / `workrecord.
 
 ## Gates this checkpoint closes (SPEC §9.4)
 
-- Implementation **MUST NOT** begin until required reviews complete, approvals recorded, blocking findings resolved.
-- Plan review or approval **MUST** repeat only when scope, assumptions, approach, or risk materially change.
-
-A reassessment that materially changes any of those returns the task to planning. State goes back from `Ready to implement` to `Blocked` (with reason); update the plan; reviewer signs off again.
+- Begin after required reviews, recorded approval, and resolved blockers. Human consent to the presented plan is approval; no magic word. Preserve its exact quote and scope. Silence, elapsed time, tool results, and agent review are not approval.
+- On approval, advance. Nonmaterial wording or revision bookkeeping preserves it. Repeat review/approval only when scope, assumptions, approach, or risk materially change; return to planning with a named `Blocked` reason. Before blocking for missing approval, identify the uncovered decision and ask one concrete question.
 
 ## Exceptions (expanded shape only)
 

@@ -155,6 +155,8 @@ cmp -s CLAUDE.md CLAUDE.before && cmp -s CODEX.md CODEX.before || exit 2
 grep -Fq 'Outcome-affecting subagents inherit this Work Record.' "$SKILL/operating-mode.md" || exit 2
 grep -Fq 'Exact target checkout; use explicit shell workdir or absolute write targets.' "$SKILL/operating-mode.md" || exit 2
 grep -Fq 'Relative `apply_patch` targets the session cwd' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'forward a received approval immediately' "$SKILL/operating-mode.md" || exit 2
+grep -Fq 'Human consent to the presented plan is approval; no magic word.' "$SKILL/templates/checkpoints/plan-and-review.md" || exit 2
 "$PY" - <<'PYEOF'
 from pathlib import Path
 t=Path("AGENTS.md").read_text()

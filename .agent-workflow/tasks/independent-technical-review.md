@@ -55,7 +55,7 @@ Approved by user 2026-09-25 (relayed by coordinator from thread 01a0d7cd-696b-76
 **Exceptions:**
 —
 
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -70,6 +70,7 @@ Approved by user 2026-09-25 (relayed by coordinator from thread 01a0d7cd-696b-76
 - 2026-09-25: Independent delta review of a6e9283 found a remaining Markdown-link punctuation edge. The parser now recognizes complete links followed by ordinary sentence punctuation without treating bracket placeholders as links. Added Markdown/autolink punctuation regressions; focused tests passed (23), then the full nine-layer suite passed again after package/native-install regeneration. Awaiting final independent disposition on this revision and separate human High result review.
 - 2026-09-25: Independent Astra final disposition approved b23a7bf653f69c6272d7ebaa2025d0d6132cba12. No remaining actionable findings. Skill-feedback filter: Trigger 1 dropped: the repeated Python workaround is machine-local, not upstream-owned. Trigger 2 dropped: reviewer findings were implementation defects resolved before delivery, not a separate product/skill field defect. Separate High human result review and PR-time architecture review remain pending.
 
+- 2026-09-25: Clarified existing contextual plan approval and continuity in the plan checkpoint, and immediate forwarding of received approval in handoff guidance. Kept material-change gates and unrelated blockers intact. Independent Astra review found one overbroad Blocked sentence; corrected it and received final approval with no remaining findings. Mirrored public guidance, regenerated source/dist/native installs, and added packaged consumer assertions. `bash tests/run-all.sh` passed all nine layers on the final guidance diff. No schema, checker, CI, or normative SPEC change.
 ## Evidence
 
 - Completion criterion, independent agent plan/result review: SPEC and installed checkpoint guidance now require both for Elevated/High, with High human plan/result reviews additive. Focused checker review-evidence tests passed: 23 on b23a7bf; curated golden checker scenarios passed: 80. The checker validates structural attestations, not reviewer identity or review quality.
@@ -84,3 +85,4 @@ Verification adequacy: The independent reviewer judged the 23 focused tests and 
 Inspected evidence: normative SPEC/default profile, checker/source/package/native install diff, focused regression run (23 passed), recorded full nine-layer suite result, Work Record plan and approved scope.
 Findings: initial dotted-state bypass, link rejection, and unknown provenance were fixed; a second punctuation-link finding was fixed; final review found no actionable issue.
 Limits: reviewer did not repeat the full suite. Structural markers do not authenticate technical reviewer identity, competence, or quality. Separate High human result review and architecture-review checkpoint remain pending; Ready for review is not acceptance or merge.
+- 2026-09-25: Coordinator relayed the user's correction that contextual plan authorization must not be treated as missing for want of a magic word. Existing SPEC §9.4 already preserves approval through nonmaterial wording and revision bookkeeping. This is a nonmaterial clarification to the same plan/approval checkpoint and handoff instructions, with no new gate, schema, or human approval request. Before edit: touch only core/templates/checkpoints/plan-and-review.md and core/skill/operating-mode.md plus their generated/mirrored copies; then recheck budgets, links, package, full suite, and independent result review. Prior result review remains valid for unchanged code but must be reconciled against this guidance delta.
