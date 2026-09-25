@@ -136,6 +136,8 @@ def test_dotted_ready_state_still_requires_result_review(tmp_path: Path, risk: s
 @pytest.mark.parametrize("reference", [
     "[review](https://example.com/review/123)",
     "<https://example.com/review/123>",
+    "[review](https://example.com/review/123).",
+    "<https://example.com/review/123>.",
 ])
 def test_markdown_review_links_are_valid_evidence(
     tmp_path: Path, risk: str, reference: str

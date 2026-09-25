@@ -3742,7 +3742,7 @@ _PLACEHOLDER_RE = re.compile(
     r"approved by user\b|human\b|codeowner\b|label\b|<|\[)",
     re.IGNORECASE,
 )
-_MARKDOWN_LINK_RE = re.compile(r"^(?:\[[^\]]+\]\([^)]+\)|<https?://[^>]+>)(?:\s|$)")
+_MARKDOWN_LINK_RE = re.compile(r"^(?:\[[^\]]+\]\([^)]+\)|<https?://[^>]+>)")
 
 # Sentinel for the High-risk approval line. Format:
 #   Approved by user <timestamp>: "<verbatim quote>"
