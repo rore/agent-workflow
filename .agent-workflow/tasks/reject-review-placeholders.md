@@ -30,9 +30,14 @@
 
 **Approvals:** Not required at this risk level.
 
-**Exceptions:** —
+**Exceptions:**
+- rule: approval.elevated_clean_context_review_present
+  reason: Initial Routine misclassification meant the independent Elevated plan review happened after implementation; no pre-edit review is claimed.
+  scope: Pre-implementation review timing for this task and PR #44 only.
+  approver: Rotem Hermon, 2026-09-25, "Yes, I approve."
+  compensating_validation: Independent plan and result reviews; 27 focused tests, 414 Python tests, package checks, and green PR CI.
 
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -55,4 +60,6 @@ Verification adequacy: 27/27 focused tests, 414 Python tests, package drift/inst
 
 ## Process gate, 2026-09-25
 
-CodeRabbit review on upstream PR #44 correctly flagged that the independent Elevated plan review occurred after implementation due to the initially incorrect Routine classification. Green checker/CI does not repair the timing requirement. PR #44 must not merge until the task owner approves a specific one-task exception or the workflow is otherwise remediated; approval requested. No exception is claimed yet.
+CodeRabbit review on upstream PR #44 correctly flagged that the independent Elevated plan review occurred after implementation due to the initially incorrect Routine classification. Green checker/CI does not repair the timing requirement. Rotem Hermon explicitly approved a one-task exception on 2026-09-25: "Yes, I approve." The exception applies only to PR #44's missed pre-edit timing; it does not relax future review requirements or assert that this review happened before implementation.
+
+Skill-feedback trigger 2 dropped: the late review was caused by this task's own initial risk misclassification, not an upstream skill defect.
