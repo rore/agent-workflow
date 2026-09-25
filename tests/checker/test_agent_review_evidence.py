@@ -176,6 +176,23 @@ def test_placeholder_review_links_are_not_evidence(
     assert not checks[plan]
     assert not checks["review.agent_result_review_present"]
 
+@pytest.mark.parametrize("risk", ["Elevated", "High"])
+@pytest.mark.parametrize("placeholder", ["unknown", "not provided"])
+def test_textual_placeholders_are_not_review_evidence(
+    tmp_path: Path, risk: str, placeholder: str
+) -> None:
+    plan = (
+        "approval.elevated_clean_context_review_present"
+        if risk == "Elevated" else "approval.high_clean_context_review_present"
+    )
+    assert not _predicates(
+        tmp_path, risk=risk, plan_review=f"Agent technical review: {placeholder}"
+    )[plan]
+    for value in ("session/result-456", "abc1234", "concurrent and boundary checks"):
+        assert not _predicates(
+            tmp_path, risk=risk, state="Ready for review",
+            result_review=RESULT_AGENT.replace(value, placeholder),
+        )["review.agent_result_review_present"]
 
 def test_agent_review_rules_report_core_provenance(tmp_path: Path) -> None:
     _predicates(tmp_path, risk="High", state="Ready for review", result_review=RESULT_AGENT)
