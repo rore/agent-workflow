@@ -24,12 +24,12 @@ Self-review is sufficient; no Plan review field on compact.
 |---|---|
 | **Routine** | Self-review. No Plan review field on compact. |
 | **Elevated** | Clean-context agent review required. Use operating-mode §Clean-context delegation; probe material uncertainty and record the result under Plan review in the Work Record. |
-| **High** | Clean-context review **plus** human approval. Stop, present the plan + clean-context summary to the human, refuse to advance until approved. Record the approval **verbatim** in Approvals (see below). |
+| **High** | Clean-context agent technical review **plus** separate human plan review and approval. Stop until both are complete; record human approval verbatim in Approvals. |
 
-Use the least costly reviewer capable of the consequence; preserve required independent, human, and specialist review and user-selected settings. Reuse valid review unless material scope, assumptions, approach, or risk changes.
+Record `Agent technical review: <source ref>` in Plan review for Elevated/High. The non-implementer agent assesses risk and verification-plan adequacy, citing revision, inspected evidence, findings, and disposition. Human approval alone proves neither review. Use the least costly capable reviewer; preserve human/specialist duties and user-selected settings. Reuse valid unchanged review.
 
 **Predicates:**
-- `approval.elevated_clean_context_review_present` — blocks when the field is empty/`—`/`self` AND no `## Plan review` section exists.
+- `approval.elevated_clean_context_review_present` / `approval.high_clean_context_review_present` — require a distinct agent technical review reference at Elevated / High.
 - `approval.high_risk_approval_recorded` — matches the Approvals pattern case-insensitively.
 - `approval.clean_context_does_not_satisfy_human` (non-waivable) — ensures the recorded approval is not the clean-context reference copied across.
 

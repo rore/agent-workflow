@@ -25,9 +25,14 @@
 
 **Verification plan:** Unit tests for OrderService; ArchUnit boundary tests.
 
-**Plan review:** Self-review.
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** Not required at Elevated risk level.
 
 **State:** Ready for review
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: fixture/session-result
+Reviewed revision: abc1234
+Verification adequacy: fixture checks cover the completion criteria.

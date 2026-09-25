@@ -25,7 +25,7 @@
 
 **Verification plan:** Existing unit suite.
 
-**Plan review:** clean-context review.
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** —
 
@@ -39,3 +39,8 @@
 
 **State:** Ready for review.
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: fixture/session-result
+Reviewed revision: abc1234
+Verification adequacy: fixture checks cover the completion criteria.

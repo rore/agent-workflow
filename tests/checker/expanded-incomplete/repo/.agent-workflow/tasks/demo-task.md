@@ -21,7 +21,7 @@
 
 **Verification plan:** WalletConcurrentRetryTest plus a restart-tolerance test.
 
-**Plan review:** Clean-context agent review.
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** —
 

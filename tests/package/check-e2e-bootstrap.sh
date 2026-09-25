@@ -464,7 +464,7 @@ cat > .agent-workflow/tasks/contract.md <<'EOF'
 
 **Verification plan:** When the contract changes, the behavior-contracts check shall cover the same behavior → behavior-contracts.
 
-**Plan review:** clean-context review bootstrap-e2e-review.
+**Plan review:** Agent technical review: bootstrap-e2e-review of fixture plan and verification.
 
 **Approvals:** Approved by user 2026-09-22: "Approve bootstrap E2E fixture."
 
@@ -474,6 +474,11 @@ cat > .agent-workflow/tasks/contract.md <<'EOF'
 
 **State:** Ready for review
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: bootstrap-e2e-result-review
+Reviewed revision: fixture-contract-revision
+Verification adequacy: behavior-contracts covers the same behavior; fixture evidence inspected.
 EOF
 printf '.agent-workflow/tasks/contract.md\0tests/contracts/wake.md\0' > changed.z
 "$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \

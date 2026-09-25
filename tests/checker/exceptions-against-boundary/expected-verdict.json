@@ -108,12 +108,22 @@
           "blocking": true
         },
         {
+          "name": "approval.high_clean_context_review_present",
+          "passed": true,
+          "blocking": true
+        },
+        {
           "name": "approval.high_risk_approval_recorded",
           "passed": true,
           "blocking": true
         },
         {
           "name": "approval.clean_context_does_not_satisfy_human",
+          "passed": true,
+          "blocking": true
+        },
+        {
+          "name": "review.agent_result_review_present",
           "passed": true,
           "blocking": true
         },

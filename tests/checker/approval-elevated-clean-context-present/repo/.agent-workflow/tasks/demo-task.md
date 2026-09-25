@@ -25,9 +25,14 @@
 
 **Verification plan:** Existing API conformance suite plus a new controller test.
 
-**Plan review:** clean-context session 2026-06-24/abc-123 — review confirmed the change is non-breaking and well-scoped.
+**Plan review:** Agent technical review: fixture/session-plan
 
 **Approvals:** —
 
 **State:** Ready for review.
 <!-- agent-workflow:end -->
+
+## Result review
+Agent technical review: fixture/session-result
+Reviewed revision: abc1234
+Verification adequacy: fixture checks cover the completion criteria.
