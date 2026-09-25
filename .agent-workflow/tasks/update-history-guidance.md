@@ -55,3 +55,11 @@ Not required at this risk level. User authorized delivery: "Okay, so let's make 
 ## Implementation
 
 - 2026-09-25: Isolated branch feat/update-history-guidance from current main. Non-exempt agent-loaded guidance selected; planning/review remains before implementation. No source edit yet.
+- 2026-09-25: Clean-context plan review approved; moved to Ready to implement. Added one pickup rule and clarified completed, active, and unavailable update cases in Integration. Regenerated dist/native installs; source/package parity and skill budget (1896/1900) passed. The first package attempt hit this machine's broken python3 alias; a process-local Python function repaired the run without product changes. Full nine-layer suite passed after an ignored .venv junction supplied the Windows OpenCode fixture interpreter; focused OpenCode test passed. No product runtime changed. Next: independent result review.
+
+## Evidence
+
+- Confirmed completed: operating guidance preserves history; Integration keeps the old record/checkout unchanged and starts future work from updated default branch with a new record.
+- Confirmed active: Integration retains first-commit baseline migration safeguards and requires real evidence for new agent-review gates.
+- Status unavailable: operating guidance leaves it unresolved; Integration asks the owner before migration and forbids inferred activity or backfilled evidence.
+- Source, dist, Claude, and Codex installed operating guidance match. Budget is 1896/1900. The full tests/run-all.sh suite passed all nine layers after the environment-only interpreter fix.
