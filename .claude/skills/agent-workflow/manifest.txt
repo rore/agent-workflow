@@ -26,7 +26,7 @@ agent-redline/operating-mode.md	6752
 agent-redline/references/per-checkpoint/api-change-checkpoint.md	2228
 agent-redline/references/per-checkpoint/blue-zone-work.md	1265
 agent-redline/references/per-checkpoint/boundary-violation.md	2818
-agent-redline/references/per-checkpoint/gray-zone-change.md	2062
+agent-redline/references/per-checkpoint/gray-zone-change.md	2196
 agent-redline/references/per-checkpoint/persistence-change-checkpoint.md	2673
 agent-redline/references/per-checkpoint/pr-discipline.md	2367
 agent-redline/references/per-checkpoint/red-zone-change.md	1902
