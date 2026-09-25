@@ -55,12 +55,12 @@ Key conventions/targets: SPEC before skill/checker changes; source in core/skill
 Astra clean-context review on 2026-09-25; see Plan review below. Two blocking corrections and three clarifications incorporated before human approval.
 
 **Approvals:**
-Pending human plan approval.
+Approved by user 2026-09-25T10:32:24Z: "i approve"
 
 **Exceptions:**
 —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 ## Plan review
 
@@ -68,8 +68,12 @@ Astra reviewed the draft independently on 2026-09-25. It caught the red-to-gray 
 
 The coordinator reviewed the five-outcome direction on 2026-09-25 and confirmed the gray floor, then clarified optional proposal batching/nonblocking behavior and missing-history evidence. This is not human approval.
 
+Human approval was verified directly in coordinator task 01a0d7cd-696b-76a0-8f2f-48a80a201905, user message 01a0d81f-632a-7461-b982-5a599c935076, after the coordinator presented the reviewed plan. Relay delivery relay-msg-48e784a90bae46c6bdf416ea384d3881 carried the approval to this task.
+
 ## Implementation
 
 - 2026-09-25: Established the record before discovery or implementation on isolated branch feat/workflow-proportionality.
 - 2026-09-25: Discovery and pre-edit Redline complete. Plan reviewed, corrected, and committed; no source implementation or tests started.
 - 2026-09-25 handoff: Source pallium-relay:relay-msg-3571b68fa45a48d989a2c4d3b04a9c62; record agent-workflow:workflow-proportionality. Last clean revision before coordinator clarifications 9aa5e07d966554b62324e81b08ab4e80d9df03c8. State Blocked pending exact human plan approval. Next: record approval, then change SPEC first.
+
+- 2026-09-25: Verified exact human approval and moved State to Ready to implement. Planned source targets: docs/SPEC.md, docs/DECISIONS.md, relevant integration/packaging/enforcement docs; core/skill/operating-mode.md and bootstrap-mode.md; core/templates/checkpoints/assess-risk.md and plan-and-review.md; bundled Redline operating/bootstrap guidance; core/checker/predicates.py; package/local-install scripts; consumer AGENTS/summary templates; focused checker/bootstrap/package tests; generated dist/ and committed Claude skill. No consumer repository edits.
