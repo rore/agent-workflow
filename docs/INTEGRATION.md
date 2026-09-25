@@ -188,7 +188,9 @@ The adapter uses `PYTHON` as one executable path, then a repository `.venv`, the
 
 ## Updating agent-workflow on an installed repo
 
-Before refreshing an active repo, inspect in-flight branches for Work Records first committed without a Requirement baseline. The current checker requires a valid baseline in a new record's first commit; adding one later will still fail `requirements.baseline_unchanged`. Do not refresh an affected branch until its owner has an authoritative baseline and a migration plan.
+Before treating an existing Work Record as in-flight during an update, verify its owning task/PR's live delivery state; Ready for review and a checked-out branch prove neither activity nor completion. Preserve completed records and old checkouts unchanged; start future work from the updated default branch with a new truthful record. If live status is unavailable, ask the owner before migration; do not infer activity or backfill evidence.
+
+For confirmed in-flight branches, inspect records first committed without a Requirement baseline and current agent-review evidence. The current checker requires a valid baseline in a new record's first commit; adding one later will still fail `requirements.baseline_unchanged`. Do not refresh a baseline-affected active branch until its owner has an authoritative baseline and migration plan; meet any new review gate with real evidence.
 
 For an affected branch, preserve the old branch and its review evidence. Create a replacement branch from the PR target, excluding the old invalid Work Record commit. Put the truthful baseline in the replacement Work Record's first commit. Carry over the reviewed implementation unchanged, and link both branches and commits in the PR. Verify the implementation diff is equivalent; rerun only the tooling and integration checks invalidated by the migration. Do not backdate or rewrite history, weaken the checker, or repeat product review solely because the tool was updated.
 
