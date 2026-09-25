@@ -32,7 +32,7 @@
 
 **Exceptions:** —
 
-**State:** Ready for review
+**State:** Blocked
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -52,3 +52,7 @@ Agent technical review: delegated Codex /root/upstream_review_plan, 2026-09-25. 
 Agent technical review: delegated Codex /root/upstream_result_review, 2026-09-25; no blocking code findings. The shared parser rejects both placeholders through plan and result gates, positive references remain accepted, and packaged copies match. The late plan-review caveat remains disclosed above.
 Reviewed revision: 7a847cec52c8a1e99a237a10ab156a072a70106b
 Verification adequacy: 27/27 focused tests, 414 Python tests, package drift/install/E2E bootstrap, Redline and local workflow checks adequately cover this narrow source fix before CI. One-shell full suite remains unverified because local Git Bash and WSL prerequisites are split; upstream PR CI is required.
+
+## Process gate, 2026-09-25
+
+CodeRabbit review on upstream PR #44 correctly flagged that the independent Elevated plan review occurred after implementation due to the initially incorrect Routine classification. Green checker/CI does not repair the timing requirement. PR #44 must not merge until the task owner approves a specific one-task exception or the workflow is otherwise remediated; approval requested. No exception is claimed yet.
