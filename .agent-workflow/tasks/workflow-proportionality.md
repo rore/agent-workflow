@@ -72,3 +72,5 @@ Pending human plan approval.
 ## Plan review
 
 Astra reviewed the draft independently on 2026-09-25. It caught the red-to-gray stale-policy contradiction and a proposed installer change that would increase rebuilds. It also required a precise workflow-only mirror scope, diagnostics for independent Elevated signals, and accurate treatment of authorized exceptions. The plan above incorporates each item. A bounded delta review of the corrected Plan and Verification plan passed with no new contradiction; this is not human approval.
+
+- 2026-09-25 handoff: Source pallium-relay:relay-msg-3571b68fa45a48d989a2c4d3b04a9c62; record agent-workflow:workflow-proportionality. Last reviewed clean revision 2f0483acf53d5ab7e4fe6fafc01291ad1fa1f78b. Branch feat/workflow-proportionality. Next: obtain exact human approval of the reviewed plan, then change SPEC first. No source implementation or tests yet.
