@@ -99,6 +99,8 @@ Bootstrap installs the same package for Claude Code and Codex, plus shared Pytho
 
 Shell commands bypass runtime guarding. PR CI validates final workflow artifacts and applicability, but cannot guarantee pre-edit ordering or prevent direct pushes.
 
+Codex hook trust rows use the supported `statusMessage` labels: `Agent Workflow: load workflow rules` supplies workflow guidance on prompt submission; `Agent Workflow: check structured edits` checks workflow prerequisites before supported file edits. Reinstalling upgrades existing owned registrations without adding duplicates and preserves third-party hooks. Changed hook definitions may require renewed trust review; inspect the command as well as its label. Labels do not grant trust or expand mutation coverage.
+
 ## Risk classification and how to keep it useful
 
 The harness ships with a bundled risk-classification subsystem (the `agent-redline` subtree). It exists for one reason: **to decide whether a change is structural or routine, deterministically, before the agent plans or codes.** Everything downstream — the Work Record shape, required approvals, plan-review depth — depends on the classification being right.

@@ -36,7 +36,7 @@ assets/schema/agent-workflow.schema.json	5067
 bootstrap-mode.md	25695
 hooks/check-plan.py	4854
 hooks/check-plan.sh	888
-hooks/install-settings.py	7942
+hooks/install-settings.py	8504
 hooks/merge-agents-section.py	5041
 hooks/reinforce-workflow.sh	565
 hooks/seed-workflow.sh	1591
