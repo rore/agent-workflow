@@ -27,6 +27,10 @@ Source: Pallium Relay `relay-msg-f11c1b4e009645ec8ec18966ad045c15`; user request
 - Official docs and bounded installed-app renderer inspection establish feasibility. Installer was inspected before context was persisted; this first commit records the unchanged authoritative requirement before product edits, not retroactive implementation evidence.
 - Clean completed worktree reused at current main 7f20e060728748ba04cfaed68039a82cec289ffa; branch feat/codex-hook-labels. Root checkout remains untouched.
 - Independent plan review complete; ready for metadata-only implementation.
+- Added the two Codex-only labels through existing ownership/update logic; no command/matcher changes. Tests cover fresh, missing/stale labels, third-party/description/timeout preservation, byte-identical repeat and Claude exclusion.
+- Regenerated package and local installs. Initial hook suite exposed the separately vendored dogfood .claude/hooks/install-settings.py copy; refreshed that exact generated copy from dist. The new label checks passed before this unrelated mirror-drift failure; the full suite is running after synchronization.
+- Executed the installed Codex renderer's actual title function with both labels and no-label fallback: all three passed. No app or trust settings changed. Official changed-definition trust rule supports the documented possible re-review; exact metadata hash inclusion is not claimed.
+- Full tests/run-all.sh passed all nine layers after mirror synchronization. Package drift, committed/local install sync and bootstrap probes passed. No code changes followed this run; independent final result review is next.
 
 ## Plan review
 
@@ -35,3 +39,5 @@ Agent technical review: /root/codex_labels_review. Approved at 8b97bc2cdebcfbab9
 ## Evidence
 
 Installed app.asar read-only evidence: webview/assets/hooks-settings-copy-1f0ea6fb4a93.js function a(e,t,n) trims e.statusMessage and chooses numberedHookTitle ({index} - {statusMessage}) or fallbackHookTitle (Hook {index}). hooks-settings-source-label-71972f8ce657.js imports that title function as I and calls I(e,r,y) in the hook row beside the Trust button. No app files changed; this proves the renderer path, not a live screenshot or future-version guarantee.
+
+Verification: tests/run-all.sh exit 0 on 2026-09-27 (budget, schema, work-record, checker, redline, tuner, hooks, links, package). New installer test prints Codex approval labels, legacy/stale upgrade, preservation and byte-idempotency passed; malformed JSON and Claude tests also pass. Installed renderer execution returned `1 - Agent Workflow: load workflow rules`, `1 - Agent Workflow: check structured edits`, and asserted fallback `Hook 2`. git diff --check clean. Initial hook-only run failed only on the unsynchronized dogfood installer; full rerun passed after refreshing its generated copy. No user trust/config settings changed and no claim of a live approval-screen screenshot.

@@ -156,6 +156,53 @@ if "$PY" -c "import base64,json,sys; d=json.load(open(sys.argv[1])); hs=[h for g
 else
   echo "  FAIL: Codex hook installation"; fail=1
 fi
+# Approval labels use Codex's supported statusMessage, not an unsupported name.
+if "$PY" - "$INST" "$TMP/codex.json" "$TMP/s.json" <<'PY'
+import json, subprocess, sys
+installer, path, claude_path = sys.argv[1:]
+expected = {"UserPromptSubmit": "Agent Workflow: load workflow rules",
+            "PreToolUse": "Agent Workflow: check structured edits"}
+with open(path) as f:
+    fresh = json.load(f)
+for event, label in expected.items():
+    owned = [h for g in fresh["hooks"][event] for h in g["hooks"]
+             if "agent-workflow-runtime.sh" in h.get("command", "")]
+    assert len(owned) == 1 and owned[0]["statusMessage"] == label
+legacy = json.loads(json.dumps(fresh))
+legacy["description"] = "Keep this shared hook file description"
+for event in expected:
+    for group in legacy["hooks"][event]:
+        for hook in group["hooks"]:
+            if "agent-workflow-runtime.sh" in hook.get("command", ""):
+                hook["timeout"] = 17
+                if event == "UserPromptSubmit":
+                    del hook["statusMessage"]
+                else:
+                    hook["statusMessage"] = "Old label"
+            else:
+                hook["statusMessage"] = "Keep third-party label"
+with open(path, "w") as f:
+    json.dump(legacy, f)
+subprocess.run([sys.executable, installer, "--runtime", "codex", "--settings", path], check=True)
+with open(path, "rb") as f:
+    upgraded_bytes = f.read()
+upgraded = json.loads(upgraded_bytes)
+for event, label in expected.items():
+    for group in legacy["hooks"][event]:
+        for hook in group["hooks"]:
+            if "agent-workflow-runtime.sh" in hook.get("command", ""):
+                hook["statusMessage"] = label
+assert upgraded == legacy  # Commands, matchers and every unrelated field survive.
+subprocess.run([sys.executable, installer, "--runtime", "codex", "--settings", path], check=True)
+with open(path, "rb") as f:
+    assert f.read() == upgraded_bytes
+with open(claude_path) as f:
+    assert all("statusMessage" not in h for gs in json.load(f)["hooks"].values()
+               for g in gs for h in g["hooks"])
+PY
+then echo "  ok: Codex approval labels, legacy/stale upgrade, preservation and byte-idempotency"
+else echo "  FAIL: Codex approval labels"; fail=1
+fi
 rm -rf "$TMP"
 
 
