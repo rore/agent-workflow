@@ -14,19 +14,23 @@ Source: Pallium Relay `relay-msg-f11c1b4e009645ec8ec18966ad045c15`; user request
 **Reason:** Independent pre-edit review /root/codex_labels_review classifies installer and generated mirrors gray/watch, tests/docs/record blue; no red surface or checkpoint. Metadata only, but shipped harness code requires independent reviews.
 **Discovery:** Official https://learn.chatgpt.com/docs/hooks supports statusMessage. Installed Codex 26.924.2738.0 trust-row title function uses statusMessage, otherwise Hook N. Installer owns exact command matches and already upgrades commandWindows.
 **Material assumptions:** statusMessage remains supported and displayed in the target version; unsupported metadata or changes to execution/trust would return to planning. No canonical roadmap item applies to this small installer improvement.
-**Plan:** Await independent technical review. Add the two supported Codex statusMessage values using existing runtime registration/update logic; preserve other fields and Claude behavior. Extend existing installer checks for creation, legacy/stale-label upgrade, preservation and byte-identical repeat. Add concise trust-label and re-review guidance, regenerate package/local installs. Do not add name or file-level description, change commands, or modify trust state.
-**Verification plan:** Fresh install has exact seed/guard labels and unchanged portable commands; legacy/stale labels upgrade without duplicates and preserve third-party hooks, description and owned timeout; repeated install is byte-identical; malformed input unchanged; Claude has no new Codex metadata. Run existing hook suite, package consistency and full tests/run-all.sh. Verify installed renderer title function against sample labels; inspect changed-hook trust behavior without writing trust settings. Independent result review checks baseline and adequacy.
-**Plan review:** Pending independent agent technical review.
+**Plan:** Add the two supported Codex statusMessage values using existing runtime registration/update logic; preserve other fields and Claude behavior. Extend existing installer checks for creation, legacy/stale-label upgrade, preservation and byte-identical repeat. Add concise trust-label and re-review guidance, regenerate package/local installs. Do not add name or file-level description, change commands, or modify trust state.
+**Verification plan:** Fresh/legacy/stale-label installation, preservation, byte-identical repeat, malformed-input safety and unchanged Claude metadata -> existing tests/hooks/run.sh installer cases. Approval-title use -> execute the installed renderer title function with the two labels and fallback. Trust semantics -> official changed-definition trust documentation; no trust-setting writes. Regression/package consistency -> tests/run-all.sh. Baseline and verification adequacy -> independent result review.
+**Plan review:** Agent technical review: /root/codex_labels_review, approved baseline revision 8b97bc2cdebcfbab943cdef5e3567bea14efc4b4; see Plan review below.
 **Approvals:** Not required at this risk level; manager coordinates any genuinely new human gate.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
 - Official docs and bounded installed-app renderer inspection establish feasibility. Installer was inspected before context was persisted; this first commit records the unchanged authoritative requirement before product edits, not retroactive implementation evidence.
 - Clean completed worktree reused at current main 7f20e060728748ba04cfaed68039a82cec289ffa; branch feat/codex-hook-labels. Root checkout remains untouched.
-- Blocked only on required independent plan review.
+- Independent plan review complete; ready for metadata-only implementation.
+
+## Plan review
+
+Agent technical review: /root/codex_labels_review. Approved at 8b97bc2cdebcfbab943cdef5e3567bea14efc4b4. Inspected record, full installer/call sites, installer tests, integration guidance, policy and SPEC sections 8, 9.4, 9.7. No blockers; verification adequate. Preserve exact-command ownership, document possible renewed trust review, and do not broaden pre-existing duplicate-registration reconciliation. The criterion means upgrades add no duplicates.
 
 ## Evidence
 
