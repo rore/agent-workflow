@@ -12,10 +12,10 @@ Source: Relay relay-msg-064c8acafcfd4ca4bb99983e4c91810f. Direct user authorizat
 **Risk:** High
 **Complexity:** Simple
 **Reason:** Intended SPEC clarification touches the normative red contract and architecture-review checkpoint. Skill/checkpoint/package paths are gray/watch, record blue. One bounded prose change; no executable behavior change.
-**Discovery:** Pending bounded inspection of existing reuse and adequacy rules after this baseline commit.
+**Discovery:** SPEC 9.4 already requires valid-review reuse, but application identity and destination compatibility are implicit. Operating mode and plan checkpoint repeat the short rule; result checkpoint assesses adequacy without concrete failure-path/interface questions. Budgets are tight (operating 1896/1900, plan 886/900, result 623/700); replace redundant text and cross-reference one shared reuse instruction, without raising ceilings.
 **Material assumptions:** These clarify existing review/evidence responsibilities; materially new exemptions or destination/human/trust waivers would exceed authorization and return to planning.
-**Plan:** Pending discovery and independent technical plan review; edit SPEC first if its normative meaning needs clarification, then propagate only load-bearing instructions.
-**Verification plan:** Two authorized behaviors and preserved duties -> independent plan/result scenario review. Source/dist coherence and token ceilings -> existing budget/link/package checks. Mandatory pre-push repository gate -> one tests/run-all.sh run after edits; no repeated suite without a new reason.
+**Plan:** Edit SPEC 9.4 and 9.7 first: reuse completed technical review after confirming unchanged reviewed identity/revision and destination compatibility; retain destination verification, applicability, records, human and trust duties. Put shared executable guidance in plan-and-review.md, cross-reference from operating-mode.md and review-result.md; add failure-path and fake-interface questions to existing result review, with the smallest targeted check for uncertainty. Append DECISIONS rationale and regenerate/install dist and local mirrors. No runtime/checker change. Stop for any new exemption, risk waiver or budget increase.
+**Verification plan:** Reuse unchanged local application, reject unverified identity/revision or incompatible destination, review only materially uncovered behavior/assumptions/risk, and preserve independent/human/trust/record duties -> independent plan/result scenario review. Adequacy detects an unexercised failure path or fake repeating an invalid interface and calls for a targeted check, not a new stage -> independent result scenario review. Source/dist coherence and unchanged token ceilings -> existing budget/link/package checks. Mandatory pre-push gate -> one tests/run-all.sh after edits; repeat only for a new material reason.
 **Plan review:** Pending independent agent technical review.
 **Approvals:** Approved by user 2026-10-01: "Okay, so let's do it." Authorizes the manager's two bounded instruction changes, verified direct source above; separate final human result review remains with manager.
 **Exceptions:** —
@@ -25,3 +25,5 @@ Source: Relay relay-msg-064c8acafcfd4ca4bb99983e4c91810f. Direct user authorizat
 ## Implementation
 
 Applicability: normative SPEC and agent instructions are never documentation-exempt. Clean completed managed checkout reused on feat/review-reuse-adequacy from live main f778377b2d093966f0f82d59a9364f1e3b29f629; root checkout remains untouched. Baseline recorded before discovery, planning or source edits. Blocked on discovery and required technical plan review, not a duplicate permission request.
+
+Discovery complete. The change clarifies existing gates; no executable mechanism or extra review stage is needed. No applicable tracked roadmap item has been assigned; this is a bounded corrective instruction task.
