@@ -13,10 +13,10 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 **Risk:** Elevated
 **Complexity:** Moderate
 **Reason:** Extension and bootstrap instruction paths are gray/watch under the effective policy; tests and ordinary docs are blue. Several shipped bootstrap surfaces and layout-dependent behavior require independent technical review. No red contract/schema/CI/policy edits are intended.
-**Discovery:** Pending; baseline established before repository discovery.
+**Discovery:** Routing is agent guidance, not a runtime detector. Redline bootstrap Phase 1 currently selects Python/JVM or generic zone-only; Phase 2 already requires actual-path evidence and human approval. Packaging enumerates extension folders without a new build mechanism. Existing zone-only thresholds are 30/80 files and 800/1500 lines. Node can reuse the policy schema/reporter with adapter none; no operating-mode override is needed. Existing tests do not exercise Node proposal adaptation. Manager supplied inspected Minimap layout/script/mirror evidence; second layout will be a clearly labeled representative TypeScript workspace fixture.
 **Material assumptions:** The existing extension mechanism can support a zone-only Node profile without normative/schema changes. Contrary evidence returns this task to planning and the manager for any required human gate.
-**Plan:** Pending discovery and independent plan review; do not implement yet.
-**Verification plan:** Pending mapping from completion criteria to focused checks.
+**Plan:** Add only extensions/node/{profile.md,scaffold.md,adapter.yaml,suppressions.yaml}. Profile discovers tracked package manifests (including nested/workspace), scripts, exports/bin/main and TypeScript/test configuration, actual source/test/config/lock paths and generated mirror parity. Propose narrow evidence-backed red/blue/watch entries under existing Phase 2/3 approval, never blanket JS/UI blue or generated/lock exclusions. Zone-only boundaries remain not configured; no boundary tool or dependency. Route positive package.json evidence to node, ambiguous mixed builds to human choice, no package to existing fallback; only add node to workflow finding enum. Register small new-file budgets, integrate focused schema/reporter checks into existing redline layer, and update docs/REDLINE.md, docs/PACKAGING.md and decision rationale. No SPEC/schema/active-policy/CI changes. Stop for material scope expansion, contract changes, or unsupported backend assumptions. Then package/install, full suite, independent result review, PR/CI and review-thread closure before merge.
+**Verification plan:** Two layouts: independent blind bootstrap exercise reads shipped instructions with Minimap-like nested fixture and distinct TypeScript workspace fixture; reports exact candidates, test commands, human approval boundary and mirror obligations, without consumer writes. Runnable schema/reporter checks validate adapted policy proposals for both layouts, red sensitive-source/governance paths, blue narrow tests, gray unknown code, watch manifests/locks/mirrors, adapter none, and suppression detection on source. No-package and Python/JVM routing preservation: blind exercise scenarios plus unchanged existing suites. Package/link/budget validation proves extension ships and references resolve; tests/run-all.sh runs before push. Native agent exercise is instruction evidence, not proof of an automatic detector or a boundary backend. Independent result review compares baseline and real failure paths.
 **Plan review:** Pending clean-context technical review.
 **Approvals:** Not required at Elevated; additional High-risk or expanded scope gates go through the manager.
 **Exceptions:** —
@@ -26,6 +26,7 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 ## Implementation
 
 - Baseline established on `feat/node-bootstrap-profile` at current main `b94cb5017923f3d7fa3090a315058d3b6f3bcad2`, in the reused clean isolated checkout. Discovery and implementation have not begun. Blocked only on normal discovery/planning/review gates.
+- Discovery: existing profile/scaffold/adapter/suppression shape and automatic extension packaging suffice. No new parser, policy schema, framework taxonomy, or boundary service is needed. Proposed plan awaits independent technical review.
 
 ## Evidence
 
