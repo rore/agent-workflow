@@ -20,7 +20,7 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 **Plan review:** Agent technical review: /root/node_profile_review, approved at f0311496ed783e3fbcb14af04872a1f307c4ee26; see independent Plan review below. Verification refinements include ambiguous mixed builds and protected contract tests beneath test trees, with narrow suppression exemptions.
 **Approvals:** Not required at Elevated; additional High-risk or expanded scope gates go through the manager.
 **Exceptions:** —
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -30,6 +30,7 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 - Plan approved. Exact intended edits: `core/agent-redline/extensions/node/{profile.md,scaffold.md,adapter.yaml,suppressions.yaml}`, both bootstrap mode files, `tests/budget/budget.yaml`, `tests/redline/{run.sh,check-node-profile.py}`, `tests/package/check-install-probe.sh`, `docs/{REDLINE.md,PACKAGING.md,DECISIONS.md}`, and generated `dist/agent-workflow/` plus native mirrors. No test-only detection logic changes. Main retains docs, packaging/install, verification synthesis, review and delivery.
 - Added the Node zone-only extension, positive owned-manifest routing with mixed-build deferral, test-tree suppression exemption override, and two representative policy adaptations through the shipped schema/reporter.
 - Forward-use refinements: owned nested manifests and generic sensitive write/lifecycle responsibilities are explicit; ordinary docs exclude canonical contracts; guarded roots include gray code. Blind draft omission of shared self-protection led to an explicit shared-template scaffold pointer, not a new governance rule. Documentation/decision rationale updated; package/native mirrors regenerated once. No applicable canonical roadmap item found in the existing board.
+- Final review follow-up: CodeRabbit's sole decision-order finding declined because the log explicitly requires newest-first. Main found the new Node test invocation omitted the documented `python3` fallback when `python` is absent; reuse the existing interpreter-selection convention, honoring explicit `PYTHON`. Only this test-runner delta requires bounded verification/review; profile behavior and completed broad technical reviews remain covered.
 
 ## Plan review
 
