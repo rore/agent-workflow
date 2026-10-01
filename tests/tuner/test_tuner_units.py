@@ -124,6 +124,29 @@ def test_pr_changed_files_survives_multipage_response():
     assert files == ["src/A.java", "src/B.java", "src/C.java"]
 
 
+def test_calibrate_fetches_changed_files_once_per_pr():
+    fixture = REPO_ROOT / "tests" / "tuner" / "fixtures" / "glob-calibration"
+    runner = tune.GhRunner(fixture_root=fixture)
+    calls = []
+    original = runner.pr_changed_files
+
+    def counted(repo, number):
+        calls.append(number)
+        return original(repo, number)
+
+    runner.pr_changed_files = counted
+    suggestions = tune.calibrate(runner, "org/repo", 30, fixture / "policy.yaml")
+
+    assert calls == [1, 2, 3]
+    assert [
+        (item["rule"]["path"], item["fired"], item["total"], item["suggestion"])
+        for item in suggestions
+    ] == [
+        ("src/main/java/**/*Controller.java", 1, 3, "keep-as-is"),
+        ("src/main/java/**/infrastructure/external/**", 1, 3, "keep-as-is"),
+    ]
+
+
 def test_pr_approvers_dedupes_across_pages():
     """pr_approvers now paginates; `unique` is per-page, so cross-page dupes
     must be removed in Python."""

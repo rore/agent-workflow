@@ -13,7 +13,7 @@ A consumer needs both. The skill alone is just guidance; the checker alone has n
 
 ## What's in the skill package
 
-The committed `dist/agent-workflow/` tree (52 files), produced by `scripts/package-skill.sh`. After install (clone the repo, copy the directory identically into `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`), each skill directory looks like:
+The committed `dist/agent-workflow/` tree, produced by `scripts/package-skill.sh`. After install (clone the repo, copy the directory identically into `.claude/skills/agent-workflow/` and `.agents/skills/agent-workflow/`), each skill directory looks like:
 
 ```
 agent-workflow/
@@ -48,6 +48,8 @@ agent-workflow/
         ├── python/                           # Python/import-linter profile + adapter + scripts/
         └── node/                             # JS/TS bootstrap profile; no boundary backend
 ```
+
+The package carries scoped LF attributes to preserve manifest byte sizes after checkout. Bootstrap also merges narrow LF rules for deployed scripts/hooks and records executable Git modes for shell entrypoints, preserving consumer attributes. Verification includes a fresh `core.autocrlf=true` checkout; comparing the just-copied directories alone does not establish portability.
 
 The CI checker source (`core/checker/`), the parser (`core/work_record/`), and the dev-repo tests do **not** ship as part of the skill — only the pre-built `agent-workflow-check.py` does, so consumers can install without running any build.
 

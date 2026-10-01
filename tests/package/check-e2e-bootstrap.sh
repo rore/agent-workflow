@@ -4,8 +4,8 @@
 # Layer-3 end-to-end. Simulates a consumer adopting the skill from the
 # committed dist, mechanically performs the file-write steps bootstrap
 # Phase 4 would execute, then runs bootstrap Phase 6's self-probe
-# (write _probe.md Work Record, run the vendored checker, expect clean
-# exit). This is the cheapest test that proves what we ship actually
+# (write the bootstrap Work Record, produce required Redline evidence,
+# run the installed adapter, and report gates separately). This proves what we ship
 # installs and runs.
 #
 # What this covers:
@@ -20,7 +20,7 @@
 #       * scripts/agent-redline-report.py vendored from agent-redline/scripts/
 #       * .github/workflows/agent-workflow.yml from templates/.github/workflows/
 #       * .agent-workflow/tasks/ skeleton
-#   - Bootstrap Phase 6 probe plus the deterministic applicability approval
+#   - Bootstrap Phase 6 required-verdict probe plus applicability approval
 #     seam and packaged reporter/checker journeys in two consumer layouts.
 #
 # What this does NOT cover:
@@ -92,12 +92,22 @@ for fragment in (
     "Never downgrade.",
     "Proposal-only defers.",
     "Do not put behavior-contract paths or authority in `agent-workflow.yaml`.",
+    "complete real diff",
+    "--lines-per-file-z",
+    "--head-ref",
+    "--changed-files-z changed-files.z --redline-verdict redline-verdict.json",
+    "feedback disposition",
+    "Fresh installs use `docs/agent/`",
 ):
     assert fragment in bootstrap, fragment
 PYEOF
 
 cd "$CONSUMER"
 git init -q
+printf 'consumer baseline\n' > README.md
+git add README.md
+git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm baseline
+BASE_SHA="$(git rev-parse HEAD)"
 
 # --- Step 2: Phase 4 writes — perform mechanical equivalents of what
 # Concrete runtime install operations documented by bootstrap.
@@ -193,7 +203,7 @@ Path("agent-workflow.yaml").write_text(
     "  backend: local\n"
     "  local:\n"
     "    taskPath: \".agent-workflow/tasks/{slug}.md\"\n"
-    "redline: optional\n",
+    "redline: required\nredlineVerdictPath: redline-verdict.json\n",
     encoding="utf-8",
 )
 PYEOF
@@ -235,58 +245,106 @@ grep -Fq 'pull_request_review:' .github/workflows/agent-workflow.yml
 grep -Fq 'types: [submitted, dismissed]' .github/workflows/agent-workflow.yml
 grep -Fq 'checked in PR CI, but GitHub does not require it for merge' .github/workflows/agent-workflow.yml
 
-# --- Step 3: Phase 6 self-probe. Write a minimal compact-shape Work
-# Record at _probe slug and run the vendored checker against it.
-# Pattern from core/skill/bootstrap-mode.md §6.2.
-cat > .agent-workflow/tasks/_probe.md <<'EOF'
+# --- Step 3: Phase 6 probe. Use an expanded bootstrap record and the
+# complete committed install diff; required Redline evidence is genuine.
+cat > .agent-workflow/tasks/bootstrap-consumer.md <<'EOF'
 <!-- agent-workflow:start -->
-**Outcome:** Probe Work Record for the bootstrap self-check.
+**Outcome:** Install the workflow skill and its required governance checks.
 
 **Target:** consumer-repo
 
-**Scope:** None — probe record only.
+**Scope:** Skill package, checker, reporter, configuration, task guidance, and CI workflow.
 
-**Constraints:** —
+**Constraints:** Preserve required Redline and report gate outcomes accurately.
 
-**Completion criteria:** Checker exits cleanly against this record.
+**Completion criteria:** Installed adapter receives genuine reporter evidence and emits a structured result.
 
-**Requirement baseline:** {"source":"bootstrap-self-probe","outcome":"Probe Work Record for the bootstrap self-check.","scope":"None — probe record only.","constraints":"—","completion_criteria":"Checker exits cleanly against this record."}
+**Requirement baseline:** {"source":"bootstrap-phase-6","outcome":"Install the workflow skill and its required governance checks.","scope":"Skill package, checker, reporter, configuration, task guidance, and CI workflow.","constraints":"Preserve required Redline and report gate outcomes accurately.","completion_criteria":"Installed adapter receives genuine reporter evidence and emits a structured result."}
 
-**Risk:** Routine
+**Risk:** High
 
-**Complexity:** Simple
+**Complexity:** Moderate
 
-**Reason:** —
+**Reason:** Bootstrap changes governance configuration and CI evidence paths.
 
-**Approach:** —
+**Discovery:** Fresh install creates the configured package, policy, scripts, and workflow.
 
-**Verification:** This file is verified by `scripts/agent-workflow-check.py --slug _probe`.
+**Material assumptions:** The installed backend can execute its checker; missing reporter evidence must block.
+
+**Plan:** Run the installed adapter against the exact bootstrap slug and complete installation diff.
+
+**Verification plan:** Generate a reporter verdict from the committed diff; assert evidence availability separately from task-gate status.
+
+**Plan review:** Fixture for the mechanical bootstrap test.
+
+**Approvals:** Omitted; the fixture does not synthesize human approval.
+
+**Exceptions:** —
 
 **State:** Ready for review
 <!-- agent-workflow:end -->
 EOF
 
+# Commit first so paths, numstat, patch, and verified head describe the same
+# complete installation change set.
+git add -A
+git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm "bootstrap install fixture"
+HEAD_SHA="$(git rev-parse HEAD)"
+git diff --name-only -z --no-renames "$BASE_SHA" "$HEAD_SHA" > changed-files.z
+git diff --numstat -z --no-renames "$BASE_SHA" "$HEAD_SHA" > lines-per-file.z
+git diff --no-ext-diff --no-color --no-renames -U0 "$BASE_SHA" "$HEAD_SHA" > diff-unified.patch
+
+set +e
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z changed-files.z --lines-per-file-z lines-per-file.z \
+  --diff-unified diff-unified.patch --head-ref "$HEAD_SHA" \
+  --json-out redline-verdict.json > redline-output.txt 2>&1
+REPORTER_EXIT=$?
+set -e
+[[ "$REPORTER_EXIT" -le 2 && -s redline-verdict.json ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+verdict = json.loads(Path("redline-verdict.json").read_text(encoding="utf-8"))
+assert "error" not in verdict, verdict
+PYEOF
+
+# Required mode blocks without the artifact, then receives the real verdict.
+mv redline-verdict.json redline-verdict.saved.json
 set +e
 PYTHON="$PY" bash scripts/agent-workflow-runtime.sh codex check \
-  --repo-root . --slug _probe > probe-output.txt 2>&1
+  --repo-root . --slug bootstrap-consumer --changed-files-z changed-files.z \
+  > missing-verdict-output.json 2> missing-verdict-error.txt
+MISSING_EXIT=$?
+set -e
+mv redline-verdict.saved.json redline-verdict.json
+[[ "$MISSING_EXIT" -eq 2 ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+payload = json.loads(Path("missing-verdict-output.json").read_text(encoding="utf-8"))
+record = next(r for r in payload["records"] if r["slug"] == "bootstrap-consumer")
+predicate = next(p for p in record["predicates"] if p["name"] == "risk.redline_findings_available")
+assert not predicate["passed"]
+PYEOF
+
+set +e
+PYTHON="$PY" bash scripts/agent-workflow-runtime.sh codex check \
+  --repo-root . --slug bootstrap-consumer --changed-files-z changed-files.z \
+  --redline-verdict redline-verdict.json > probe-output.json 2> probe-error.txt
 PROBE_EXIT=$?
 set -e
 
-# Exit code 0 = clean; 1 = advisory only (e.g. redline verdict not
-# present — that's fine for a probe on a synthetic repo). Anything
-# else fails the simulation.
-if (( PROBE_EXIT > 1 )); then
-  echo "FAIL: probe checker exit code $PROBE_EXIT (expected 0 or 1)" >&2
-  echo "--- checker output ---" >&2
-  cat probe-output.txt >&2
-  exit 2
-fi
-
-# Confirm the checker actually produced a verdict (non-empty output).
-if [[ ! -s probe-output.txt ]]; then
-  echo "FAIL: probe checker produced no output" >&2
-  exit 2
-fi
+[[ "$PROBE_EXIT" -le 2 ]]
+"$PY" - <<'PYEOF'
+import json
+from pathlib import Path
+payload = json.loads(Path("probe-output.json").read_text(encoding="utf-8"))
+record = next(r for r in payload["records"] if r["slug"] == "bootstrap-consumer")
+predicate = next(p for p in record["predicates"] if p["name"] == "risk.redline_findings_available")
+assert predicate["passed"], predicate
+assert Path("redline-verdict.json").is_file()
+PYEOF
 
 # Invalid slugs remain structured in the packaged normal checker path.
 set +e
@@ -628,7 +686,7 @@ PYEOF
 # The packaged resolver uses the configured non-default path, preserves a supplied
 # identity, and does not mutate the consumer record.
 mkdir -p .work/items
-cp .agent-workflow/tasks/_probe.md .work/items/persisted.record.md
+cp .agent-workflow/tasks/bootstrap-consumer.md .work/items/persisted.record.md
 cp .work/items/persisted.record.md resolver-before.md
 "$PY" scripts/agent-workflow-check.py --repo-root . --resolve-work-record \
   --work-record-ref agent-workflow:persisted > resolver-output.json 2> resolver-error.txt
@@ -741,4 +799,4 @@ result = json.loads(payload)
 assert (result["status"], result["reason"]) == ("error", "unsafe_record_path")
 PYEOF
 
-echo "ok: e2e bootstrap simulation passed (install → probe → approved applicability in two layouts → packaged read-only resolver; checker exit $PROBE_EXIT)."
+echo "ok: e2e bootstrap simulation passed (install → genuine required-verdict probe → approved applicability in two layouts → packaged read-only resolver; reporter exit $REPORTER_EXIT, checker exit $PROBE_EXIT, missing-verdict exit $MISSING_EXIT)."

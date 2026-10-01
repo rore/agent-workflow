@@ -61,6 +61,7 @@ require() {
 # reference check covers in-markdown links, and this list backs up the
 # files those references depend on.
 require "SKILL.md"
+require ".gitattributes"
 require "operating-mode.md"
 require "bootstrap-mode.md"
 require "templates/checkpoints/establish-context.md"
@@ -72,6 +73,7 @@ require "templates/agent-workflow.yaml.template"
 require "templates/work-record-routine.md"
 require "templates/work-record-expanded.md"
 require "templates/skill-feedback.md"
+require "templates/agent-workflow-consumer.gitattributes"
 require "templates/.github/workflows/agent-workflow.yml.template"
 require "assets/schema/agent-workflow.schema.json"
 require "scripts/agent-workflow-check.py"
@@ -116,6 +118,22 @@ if not re.search(r"^name:\s*\S+", fm, re.MULTILINE):
     sys.exit("missing/empty name")
 if not re.search(r"^description:\s*\S+", fm, re.MULTILINE):
     sys.exit("missing/empty description")
+PYEOF
+
+"$PY" - "$PROBE" <<'PYEOF' || errors+=("bootstrap summary guidance is stale")
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+summary = (root / "templates/bootstrap-summary.md.template").read_text(encoding="utf-8")
+bootstrap = (root / "bootstrap-mode.md").read_text(encoding="utf-8")
+node = (root / "agent-redline/extensions/node/scaffold.md").read_text(encoding="utf-8")
+assert "Default exemptions: `**/tests/**`" not in summary
+assert "`exemptPaths`: <exact configured list>" in summary
+assert "suppressions.exemptPaths: []" in node
+assert "docs/agent/" in bootstrap and "docs/agent-redline/skills/" in bootstrap
+assert "feedback disposition" in summary.lower()
+assert "risk.redline_findings_available" in bootstrap
+assert "--redline-verdict redline-verdict.json" in bootstrap
 PYEOF
 
 # Invokability.

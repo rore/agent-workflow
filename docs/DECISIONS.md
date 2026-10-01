@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-10-01 — Genuine diff evidence and semantic catalog handling at bootstrap
+
+**Decision:** Feed the reporter lossless changed paths, per-file counts and unified diff from the same trusted comparison; use exact patch-head content to distinguish suppression-catalog data from active directives. Preserve classification and scan uncertain data conservatively. Bootstrap verifies the actual required-mode adapter path and a fresh LF-preserving checkout, reports effective configuration and unresolved controls, and carries its existing closing-report obligation into task verification. Calibration fetches each PR's files once per run.
+
+**Alternatives considered:** Check only filenames or template strings; exempt complete installed catalogs or vendored/test trees; weaken the probe config; normalize a consumer repository wholesale; add a chat-inspection checker or new reminders.
+
+**Rationale:** Minimap adoption exposed gaps between isolated fixtures and the installed CI/probe paths. Definitions are data, but edits to their governance still need review. Actual invocation and checkout tests cover those paths without new infrastructure. User-facing delivery remains agent behavior: a forward-use exercise provides evidence for that exercise, not a guarantee that future agents comply or that native hooks enforce mutations.
+
 ## 2026-10-01 — Small Node bootstrap profile without a boundary backend
 
 **Decision:** Ship a zone-only `node` extension through the existing profile/scaffold/adapter/suppression mechanism. Bootstrap uses actual package manifests, scripts, entry points, configuration, source/test layouts, and generated mirrors as evidence for human-approved, narrow policy candidates. Mixed builds defer extension choice to the developer. Reuse zone-only size thresholds; retain classification of locks and generated mirrors and explicit mirror-parity verification. Report the missing boundary backend as not configured.

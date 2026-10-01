@@ -51,12 +51,18 @@ for layer in "${LAYERS[@]}"; do
   bash tests/run-all.sh --only "$layer"
 done
 
-echo "  redline.node-profile ..."
+echo "  redline.reporter-evidence-unit ..."
 if [[ -n "${PYTHON:-}" ]]; then
-  NODE_PY="$PYTHON"
+  REDLINE_PY="$PYTHON"
 elif command -v python >/dev/null 2>&1; then
-  NODE_PY=python
+  REDLINE_PY=python
 else
-  NODE_PY=python3
+  REDLINE_PY=python3
 fi
-"$NODE_PY" "$REPO_ROOT/tests/redline/check-node-profile.py"
+"$REDLINE_PY" -m pytest tests/reporter/test_reporter_unit.py -q
+
+echo "  redline.node-profile ..."
+"$REDLINE_PY" "$REPO_ROOT/tests/redline/check-node-profile.py"
+
+echo "  redline.ci-evidence ..."
+"$REDLINE_PY" "$REPO_ROOT/tests/redline/check-ci-evidence.py"

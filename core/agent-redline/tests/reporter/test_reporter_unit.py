@@ -18,6 +18,7 @@ and Diff objects in-memory and assert against the Verdict.
 from __future__ import annotations
 
 import sys
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -42,6 +43,11 @@ from core.reporter.reporter import (  # noqa: E402
     resolve_boundary_input,
     load_diff_from_files,
     load_policy,
+    SuppressionsConfig,
+    parse_unified_diff,
+    scan_suppressions,
+    suppression_catalog_ranges,
+    _decode_git_path_header,
 )
 
 
@@ -65,6 +71,159 @@ class TestChangedPathInput:
         changed.write_bytes(b"docs/guide.md")
         with pytest.raises(ValueError, match="incomplete"):
             load_diff_from_files(changed, nul_delimited=True)
+
+    def test_nul_numstat_is_lossless_and_requires_exact_path_set(self, tmp_path: Path) -> None:
+        paths = ["space name.md", "tab\tname.md", "line\nname.md", "用户.md"]
+        changed = tmp_path / "changed.z"
+        changed.write_bytes(b"".join(p.encode() + b"\0" for p in paths))
+        numstat = tmp_path / "numstat.z"
+        numstat.write_bytes(b"".join(b"1\t2\t" + p.encode() + b"\0" for p in paths))
+        diff = load_diff_from_files(changed, lines_per_file_z_path=numstat, nul_delimited=True)
+        assert diff.changed_files == paths
+        assert diff.lines_by_file == {path: 3 for path in paths}
+
+        numstat.write_bytes(b"1\t2\tmissing.md\0")
+        with pytest.raises(ValueError, match="do not match"):
+            load_diff_from_files(changed, lines_per_file_z_path=numstat, nul_delimited=True)
+
+    def test_nul_numstat_rejects_malformed_or_incomplete_records(self, tmp_path: Path) -> None:
+        changed = tmp_path / "changed.z"
+        changed.write_bytes(b"ok.md\0")
+        numstat = tmp_path / "numstat.z"
+        for raw in (b"1\t2\tok.md", b"x\t2\tok.md\0", b"1\t2\0"):
+            numstat.write_bytes(raw)
+            with pytest.raises(ValueError):
+                load_diff_from_files(changed, lines_per_file_z_path=numstat, nul_delimited=True)
+
+
+class TestUnifiedDiffEvidence:
+
+    def test_quoted_git_path_decodes_control_and_utf8_bytes(self) -> None:
+        assert _decode_git_path_header('"b/a\\t\\n\\345\\206\\205.txt"') == "b/a\t\n内.txt"
+        assert _decode_git_path_header("b/space name.ts\t") == "b/space name.ts"
+
+    def test_quoted_unified_header_keeps_decoded_unusual_path(self) -> None:
+        patch = 'diff --git "a/src/a\\t\\n\\345\\206\\205.py" "b/src/a\\t\\n\\345\\206\\205.py"\n--- /dev/null\n+++ "b/src/a\\t\\n\\345\\206\\205.py"\n@@ -0,0 +1 @@\n+value = 1\n'
+        assert parse_unified_diff(patch) == {"src/a\t\n内.py": [(1, "value = 1")]}
+
+    def test_plus_plus_added_line_is_not_treated_as_file_header(self) -> None:
+        patch = """diff --git a/x.py b/x.py
+index 1111111..2222222 100644
+--- a/x.py
++++ b/x.py
+@@ -0,0 +1 @@
++++ # noqa\n"""
+        parsed = parse_unified_diff(patch)
+        assert parsed == {"x.py": [(1, "++ # noqa") ]}
+
+
+class TestSuppressionCatalogDefinitions:
+
+    config = SuppressionsConfig(inline_comments=["# noqa"], annotations=["@SuppressWarnings"], config_keys=["ignore_imports"])
+
+    def test_only_exact_catalog_scalar_occurrences_are_masked(self) -> None:
+        source = "suppressions:\n  inlineComments:\n    - '# noqa' # real trailing # noqa\n"
+        ranges = suppression_catalog_ranges(source, self.config)
+        assert ranges is not None
+        line = "    - '# noqa' # real trailing # noqa"
+        found = scan_suppressions(
+            {".agent-redline/suppressions.yaml": [(3, line)]}, self.config,
+            {"gray": [".agent-redline/suppressions.yaml"]},
+            {(".agent-redline/suppressions.yaml", line_no, marker): spans
+             for (line_no, marker), spans in ranges.items()},
+        )
+        assert len(found) == 1
+        assert found[0].line == 3
+
+    def test_exact_multiline_scalar_marker_is_masked_but_outside_comment_fires(self) -> None:
+        source = "suppressions:\n  inlineComments:\n    - |-\n      # noqa\n# noqa\n"
+        ranges = suppression_catalog_ranges(source, self.config)
+        assert ranges is not None
+        spans = {("catalog.yml", line, marker): value for (line, marker), value in ranges.items()}
+        found = scan_suppressions(
+            {"catalog.yml": [(4, "      # noqa"), (5, "# noqa")]}, self.config,
+            {"gray": ["catalog.yml"]}, spans,
+        )
+        assert [(match.line, match.marker) for match in found] == [(5, "# noqa")]
+
+    def test_annotation_and_config_catalog_spans_do_not_mask_real_source_edits(self) -> None:
+        config = SuppressionsConfig(
+            inline_comments=["# noqa"], annotations=["@SuppressWarnings"],
+            config_files=["*.toml"], config_keys=["ignore_imports"],
+        )
+        source = (
+            "suppressions:\n  inlineComments: ['# noqa']\n"
+            "  annotations: ['@SuppressWarnings']\n"
+            "  configEdits:\n    files: ['*.toml']\n    keys: ['ignore_imports']\n"
+        )
+        ranges = suppression_catalog_ranges(source, config)
+        assert ranges is not None
+        assert {marker for _, marker in ranges} == {"# noqa", "@SuppressWarnings", "ignore_imports"}
+        keyed = {("catalog.yaml", line, marker): spans for (line, marker), spans in ranges.items()}
+        found = scan_suppressions(
+            {"catalog.yaml": [(2, "  inlineComments: ['# noqa']")],
+             "src/Example.java": [(4, '@SuppressWarnings("unchecked")')],
+             "pyproject.toml": [(7, "ignore_imports = ['legacy']")]},
+            config,
+            {"gray": ["catalog.yaml", "src/Example.java", "pyproject.toml"]},
+            keyed,
+        )
+        assert {(match.file, match.category, match.marker) for match in found} == {
+            ("src/Example.java", "annotation", "@SuppressWarnings"),
+            ("pyproject.toml", "configEdit", "ignore_imports"),
+        }
+
+    @pytest.mark.parametrize("source", [
+        "suppressions: &s {inlineComments: ['# noqa']}\n",
+        "suppressions: {inlineComments: ['# noqa'], extra: []}\n",
+        "suppressions: {configEdits: {files: ['*.toml']}}\n",
+        "suppressions: {inlineComments: ['# noqa'], inlineComments: ['# noqa']}\n",
+    ])
+    def test_ambiguous_or_incomplete_catalog_fails_closed(self, source: str) -> None:
+        assert suppression_catalog_ranges(source, self.config) is None
+
+    def test_head_masks_require_exact_regular_git_postimage(self, tmp_path: Path) -> None:
+        from core.reporter.reporter import suppression_definition_ranges_for_head
+
+        def git(*args: str, data: bytes | None = None) -> str:
+            result = subprocess.run(
+                ["git", *args], cwd=tmp_path, input=data, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            assert result.returncode == 0, result.stderr.decode("utf-8", "replace")
+            return result.stdout.decode("ascii").strip()
+
+        git("init", "-q")
+        git("config", "user.email", "unit@example.invalid")
+        git("config", "user.name", "Reporter unit")
+        path = ".agent-redline/suppressions.yaml"
+        source = "suppressions:\n  inlineComments: ['# noqa']\n"
+        target = tmp_path / path
+        target.parent.mkdir(parents=True)
+        target.write_text(source, encoding="utf-8")
+        git("add", path)
+        git("commit", "-qm", "catalog")
+        head = git("rev-parse", "HEAD")
+        added = [(i, line) for i, line in enumerate(source.splitlines(), 1)]
+        masks = suppression_definition_ranges_for_head(
+            [path], {path: added}, self.config, head, tmp_path,
+        )
+        assert (path, 2, "# noqa") in masks
+
+        # A local postimage that differs from the patch-head blob cannot supply
+        # definition masks, even though the catalog path itself is valid.
+        assert suppression_definition_ranges_for_head(
+            [path], {path: [(2, "  inlineComments: ['# noqa'] # extra")]},
+            self.config, head, tmp_path,
+        ) == {}
+
+        blob = git("hash-object", "-w", "--stdin", data=b"suppressions:\n  inlineComments: ['# noqa']\n").strip()
+        git("update-index", "--add", "--cacheinfo", f"120000,{blob},{path}")
+        git("commit", "-qm", "catalog symlink mode")
+        symlink_head = git("rev-parse", "HEAD")
+        assert suppression_definition_ranges_for_head(
+            [path], {path: added}, self.config, symlink_head, tmp_path,
+        ) == {}
 
 
 # --------------------------------------------------------------------------
@@ -1071,7 +1230,7 @@ class TestScanSuppressions:
         matches = scan_suppressions(added, config, classification)
         assert matches == []
 
-    def test_vendored_suppressions_file_is_not_scanned_as_code(self):
+    def test_vendored_suppressions_marker_is_active_without_verified_catalog_evidence(self):
         from core.reporter.reporter import scan_suppressions, SuppressionsConfig
         config = SuppressionsConfig(
             inline_comments=["# noqa"],
@@ -1085,7 +1244,7 @@ class TestScanSuppressions:
         }
         classification = {"red": [], "blue": [], "gray": [".agent-redline/suppressions.yaml"], "watch": []}
         matches = scan_suppressions(added, config, classification)
-        assert matches == []
+        assert [(match.line, match.marker) for match in matches] == [(5, "# noqa")]
 
     def test_annotation_no_match_on_extended_name(self):
         from core.reporter.reporter import scan_suppressions, SuppressionsConfig
