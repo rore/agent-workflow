@@ -5,7 +5,7 @@ Write the plan, then a reviewer (self / clean-context agent / human) signs off b
 ## Fields
 
 **Compact (routine) shape — two fields:**
-- **Approach** — one or two lines naming the implementation strategy.
+- **Approach** — one or two lines naming the implementation strategy. Concrete enough that a reviewer can predict the diff.
 - **Verification** — the test or CI job that proves the completion criterion. Name the test class or job, not "unit tests."
 
 Self-review is sufficient; no Plan review field on compact.
