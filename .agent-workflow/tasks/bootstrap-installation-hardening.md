@@ -20,13 +20,31 @@
 
 **Reason:** Clean-context Redline review reports gray/watch core and packaged harness surfaces (Elevated floor). Engineering judgment raises Risk to High because shared suppression scanning and CI evidence wiring control governance verification across installs.
 
-**Discovery:** Pending bounded reproduction; no product discovery or implementation performed yet.
+**Discovery:** Combined template and active dogfood CI omit unified diff and per-file line counts. Reporter already accepts both but parses numstat by newline and Git patch paths without C-quote decoding; lossless filenames need focused repair. Scanner skips only the root vendored marker file, not definition data in complete installed copies. Phase 6 probe omits required evidence; the existing mechanical bootstrap test uses optional Redline, masking this. Combined versus nested docs destinations differ; summary hardcodes test exemptions despite Node []. Tuner fetches PR files inside each rule loop. The reported closing failure violated existing render/feedback instructions; task criteria and result verification did not map that user-facing obligation. Native interception/trust and remote controls are explicitly unverified, not new bugs. Evidence: main468f1d5 source, original report, named read-only consumer record/summary, and bounded discovery agents below.
 
 **Material assumptions:** Existing normative requirements cover the reported failures. If discovery requires a changed contract, stop and present the exact decision before SPEC-first work. Installation/environment limits may be irreducible; report them instead of redefining completion as full native enforcement.
 
-**Plan:** Pending discovery and required plan reviews; no implementation authorized by this record yet.
+**Plan:**
+1. Repair existing reporter evidence ingestion for lossless NUL numstat and Git C-quoted unified paths while retaining legacy CLI inputs. Generate no-rename NUL paths/numstat and -U0 patch from the same trusted merge-base/head pair in the combined template and active dogfood CI. Preserve artifact, label/owner, schema, exit-code and checker gates. Fix sibling shipped pre-push/extension invocation paths only where this same filename/evidence root cause applies; no CI redesign.
+2. Reproduce definition false positives and recognize marker definition data narrowly, not whole vendored/test files. Keep active directive comments, annotations and config edits detected, and marker-file governance classification independent. Stop if narrow semantics cannot exclude definitions without a suppression bypass; obtain review of the exact discriminator before accepting it.
+3. Replace the incomplete Phase 6 command with an installed-adapter probe supplied genuine fresh reporter evidence. Prefer the canonical bootstrap record and actual complete change set over a dummy Routine record misclassified against a real bootstrap diff. Record backend reachability separately from task gate failures/native interception, and verify required-mode behavior using the shipped adapter and existing test seam.
+4. Ship scoped package LF attributes; bootstrap preserves consumer attributes while adding only owned skill/script/hook LF rules and explicit executable Git modes. Verify real commit/fresh checkout under core.autocrlf=true and manifest bytes/shell startup. No repository-wide normalization or consumer writes.
+5. Reconcile combined Redline docs destination through existing bootstrap composition; preserve standalone/legacy destinations and links rather than duplicate documentation. Render selected effective suppression exemptions, doc destinations, interpreter/verdict scope and runtime/remote status from actual configuration in the summary.
+6. Fetch each PR file list once before the tuner red-rule loop; preserve output and existing errors. Add call-count verification to the existing unit suite, no persisted cache.
+7. Use existing bootstrap task criteria, Verification and result review to map the already-required rendered summary and feedback disposition to closing evidence. Run a clean-context forward-use closing exercise. Do not add a chat-inspection checker or claim instructions prevent agent noncompliance; keep that irreducible limit explicit.
+8. Validate available installed adapter/backend probes and accurate evidence labels; reuse unchanged runtime tests. Native tool interception, Codex trust and consumer remote protection remain unverified unless actual authoritative evidence is obtained without environment/consumer mutation.
+Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.template; .github/workflows/agent-workflow.yml (architecture-review); core/agent-redline/core/reporter/reporter.py and justified sibling invocation templates; core/skill/bootstrap-mode.md; core/templates/bootstrap-summary.md.template; nested bootstrap composition guidance; scripts/agent-workflow-tune.py; scripts/package-skill.sh and a scoped package attribute asset; focused existing runner/tests; docs/INTEGRATION.md, REDLINE.md, PACKAGING.md and DECISIONS.md; generated dist/.claude mirrors. Use existing helpers, stdlib/PyYAML and test runners; no new dependency/backend. No SPEC change is currently needed: these fixes fulfill existing verification/reporting contracts. If discovery requires one, stop for the exact normative decision and edit SPEC first.
 
-**Verification plan:** Pending evidence-driven plan; preserve the eight observable criteria above.
+**Verification plan:**
+- CI evidence and unusual filenames -> execute actual YAML run blocks with real Git commits and reporter; source suppression and line fail/warn thresholds must fire; verify trusted diverged merge-base, no-renames, excludes/binary and quoted/tab/Unicode/newline filename fidelity where supported.
+- Definition semantics -> actual two installed Node marker copies produce no directive findings; real source/guarded-test directives, annotation/config edits and active comments near definition data remain detected; governance classification remains intact.
+- Required probe -> installed adapter executes documented procedure with a genuine fresh reporter artifact and required config; missing evidence still blocks; probe scope and task-gate status are not conflated.
+- Portability -> representative committed install freshly checked out with core.autocrlf=true, both manifest byte sizes/parity, LF shell startup and executable index modes; pre-existing consumer attributes unchanged outside appended owned rules.
+- Effective summary/paths -> actual two-layout bootstrap data and Node [] populate one destination/exemption result; no duplicate docs; selected interpreter, evidence scope and unresolved controls visible.
+- Tuner -> at least two PRs/two rules, one file-list fetch each, unchanged calibrated suggestions and existing fixture output.
+- Closing delivery -> independent forward-use output renders the actual summary and feedback disposition; reviewed transcript/artifact reference records success or failure honestly. No deterministic proof of future agent compliance claimed.
+- Evidence limits -> existing shared runtime/installation tests plus supported installed adapter checks; native interception/trust/remote enforcement labeled degraded/unverified unless authoritative live proof exists.
+- Delivery -> package/install sync, one full mandatory nine-layer suite at final product revision, independent smart plan/result reviews, separate human High-risk plan/result gates, real GitHub CI and every review thread resolved before merge.
 
 **Plan review:** Pending clean-context technical review and separate human review.
 
@@ -50,9 +68,16 @@ Pallium Relay assignment `relay-msg-b9886b1c5467439581aeb65b02e24066`, delivery 
 
 ## Evidence
 
-Initial record only; no implementation verification claimed.
+- Initial local checker with genuine freshly generated record-only reporter artifact: structural/baseline fields pass; expected blocking pending technical/human plan reviews. No readiness claimed. Baseline first commit 67d6b4e, before product discovery/edits.
+- Source bootstrap, summary, nested Redline bootstrap, relevant SPEC verification/result/native-contract sections, integration/default-profile/packaging/Redline guidance and authoring discipline inspected. No normative change identified.
+- /root/install_portability_discovery reproduces missing required verdict using the real checker fixture (exit 2); named consumer record independently confirms literal installed probe exit 2 and genuine-verdict retry exit 0. Source/effective consumer summary confirm Node [] and composed docs destination, not generic test exemptions.
+- Original Relay report explicitly admits missing rendered closing report despite existing instructions. No live consumer conversation inspection or native-interception proof inferred from that report.
+- Canonical roadmap board has local-doctor in Now; this installation-hardening task is not assigned to that item's broader scope. Do not mark it complete or mutate its owning roadmap.
+
+## Plan review
+
+Pending clean-context technical review of this concrete plan, then separate human plan approval. Product edits remain blocked.
 
 ## Result review
 
 Pending.
-
