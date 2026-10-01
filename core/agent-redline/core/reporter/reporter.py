@@ -2171,7 +2171,9 @@ def load_diff_from_files(
 
     added_by_file: dict[str, list[tuple[int, str]]] | None = None
     if diff_unified_path is not None:
-        added_by_file = parse_unified_diff(diff_unified_path.read_bytes().decode("utf-8"))
+        added_by_file = parse_unified_diff(
+            diff_unified_path.read_bytes().decode("utf-8", errors="surrogateescape")
+        )
         if set(added_by_file) - set(files):
             raise ValueError("unified diff paths do not match changed-files paths")
 

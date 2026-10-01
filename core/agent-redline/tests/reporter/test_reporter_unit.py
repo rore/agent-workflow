@@ -98,6 +98,42 @@ class TestChangedPathInput:
 
 class TestUnifiedDiffEvidence:
 
+    def test_non_utf8_patch_content_loads_and_ascii_marker_still_fires(self, tmp_path: Path) -> None:
+        def git(*args: str) -> bytes:
+            result = subprocess.run(
+                ["git", *args], cwd=tmp_path, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            assert result.returncode == 0, result.stderr.decode("utf-8", "replace")
+            return result.stdout
+
+        git("init", "-q")
+        git("config", "user.email", "unit@example.invalid")
+        git("config", "user.name", "Reporter unit")
+        path = "src/example.py"
+        target = tmp_path / path
+        target.parent.mkdir()
+        target.write_bytes(b"before = 1\n")
+        git("add", path)
+        git("commit", "-qm", "base")
+        target.write_bytes(b"before = 1\n# noqa \xff\nmarker-free \xfe\n")
+
+        changed = tmp_path / "changed.z"
+        changed.write_bytes(path.encode() + b"\0")
+        patch = tmp_path / "diff.patch"
+        patch.write_bytes(git("diff", "--no-ext-diff", "--no-textconv", "--unified=0", "--no-renames", "HEAD", "--", path))
+        diff = load_diff_from_files(changed, diff_unified_path=patch, nul_delimited=True)
+        assert diff.added_by_file == {
+            path: [(2, "# noqa \udcff"), (3, "marker-free \udcfe")]
+        }
+
+        classification = {"red": [], "blue": [], "gray": [path]}
+        matches = scan_suppressions(
+            diff.added_by_file, SuppressionsConfig(inline_comments=["# noqa"]), classification,
+        )
+        assert [(match.file, match.line, match.marker) for match in matches] == [(path, 2, "# noqa")]
+        assert scan_suppressions(diff.added_by_file, None, classification) == []
+
     def test_quoted_git_path_decodes_control_and_utf8_bytes(self) -> None:
         assert _decode_git_path_header('"b/a\\t\\n\\345\\206\\205.txt"') == "b/a\t\n内.txt"
         assert _decode_git_path_header("b/space name.ts\t") == "b/space name.ts"

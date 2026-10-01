@@ -61,6 +61,13 @@ CONSUMER="$TMP/consumer-repo"
 SKILL="$CONSUMER/.claude/skills/agent-workflow"
 mkdir -p "$CONSUMER" "$(dirname "$SKILL")"
 
+cd "$CONSUMER"
+git init -q
+printf 'consumer baseline\n' > README.md
+git add README.md
+git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm baseline
+BASE_SHA="$(git rev-parse HEAD)"
+
 # --- Step 1: install the skill (the documented "clone this repo and copy
 # dist/agent-workflow/ into your .claude/skills/" path).
 cp -r "$DIST" "$SKILL"
@@ -92,8 +99,9 @@ for fragment in (
     "Never downgrade.",
     "Proposal-only defers.",
     "Do not put behavior-contract paths or authority in `agent-workflow.yaml`.",
-    "complete real diff",
-    "--lines-per-file-z",
+    "complete diff exactly matches a verified commit",
+    "derive NUL paths, NUL numstat, and `-U0` patch",
+    "git diff --cached <saved baseline>",
     "--head-ref",
     "--changed-files-z changed-files.z --redline-verdict redline-verdict.json",
     "feedback disposition",
@@ -101,13 +109,6 @@ for fragment in (
 ):
     assert fragment in bootstrap, fragment
 PYEOF
-
-cd "$CONSUMER"
-git init -q
-printf 'consumer baseline\n' > README.md
-git add README.md
-git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm baseline
-BASE_SHA="$(git rev-parse HEAD)"
 
 # --- Step 2: Phase 4 writes — perform mechanical equivalents of what
 # Concrete runtime install operations documented by bootstrap.
@@ -161,7 +162,7 @@ mkdir -p docs/agent
 cp "$SKILL/agent-redline/references/per-checkpoint/blue-zone-work.md" docs/agent/
 "$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
 grep -Fq '`docs/agent/`' AGENTS.md
-! grep -Fq '`docs/agent-redline/skills/`' AGENTS.md
+if grep -Fq '`docs/agent-redline/skills/`' AGENTS.md; then exit 2; fi
 [[ -f docs/agent/blue-zone-work.md ]]
 cp AGENTS.md AGENTS.before
 "$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
@@ -180,7 +181,7 @@ EOF
   --template "$SKILL/templates/agents-section.md.template" \
   --redline-docs-path docs/agent-redline/skills/ >/dev/null
 grep -Fq '`docs/agent-redline/skills/`' legacy/AGENTS.md
-! grep -Fq '`docs/agent/`' legacy/AGENTS.md
+if grep -Fq '`docs/agent/`' legacy/AGENTS.md; then exit 2; fi
 [[ -f legacy/docs/agent-redline/skills/blue-zone-work.md && ! -e legacy/docs/agent ]]
 cmp -s legacy/docs/agent-redline/skills/blue-zone-work.md legacy/blue-zone-work.before
 cp legacy/AGENTS.md legacy/AGENTS.before
@@ -274,8 +275,13 @@ grep -Fq 'pull_request_review:' .github/workflows/agent-workflow.yml
 grep -Fq 'types: [submitted, dismissed]' .github/workflows/agent-workflow.yml
 grep -Fq 'checked in PR CI, but GitHub does not require it for merge' .github/workflows/agent-workflow.yml
 
-# --- Step 3: Phase 6 probe. Use an expanded bootstrap record and the
-# complete committed install diff; required Redline evidence is genuine.
+# --- Step 3: commit Phase 4, then probe mixed committed-install and
+# uncommitted-Phase-6 changes using one saved-baseline comparison.
+git add -A
+git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm "bootstrap Phase 4 install"
+PHASE4_HEAD="$(git rev-parse HEAD)"
+USER_INDEX_TREE="$(git write-tree)"
+
 cat > .agent-workflow/tasks/bootstrap-consumer.md <<'EOF'
 <!-- agent-workflow:start -->
 **Outcome:** Install the workflow skill and its required governance checks.
@@ -314,19 +320,75 @@ cat > .agent-workflow/tasks/bootstrap-consumer.md <<'EOF'
 <!-- agent-workflow:end -->
 EOF
 
-# Commit first so paths, numstat, patch, and verified head describe the same
-# complete installation change set.
-git add -A
-git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm "bootstrap install fixture"
-HEAD_SHA="$(git rev-parse HEAD)"
-git diff --name-only -z --no-renames "$BASE_SHA" "$HEAD_SHA" > changed-files.z
-git diff --numstat -z --no-renames "$BASE_SHA" "$HEAD_SHA" > lines-per-file.z
-git diff --no-ext-diff --no-color --no-renames -U0 "$BASE_SHA" "$HEAD_SHA" > diff-unified.patch
+printf 'scripts/agent-workflow-check.py\n' > .gitignore
+TEMP_INDEX="$TMP/bootstrap.index"
+GIT_INDEX_FILE="$TEMP_INDEX" git read-tree "$PHASE4_HEAD"
+GIT_INDEX_FILE="$TEMP_INDEX" git add -A
+BOOTSTRAP_CHANGED_FILES="$TMP/bootstrap-changed-files.z"
+BOOTSTRAP_LINES_PER_FILE="$TMP/bootstrap-lines-per-file.z"
+BOOTSTRAP_DIFF="$TMP/bootstrap-diff.patch"
+GIT_INDEX_FILE="$TEMP_INDEX" git diff --cached --name-only -z --no-renames "$BASE_SHA" > "$BOOTSTRAP_CHANGED_FILES"
+GIT_INDEX_FILE="$TEMP_INDEX" git diff --cached --numstat -z --no-renames "$BASE_SHA" > "$BOOTSTRAP_LINES_PER_FILE"
+GIT_INDEX_FILE="$TEMP_INDEX" git diff --cached --no-ext-diff --no-textconv --no-color --no-renames -U0 "$BASE_SHA" > "$BOOTSTRAP_DIFF"
+[[ "$(git write-tree)" == "$USER_INDEX_TREE" ]]
+"$PY" - "$BOOTSTRAP_CHANGED_FILES" "$BOOTSTRAP_LINES_PER_FILE" "$BOOTSTRAP_DIFF" <<'PYEOF'
+import sys
+from pathlib import Path
+changed, numstat, patch = map(lambda p: Path(p).read_bytes(), sys.argv[1:])
+paths = set(changed.split(b"\0")[:-1])
+assert b"agent-workflow.yaml" in paths
+assert b"scripts/agent-workflow-check.py" in paths
+assert b".agent-workflow/tasks/bootstrap-consumer.md" in paths
+assert b".gitignore" in paths
+assert b"agent-workflow.yaml" in numstat and b"bootstrap-consumer.md" in numstat
+assert b"agent-workflow-check.py" in patch and b"bootstrap-consumer.md" in patch
+PYEOF
+
+git ls-files --error-unmatch scripts/agent-workflow-check.py >/dev/null
+git check-ignore --no-index -q scripts/agent-workflow-check.py
+[[ "$(git write-tree)" == "$USER_INDEX_TREE" ]]
+MIXED_VERDICT="$TMP/mixed-redline-verdict.json"
+set +e
+"$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
+  --changed-files-z "$BOOTSTRAP_CHANGED_FILES" \
+  --lines-per-file-z "$BOOTSTRAP_LINES_PER_FILE" \
+  --diff-unified "$BOOTSTRAP_DIFF" --json-out "$MIXED_VERDICT" \
+  > "$TMP/mixed-redline-output.txt" 2>&1
+MIXED_REPORTER_EXIT=$?
+set -e
+[[ "$MIXED_REPORTER_EXIT" -le 2 && -s "$MIXED_VERDICT" ]]
+set +e
+PYTHON="$PY" bash scripts/agent-workflow-runtime.sh codex check \
+  --repo-root . --slug bootstrap-consumer \
+  --changed-files-z "$BOOTSTRAP_CHANGED_FILES" \
+  --redline-verdict "$MIXED_VERDICT" \
+  > "$TMP/mixed-probe-output.json" 2> "$TMP/mixed-probe-error.txt"
+MIXED_PROBE_EXIT=$?
+set -e
+[[ "$MIXED_PROBE_EXIT" -le 2 ]]
+"$PY" - "$MIXED_VERDICT" "$TMP/mixed-probe-output.json" <<'PYEOF'
+import json, sys
+from pathlib import Path
+verdict = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert "error" not in verdict, verdict
+payload = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+record = next(r for r in payload["records"] if r["slug"] == "bootstrap-consumer")
+predicate = next(p for p in record["predicates"] if p["name"] == "risk.redline_findings_available")
+assert predicate["passed"], predicate
+PYEOF
+
+# Commit only Phase 6 source files; generated evidence stays outside the repo.
+git add -- .agent-workflow/tasks/bootstrap-consumer.md .gitignore
+git -c user.name=Bootstrap -c user.email=bootstrap@example.invalid commit -qm "bootstrap Phase 6 record"
+PHASE6_HEAD="$(git rev-parse HEAD)"
+git diff --name-only -z --no-renames "$BASE_SHA" "$PHASE6_HEAD" > changed-files.z
+git diff --numstat -z --no-renames "$BASE_SHA" "$PHASE6_HEAD" > lines-per-file.z
+git diff --no-ext-diff --no-textconv --no-color --no-renames -U0 "$BASE_SHA" "$PHASE6_HEAD" > diff-unified.patch
 
 set +e
 "$PY" scripts/agent-redline-report.py --policy agent-redline-policy.yaml \
   --changed-files-z changed-files.z --lines-per-file-z lines-per-file.z \
-  --diff-unified diff-unified.patch --head-ref "$HEAD_SHA" \
+  --diff-unified diff-unified.patch --head-ref "$PHASE6_HEAD" \
   --json-out redline-verdict.json > redline-output.txt 2>&1
 REPORTER_EXIT=$?
 set -e
@@ -828,4 +890,4 @@ result = json.loads(payload)
 assert (result["status"], result["reason"]) == ("error", "unsafe_record_path")
 PYEOF
 
-echo "ok: e2e bootstrap simulation passed (install → genuine required-verdict probe → approved applicability in two layouts → packaged read-only resolver; reporter exit $REPORTER_EXIT, checker exit $PROBE_EXIT, missing-verdict exit $MISSING_EXIT)."
+echo "ok: e2e bootstrap simulation passed (install → mixed/full required-verdict probes → approved applicability in two layouts → packaged read-only resolver; mixed reporter/checker $MIXED_REPORTER_EXIT/$MIXED_PROBE_EXIT, committed reporter/checker/missing $REPORTER_EXIT/$PROBE_EXIT/$MISSING_EXIT)."

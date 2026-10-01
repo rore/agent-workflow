@@ -34,7 +34,7 @@ Each phase ends with developer review or a defined notification. Do not skip ahe
 
 ## Before Phase 1 — write the Work Record for THIS task
 
-Bootstrap is itself an engineering task. Operating-mode discipline applies: **write a Work Record before starting.**
+Bootstrap is itself an engineering task. Before writing its Work Record, capture target Git `HEAD` as the bootstrap baseline (separate from the requirements baseline); record it under Evidence. If unavailable, mark the probe unverified.
 
 Path: `.agent-workflow/tasks/bootstrap-<repo-name>.md` in the **target** repo. Use the **expanded shape** — bootstrap touches CI, policy, and AGENTS surfaces (default profile §3 classifies as Elevated; never compact).
 
@@ -49,8 +49,8 @@ Minimum fields before Phase 1:
 - **Complexity:** Simple for stub / fresh repos; Moderate for repos with existing tools to compose with
 - **Reason:** "bootstrap installs CI gates and AGENTS.md — default profile §3 Elevated"
 - **Plan:** "walk bootstrap's six phases per the skill"
-- **Verification plan:** genuine reporter verdict reaches the adapter; record its evidence predicate, overall gates, rendered summary, feedback disposition, then PR CI.
-- **Evidence:** summary path, reporter artifact, probe output, and truthful feedback disposition.
+- **Verification plan:** Phase 6 full-diff reporter, adapter, summary, feedback disposition; then PR CI.
+- **Evidence:** bootstrap baseline, summary, reporter artifact, probe, feedback disposition.
 - **State:** `Ready to implement`
 
 Update State to `Ready for review` when Phase 6 finishes. Record the rendered summary, feedback disposition, probe predicate and blockers; add the PR CI verdict later.
@@ -252,7 +252,7 @@ Write `docs/agent-workflow-bootstrap-summary.md` from [`templates/bootstrap-summ
 
 ### Run the probe
 
-Use the canonical bootstrap Work Record and complete real diff. For uncommitted files with `HEAD`, initialize a temporary `GIT_INDEX_FILE` with `git read-tree HEAD`, then run `git add -A` and `git diff --cached HEAD`; never alter the user's index. Without `HEAD`, report unverified. Follow the reporter recipe in `templates/.github/workflows/agent-workflow.yml.template`: `--changed-files-z`, `--lines-per-file-z`, `--diff-unified`; add `--head-ref` only for a verified commit. Without it, scan conservatively and report catalog masking unverified.
+For committed Phase 4, compare the saved baseline with the verified install commit. For uncommitted Phase 6, initialize a temporary `GIT_INDEX_FILE` with `git read-tree HEAD`, then `git add -A`; derive NUL paths, NUL numstat, and `-U0` patch from `git diff --cached <saved baseline>` using that same index. Keep evidence files outside the repo and never alter the user's index. Follow the reporter recipe in `templates/.github/workflows/agent-workflow.yml.template`; pass `--head-ref` only when the complete diff exactly matches a verified commit. Otherwise omit it; scan conservatively and report catalog masking unverified.
 
 Run the installed checker with its actual slug and evidence: POSIX `bash scripts/agent-workflow-runtime.sh codex check --repo-root . --slug <bootstrap-slug> --changed-files-z changed-files.z --redline-verdict redline-verdict.json`; PowerShell `& scripts/agent-workflow-runtime.ps1 codex check --repo-root . --slug <bootstrap-slug> --changed-files-z changed-files.z --redline-verdict redline-verdict.json`. Keep `redline: required`; report `risk.redline_findings_available` apart from task-gate status. Missing complete evidence means unverified. Get approval before installing missing prerequisites.
 
