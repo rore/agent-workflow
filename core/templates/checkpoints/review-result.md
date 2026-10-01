@@ -7,7 +7,7 @@
 
 ## What stays reviewer judgment (SPEC §9.7)
 
-The reviewer of Elevated and High work MUST also assess:
+The reviewer at every Risk level MUST assess:
 
 - whether completion criteria are satisfied
 - whether the recorded Verification Record is **adequate** (the harness validates presence and structural well-formedness, not adequacy)

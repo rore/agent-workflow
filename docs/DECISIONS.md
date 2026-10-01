@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-10-01 — Reuse reviewed applications and probe test blind spots
+
+**Decision:** Applying an unchanged reviewed change reuses completed technical plan/result reviews after checking source identity/revision and destination compatibility. Records cite the original evidence; destination verification, applicability, human review/approval and runtime trust remain separate. Only materially uncovered decisions need further technical review. Existing result review explicitly checks the relevant failure-triggering path and whether fakes reflect the real interface; uncertainty calls for the smallest targeted behavioral check.
+
+**Alternatives considered:** Full duplicate planning/review for every local application; installation exemptions; another test-review stage; replacing behavioral evidence with model choice or a passing suite.
+
+**Rationale:** Repeating unchanged technical judgment adds cost without covering a new decision. Conversely, identical blind reviews can miss a failure never entered by short tests, and a fake can repeat an invalid production assumption. Source/destination checks preserve the reuse boundary; concrete adequacy questions address shared blind spots inside existing checkpoints, without new mechanisms or waived gates.
+
 ## 2026-09-25 — Agent technical review is additive to human review
 
 **Decision:** Elevated and High plans and results require a clean-context non-implementer agent technical review that independently assesses risk and verification adequacy, records a source reference and reviewed revision, and exposes findings and expertise limits. Keep existing High human plan review/approval and separate human result review, plus external specialist requirements. Human review, approval, or a checkpoint label cannot replace the agent review. The checker gates only structural evidence in existing Work Record fields/prose; it cannot authenticate reviewers or judge review quality. Routine remains unchanged.
@@ -182,11 +190,3 @@ the final repository state.
 **Alternatives considered:** A global missing-Work-Record opt-out; hardcoded `roadmap/` and `docs/` paths; ordered allow rules; treating bootstrap's protection observation as durable; using prose or model classification.
 
 **Rationale:** Pallium repeatedly needed a manual roadmap exception, while installed workflow guidance contradicted it. Repository layouts differ, documentation can include governance contracts, and branch protection changes over time. Bootstrap discovery plus human approval makes the standing preference durable; deterministic all-path evaluation, Redline/protected-surface precedence, and fresh protection checks keep the exception narrow.
-
-## 2026-10-01 — Reuse reviewed applications and probe test blind spots
-
-**Decision:** Applying an unchanged reviewed change reuses completed technical plan/result reviews after checking source identity/revision and destination compatibility. Records cite the original evidence; destination verification, applicability, human review/approval and runtime trust remain separate. Only materially uncovered decisions need further technical review. Existing result review explicitly checks the relevant failure-triggering path and whether fakes reflect the real interface; uncertainty calls for the smallest targeted behavioral check.
-
-**Alternatives considered:** Full duplicate planning/review for every local application; installation exemptions; another test-review stage; replacing behavioral evidence with model choice or a passing suite.
-
-**Rationale:** Repeating unchanged technical judgment adds cost without covering a new decision. Conversely, identical blind reviews can miss a failure never entered by short tests, and a fake can repeat an invalid production assumption. Source/destination checks preserve the reuse boundary; concrete adequacy questions address shared blind spots inside existing checkpoints, without new mechanisms or waived gates.
