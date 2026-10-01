@@ -52,7 +52,7 @@ Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.templat
 
 **Exceptions:** —
 
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -118,6 +118,8 @@ Result-review remediation: changed only the selected docs reference, a three-lin
 Final full-suite run 91279 failed in hooks (exit 1), after budget/schema/Work Record/checker/Redline/tuner passed. Captured standalone hooks run 48830/e1a573 identified only the stale tracked `.claude/hooks/merge-agents-section.py` mirror; all helper behavior tests passed. The package installer updates the skill trees, not this separate dogfood hook directory. Synchronized only that helper's exact three-line reviewed source delta; no hook settings or shared-root files changed. Full-suite verification remains pending until a complete rerun passes.
 
 Final complete nine-layer rerun passed at unchanged product revision `4b8d90776a7bfd7b4ab102652c99c0e1b7144939`: native Windows Python 3.12.14 and Git Bash, session 79912, final chunk 997f1f, exit 0, `all layers ok`. Log `.local/bootstrap-hardening-final-suite.log`, SHA256 `32E637A0B453DCE8E42C95D88E2D858FD3BFB1C46989948E6783233CC9813E38`, records all nine layer passes. No product edits during or after the run; candidate was clean. Hook mirror and packaged helper both hash `8CBA28DFF3FD4D01C8170EDAF4330F62C231AC98B2F1556456E321BEBA302749`. The earlier failed full run is retained, not treated as a pass. Final technical acceptance requested via manager message `relay-msg-d8e1dff0b5e64eae9ee16ff6354b2d1d`; saved delivery does not establish receipt or approval.
+
+2026-10-01 PR #49 CodeRabbit review at `a8d5ed27387042911d7072ec7b59dcbc92a44d95` adds three verified gaps; final readiness is withdrawn pending remediation and independent delta acceptance. Threads: `PRRT_kwDOT2Ai6s6n8rOS` (strict UTF-8 decoding of raw added-line content blocks legitimate non-UTF-8 text), `PRRT_kwDOT2Ai6s6n8rOi` (HEAD-relative temporary-index diff omits committed Phase 4 changes), `PRRT_kwDOT2Ai6s6n8rOq` (bare negative grep bypasses Bash errexit). Fix within existing approved criteria 1/3/5: preserve arbitrary patch-content bytes while retaining strict filename/structural validation and conservative catalog masking; capture pre-bootstrap Git baseline and compare the entire committed-plus-uncommitted tree against it without touching the user index; explicitly fail forbidden-path assertions. Add focused reproductions, regenerate package/install, run the mandatory final suite and request smart bounded delta review. Prior product approval remains historical, not acceptance of this new delta. Human final result/architecture gate is still pending. GitHub test, Redline and workflow jobs passed at a8d5ed2, but do not satisfy the new revision's gates.
 
 ## Skill feedback (unsent)
 
