@@ -19,7 +19,7 @@ Source: Relay relay-msg-064c8acafcfd4ca4bb99983e4c91810f. Direct user authorizat
 **Plan review:** Agent technical review: /root/review_reuse_technical at b3887e11413b383c041743707f9189213401f6d9; approved with shared-rule placement correction recorded in Plan. See Plan review below.
 **Approvals:** Approved by user 2026-10-01: "Okay, so let's do it." Authorizes the manager's two bounded instruction changes, verified direct source above; separate final human result review remains with manager.
 **Exceptions:** —
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -28,8 +28,31 @@ Applicability: normative SPEC and agent instructions are never documentation-exe
 
 Discovery complete. The change clarifies existing gates; no executable mechanism or extra review stage is needed. No applicable tracked roadmap item has been assigned; this is a bounded corrective instruction task.
 
-Implementation: SPEC amended first, then one shared reuse rule in operating-mode with plan/result references; the existing result adequacy checklist now probes triggering paths and fake-interface fidelity. DECISIONS rationale appended. Redundant delegation/recovery wording trimmed without removing directives. Budget check passes unchanged ceilings: operating 1857/1900 (was 1896), plan 876/900 (was 886), result 658/700 (was 623); combined loaded instruction cost decreases by 14 tokens. Packaging/local reinstall underway; root checkout and runtime trust untouched.
+Implementation: SPEC amended first, then one shared reuse rule in operating-mode with plan/result references; the existing result adequacy checklist now probes triggering paths and fake-interface fidelity. DECISIONS rationale appended. Redundant delegation/recovery wording trimmed without removing directives. Budget check passes unchanged ceilings: operating 1857/1900 (was 1896), plan 876/900 (was 886), result 658/700 (was 623); combined loaded instruction cost decreases by 14 tokens. Packaging/local reinstall completed; root checkout and runtime trust untouched.
+
+Verification exposed two public checkpoint copies in docs/agent-workflow/ that packaging does not regenerate. They were synchronized exactly using existing declared public-link rewrites in ee61077. This is instruction propagation only, not changed behavior or authorization scope. Existing technical review reused for unchanged source; reviewer inspected only this uncovered mirror delta.
 
 ## Plan review
 
 Agent technical review: /root/review_reuse_technical, clean-context non-implementer Sol/high, inspected b3887e11413b383c041743707f9189213401f6d9: baseline/plan, SPEC 9.4/9.7/13.3/13.4, source modes/checkpoints, governance, authoring, packaging and checks. Approved High/Simple plan; no blockers. Shared reuse belongs in operating-mode with checkpoint references. Preserve all destination, independent/human, applicability/record and trust duties; scenario review covers missing identity, changed destination and insufficient failure-path/fake evidence. Plan only; final agent/human result and architecture checkpoint remain required. Placement correction accepted before implementation.
+
+## Evidence
+
+- Instruction semantics and preserved duties -> independent scenario review /root/review_reuse_technical at b9df47b76ab5766711f7b90ee3bfcb416eac962f; approved, six scenarios covered below. Public-mirror-only delta revalidated at ee61077899a07f287b29212a524f255a5f2b5404; approved.
+- Regression gate -> bash tests/run-all.sh at b9df47b: budget, schema, work-record, checker, redline, tuner and hooks passed; links failed only on the two unsynchronized public copies, so package was not reached. After mirror-only fix at ee61077, bash tests/run-all.sh --only links and --only package both passed (exit 0). All nine layers now have passing evidence; earlier seven not repeated because neither their inputs nor product semantics changed. Final CI will run the complete suite on the PR head.
+- Package/references/budgets -> install-skill-locally.sh completed, source/dist/native copies consistent; unchanged budget ceilings pass and combined affected instruction cost decreases by 14 tokens. Link check verifies public parity and references; package check verifies generated artifact drift. git diff --check passes.
+- Root preservation -> root .codex/hooks.json SHA256 remains 6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E; original branch/local hook preview untouched.
+
+## Result review
+
+Agent technical review: /root/review_reuse_technical, clean-context non-implementer Sol/high.
+Reviewed revision: b9df47b76ab5766711f7b90ee3bfcb416eac962f; public-mirror delta revalidated at ee61077899a07f287b29212a524f255a5f2b5404.
+Verification adequacy: approved semantics and instruction propagation. Inspected full edited instructions, SPEC 9.4/9.7 against 13.3/13.4, baseline/plan, DECISIONS, package/native diffs and public link rewrites. Scenarios: compatible unchanged local application reuses original independent plan/result evidence; unknown/mismatched revision cannot reuse; incompatible destination exposes uncovered decisions; materially changed decisions get scoped review; unexercised failure-triggering path and fake encoding an invalid real interface require the smallest targeted check. Trimming preserves scope/update/read-only/exact-checkout/recovery directives. No findings. This verifies guidance, not deterministic future agent behavior. Reviewer did not rerun the suite. Final CI, separate human result review and architecture checkpoint remain required before acceptance.
+
+## Checkpoint: architecture-review
+
+What is changing: SPEC clarifies existing review reuse and adequacy obligations, propagated to installed and public guidance.
+Why: avoid duplicate unchanged technical judgment and expose tests that miss failure paths or repeat invalid interface assumptions.
+Affected contract: SPEC 9.4 and 9.7; no schema/checker/runtime change.
+Compatibility risk: low implementation complexity, High governance consequence; no exemption or waived approval/trust duties.
+Verification: independent plan/result scenario review, unchanged budget ceilings, nine repository layers with passing evidence after public mirror correction; final CI and human architecture/result review pending.
