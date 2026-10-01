@@ -46,7 +46,7 @@ Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.templat
 - Evidence limits -> existing shared runtime/installation tests plus supported installed adapter checks; native interception/trust/remote enforcement labeled degraded/unverified unless authoritative live proof exists.
 - Delivery -> package/install sync, one full mandatory nine-layer suite at final product revision, independent smart plan/result reviews, separate human High-risk plan/result gates, real GitHub CI and every review thread resolved before merge.
 
-**Plan review:** Pending clean-context technical review and separate human review.
+**Plan review:** Agent technical review: /root/bootstrap_hardening_plan_review at 06805505568b98503c456d3868e252a7a85bc37e, approved with the exact-patch-head interpretation below. Separate human plan approval pending.
 
 **Approvals:** Pending separate human approval of the concrete reviewed plan.
 
@@ -79,6 +79,16 @@ Pallium Relay assignment `relay-msg-b9886b1c5467439581aeb65b02e24066`, delivery 
 ## Plan review
 
 Agent /root/bootstrap_hardening_plan_review reviewed 19020676848ff4a161d8d2398e310aa2462db9f2 and did not approve because step 2 lacked an exact discriminator. It also requested fail-closed NUL evidence parsing, concrete fresh docs/agent choice, truthful probe outcomes and actual sibling invocation tests. This revision specifies those decisions; technical follow-up and separate human plan approval remain pending. Product edits remain blocked.
+
+Follow-up technical approval: /root/bootstrap_hardening_plan_review, reviewed revision 06805505568b98503c456d3868e252a7a85bc37e. It independently checked the discriminator against the shipped suppression schema and accepted all eight verification mappings, reusing unchanged source review from 1902067. Binding interpretation of step 2: trustworthy postimage is the exact patch-head content and line-number basis. A dirty or synthetic-merge working-tree copy is insufficient unless identity with that patch head is established; otherwise apply no mask and scan conservatively. This records the reviewer's interpretation without changing Outcome/Scope/Constraints/Completion criteria or broadening the approved technical plan. Results are unverified; technical approval does not satisfy the separate human gate.
+
+## Checkpoint: architecture-review
+
+What is changing: active dogfood CI gains the same genuine diff/numstat evidence as the repaired shipped combined template.
+Why: filenames alone silently disable configured suppression and line-threshold analysis.
+Affected contract: CI evidence supplied to the reporter, preserving labels/owners, schema validation, artifacts and exit-code gates.
+Compatibility risk: medium; lossless inputs must preserve unusual names and strict malformed-evidence failure without relaxing merge controls.
+Verification: actual source and dogfood YAML run blocks, same merge-base/head, directive and size failures, captured statuses/artifacts; independent technical and separate human plan/result review. No active CI edit has begun.
 
 ## Result review
 
