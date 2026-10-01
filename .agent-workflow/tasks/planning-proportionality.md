@@ -60,6 +60,10 @@ Effective zone policy: core templates and required dist/native mirrors gray/watc
 
 Pre-edit clean-context classifier /root/proportionality_scope_risk confirmed gray/watch and Elevated floor with no red/checkpoint/boundary/API/schema/security/config touch. Its first read-only command failed environment error 1385; narrow elevated retry succeeded, no edits. Current-main installed guidance allows direct mechanical classification; the shared root's older skill must not be used to impose stale extra ceremony. Initial genuine reporter/checker at d02d93f returned 0/2, pending plan-review/Blocked state, not readiness. Budget baseline: planning 876/900, result review 655/700; all 22 files pass.
 
+Implemented only the two approved load-point edits: canonical Approach paragraph and result-review pointer. Removed repeated field-example/rationale prose, retaining explicit criterion-to-check mapping. No normative contract, runtime, test or gate changed. Regenerated 72-file package and both owned local installs; standalone skill validator and diff check pass. All 22 unchanged ceilings pass: planning 886/900 (+10 tokens), result review 671/700 (+16), combined recurring cost +26 estimated tokens. No ceiling raised. Product verification and independent scenario/result acceptance remain pending.
+
+Skill feedback trigger 4 dropped: the old shared-checkout install versus current isolated install was a local version-selection mistake, not contradictory upstream instructions. The requested judgment clarification is addressed here rather than submitted as a separate feature-request defect. No public issue or private incident detail is published.
+
 ## Result review
 
 Pending.
