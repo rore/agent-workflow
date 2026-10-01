@@ -7,10 +7,11 @@
 
 ## What stays reviewer judgment (SPEC §9.7)
 
-The reviewer of Elevated and High work MUST also assess:
+The reviewer at every Risk level MUST assess:
 
 - whether completion criteria are satisfied
 - whether the recorded Verification Record is **adequate** (the harness validates presence and structural well-formedness, not adequacy)
+- whether tests would detect the relevant failure and exercise its triggering path, and fakes reflect the real interface rather than repeat implementation assumptions
 - whether evidence is sufficient
 - whether scope expanded unintentionally
 - whether assumptions remain unresolved
@@ -18,7 +19,7 @@ The reviewer of Elevated and High work MUST also assess:
 
 When the repository already uses a roadmap and this work affects a tracked item's progress or scope, reconcile the owning item under that roadmap's guidance: status, shipped scope, remaining scope, obsolete next steps, placement, and directly affected prerequisites. State the result briefly in existing prose; no roadmap edit is needed when already accurate. Skip when no roadmap/item applies.
 
-Review identity: Routine may use normal PR review. Elevated/High require a clean-context non-implementer agent technical review; High also requires separate human result review. In `## Result review`, record `Agent technical review: <source ref>`, `Reviewed revision: <rev>`, and `Verification adequacy: <assessment>`, with inspected evidence, findings, and limits. Human review/approval/labels add to, never replace, the agent review. Different model optional.
+Review identity: Routine may use normal PR review. Elevated/High require a clean-context non-implementer agent technical review; High also requires separate human result review. In `## Result review`, record `Agent technical review: <source ref>`, `Reviewed revision: <rev>`, and `Verification adequacy: <assessment>`, with inspected evidence, findings, and limits. Human review/approval/labels add to, never replace, the agent review. Unchanged-application reuse follows [Clean-context delegation](../../skill/operating-mode.md#clean-context-delegation).
 
 If evidence is insufficient, run or request the smallest behavioral check that resolves it; prefer the relevant end-to-end transition to rerunning a passing suite. Record authoritative result references; if unavailable, leave the gate unsatisfied.
 
