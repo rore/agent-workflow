@@ -8,13 +8,17 @@ agent-redline/assets/templates/agent-policy.yaml.template	4022
 agent-redline/assets/templates/pr-template.md	401
 agent-redline/assets/templates/pre-push-check.sh	4990
 agent-redline/assets/templates/suppressions.yaml	600
-agent-redline/bootstrap-mode.md	22870
+agent-redline/bootstrap-mode.md	23628
 agent-redline/extensions/jvm-archunit/README.md	3722
 agent-redline/extensions/jvm-archunit/adapter.yaml	1093
 agent-redline/extensions/jvm-archunit/operating.md	2385
 agent-redline/extensions/jvm-archunit/profile.md	18444
 agent-redline/extensions/jvm-archunit/scaffold.md	13068
 agent-redline/extensions/jvm-archunit/suppressions.yaml	394
+agent-redline/extensions/node/adapter.yaml	77
+agent-redline/extensions/node/profile.md	2842
+agent-redline/extensions/node/scaffold.md	866
+agent-redline/extensions/node/suppressions.yaml	218
 agent-redline/extensions/python/README.md	3443
 agent-redline/extensions/python/adapter.yaml	1052
 agent-redline/extensions/python/operating.md	2824
@@ -33,7 +37,7 @@ agent-redline/references/per-checkpoint/red-zone-change.md	1902
 agent-redline/references/per-checkpoint/security-change-checkpoint.md	2171
 agent-redline/scripts/agent-redline-report.py	87836
 assets/schema/agent-workflow.schema.json	5067
-bootstrap-mode.md	25695
+bootstrap-mode.md	25702
 hooks/check-plan.py	4854
 hooks/check-plan.sh	888
 hooks/install-settings.py	8504
