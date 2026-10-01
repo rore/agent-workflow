@@ -480,6 +480,8 @@ Plan review or approval **MUST** be repeated only when scope, assumptions, appro
 
 Delegation and review **SHOULD** use the least costly capable reviewer for the actual consequence and uncertainty, while preserving required non-implementer, human, and specialist reviews and user-selected model settings. Reuse still-valid review and verification evidence; do not repeat broad reviews for unchanged material.
 
+When applying an already-reviewed unchanged change, including local installation, completed technical plan and result reviews **SHOULD** be reused after confirming the applied change's identity and revision match the reviewed material and the destination preserves the reviewed assumptions and risk. The Work Record **MUST** cite the source review and reviewed revision rather than claim a new review. Only materially uncovered behavior, scope, assumptions, approach, or risk requires further technical review; unchanged covered material **MUST NOT** restart a broad planning/review cycle. Reuse does not waive applicability, Work Records, destination verification, required human review/approval, or runtime trust.
+
 #### Plan Review
 
 - **Routine:** agent self-review may be sufficient
@@ -552,6 +554,7 @@ The review **MUST** check:
 
 - whether completion criteria are satisfied
 - whether the recorded verification methods are adequate to the criterion they cover (the harness cannot judge this; it falls to the reviewer)
+- whether tests would detect the relevant failure, exercise its triggering path, and use fakes that reflect the real interface rather than repeat implementation assumptions
 - whether evidence is sufficient
 - whether scope expanded unintentionally
 - whether assumptions remain unresolved
@@ -566,6 +569,8 @@ Review depth depends on risk:
 - **High:** a non-implementer clean-context agent **MUST** technically review the result and independently assess verification adequacy. A separate human reviewer **MUST** also review the result, with specialist expertise where necessary; this review adds to, and cannot replace, the agent review.
 
 The agent reviewer **MUST** identify the final revision, inspected source and verification evidence, expertise limits, findings, and disposition. An absent or inadequate agent review **MUST NOT** be treated as satisfied by human review, approval, or a checkpoint label.
+
+When adequacy is uncertain, the reviewer **SHOULD** run or request the smallest targeted behavioral check that resolves it, not automatically repeat a passing suite or add another review stage. Unavailable required evidence leaves the gate unsatisfied.
 
 **Gate:** The change **MUST NOT** be accepted while blocking findings remain unresolved or unapproved.
 

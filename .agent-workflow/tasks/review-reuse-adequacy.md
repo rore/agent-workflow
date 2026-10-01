@@ -28,6 +28,8 @@ Applicability: normative SPEC and agent instructions are never documentation-exe
 
 Discovery complete. The change clarifies existing gates; no executable mechanism or extra review stage is needed. No applicable tracked roadmap item has been assigned; this is a bounded corrective instruction task.
 
+Implementation: SPEC amended first, then one shared reuse rule in operating-mode with plan/result references; the existing result adequacy checklist now probes triggering paths and fake-interface fidelity. DECISIONS rationale appended. Redundant delegation/recovery wording trimmed without removing directives. Budget check passes unchanged ceilings: operating 1857/1900 (was 1896), plan 876/900 (was 886), result 658/700 (was 623); combined loaded instruction cost decreases by 14 tokens. Packaging/local reinstall underway; root checkout and runtime trust untouched.
+
 ## Plan review
 
 Agent technical review: /root/review_reuse_technical, clean-context non-implementer Sol/high, inspected b3887e11413b383c041743707f9189213401f6d9: baseline/plan, SPEC 9.4/9.7/13.3/13.4, source modes/checkpoints, governance, authoring, packaging and checks. Approved High/Simple plan; no blockers. Shared reuse belongs in operating-mode with checkpoint references. Preserve all destination, independent/human, applicability/record and trust duties; scenario review covers missing identity, changed destination and insufficient failure-path/fake evidence. Plan only; final agent/human result and architecture checkpoint remain required. Placement correction accepted before implementation.

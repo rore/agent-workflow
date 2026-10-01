@@ -26,7 +26,7 @@ Self-review is sufficient; no Plan review field on compact.
 | **Elevated** | Clean-context agent review required. Use operating-mode §Clean-context delegation; probe material uncertainty and record the result under Plan review in the Work Record. |
 | **High** | Clean-context agent technical review **plus** separate human plan review and approval. Stop until both are complete; record human approval verbatim in Approvals. |
 
-Record `Agent technical review: <source ref>` in Plan review for Elevated/High. The non-implementer agent assesses risk and verification-plan adequacy, citing revision, inspected evidence, findings, and disposition. Human approval alone proves neither review. Use the least costly capable reviewer; preserve human/specialist duties and user-selected settings. Reuse valid unchanged review.
+Record `Agent technical review: <source ref>` in Plan review for Elevated/High. The non-implementer agent assesses risk and verification-plan adequacy, citing revision, inspected evidence, findings, and disposition. Human approval alone proves neither review. Reviewer selection and unchanged-application reuse follow [Clean-context delegation](../../operating-mode.md#clean-context-delegation).
 
 **Predicates:**
 - `approval.elevated_clean_context_review_present` / `approval.high_clean_context_review_present` — require a distinct agent technical review reference at Elevated / High.
