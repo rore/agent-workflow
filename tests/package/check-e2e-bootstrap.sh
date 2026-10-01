@@ -157,10 +157,37 @@ EOF
 printf 'Claude-specific instructions\n' > CLAUDE.md
 printf 'Codex-specific instructions\n' > CODEX.md
 cp CLAUDE.md CLAUDE.before; cp CODEX.md CODEX.before
+mkdir -p docs/agent
+cp "$SKILL/agent-redline/references/per-checkpoint/blue-zone-work.md" docs/agent/
 "$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
+grep -Fq '`docs/agent/`' AGENTS.md
+! grep -Fq '`docs/agent-redline/skills/`' AGENTS.md
+[[ -f docs/agent/blue-zone-work.md ]]
 cp AGENTS.md AGENTS.before
 "$PY" "$SKILL/hooks/merge-agents-section.py" --file AGENTS.md --template "$SKILL/templates/agents-section.md.template" >/dev/null
 cmp -s AGENTS.md AGENTS.before || exit 2
+mkdir -p legacy/docs/agent-redline/skills
+cp "$SKILL/agent-redline/references/per-checkpoint/blue-zone-work.md" legacy/docs/agent-redline/skills/
+cp legacy/docs/agent-redline/skills/blue-zone-work.md legacy/blue-zone-work.before
+cat > legacy/AGENTS.md <<'EOF'
+Legacy prose before.
+<!-- agent-workflow:agents-section:start -->
+STALE BODY
+<!-- agent-workflow:agents-section:end -->
+Legacy prose after.
+EOF
+"$PY" "$SKILL/hooks/merge-agents-section.py" --file legacy/AGENTS.md \
+  --template "$SKILL/templates/agents-section.md.template" \
+  --redline-docs-path docs/agent-redline/skills/ >/dev/null
+grep -Fq '`docs/agent-redline/skills/`' legacy/AGENTS.md
+! grep -Fq '`docs/agent/`' legacy/AGENTS.md
+[[ -f legacy/docs/agent-redline/skills/blue-zone-work.md && ! -e legacy/docs/agent ]]
+cmp -s legacy/docs/agent-redline/skills/blue-zone-work.md legacy/blue-zone-work.before
+cp legacy/AGENTS.md legacy/AGENTS.before
+"$PY" "$SKILL/hooks/merge-agents-section.py" --file legacy/AGENTS.md \
+  --template "$SKILL/templates/agents-section.md.template" \
+  --redline-docs-path docs/agent-redline/skills/ >/dev/null
+cmp -s legacy/AGENTS.md legacy/AGENTS.before || exit 2
 cmp -s CLAUDE.md CLAUDE.before && cmp -s CODEX.md CODEX.before || exit 2
 grep -Fq 'Outcome-affecting subagents inherit this Work Record.' "$SKILL/operating-mode.md" || exit 2
 grep -Fq 'Exact target checkout; use explicit shell workdir or absolute write targets.' "$SKILL/operating-mode.md" || exit 2
@@ -170,7 +197,9 @@ grep -Fq 'Human consent to the presented plan is approval; no magic word.' "$SKI
 "$PY" - <<'PYEOF'
 from pathlib import Path
 t=Path("AGENTS.md").read_text()
+legacy=Path("legacy/AGENTS.md").read_text()
 assert "Root prose before." in t and "Root prose after." in t and "STALE BODY" not in t
+assert "Legacy prose before." in legacy and "Legacy prose after." in legacy and "STALE BODY" not in legacy
 assert "verified requires a denied operation with unchanged target" in t
 assert "Record every other combination as degraded." in t
 assert "Evaluator failure returns deny; native prevention requires that evidence." in t

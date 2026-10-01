@@ -27,10 +27,14 @@ cp "$CLAUDE/templates/.github/workflows/agent-workflow.yml.template" \
 mkdir -p "$CONSUMER/docs"
 printf 'keep\n' > "$CONSUMER/docs/keep.txt"
 printf '#!/bin/sh\necho vendor\n' > "$CONSUMER/.claude/hooks/vendor.sh"
+printf '#!/usr/bin/env python3\nprint("vendor")\n' > "$CONSUMER/scripts/agent-workflow-tune.py"
+printf '#!/bin/sh\necho vendor\n' > "$CONSUMER/scripts/agent-redline-vendor.sh"
 
 # Preserve an unrelated rule while adding only the install's scoped rules.
 printf 'docs/** text eol=crlf\n' > "$CONSUMER/.gitattributes"
 printf '.claude/hooks/vendor.sh text eol=crlf\n' >> "$CONSUMER/.gitattributes"
+printf 'scripts/agent-workflow-tune.py text eol=crlf\n' >> "$CONSUMER/.gitattributes"
+printf 'scripts/agent-redline-vendor.sh text eol=crlf\n' >> "$CONSUMER/.gitattributes"
 while IFS= read -r rule; do
   grep -Fxq "$rule" "$CONSUMER/.gitattributes" || printf '%s\n' "$rule" >> "$CONSUMER/.gitattributes"
 done < "$CLAUDE/templates/agent-workflow-consumer.gitattributes"
@@ -69,8 +73,12 @@ for rel in entries:
     assert (skill_roots[0] / rel).read_bytes() == (skill_roots[1] / rel).read_bytes(), rel
 assert b"docs/** text eol=crlf" in (root / ".gitattributes").read_bytes()
 assert b".claude/hooks/vendor.sh text eol=crlf" in (root / ".gitattributes").read_bytes()
+assert b"scripts/agent-workflow-tune.py text eol=crlf" in (root / ".gitattributes").read_bytes()
+assert b"scripts/agent-redline-vendor.sh text eol=crlf" in (root / ".gitattributes").read_bytes()
 assert b"\r\n" in (root / "docs/keep.txt").read_bytes()
 assert b"\r\n" in (root / ".claude/hooks/vendor.sh").read_bytes()
+assert b"\r\n" in (root / "scripts/agent-workflow-tune.py").read_bytes()
+assert b"\r\n" in (root / "scripts/agent-redline-vendor.sh").read_bytes()
 assert b"\r\n" not in (root / "scripts/agent-workflow-runtime.sh").read_bytes()
 PYEOF
 
@@ -81,7 +89,7 @@ for path in \
   mode="$(git -C "$CHECKOUT" ls-files --stage -- "$path" | cut -d' ' -f1)"
   [[ "$mode" == 100755 ]] || { echo "FAIL: $path mode is $mode, expected 100755" >&2; exit 2; }
 done
-for path in docs/keep.txt .claude/hooks/vendor.sh; do
+for path in docs/keep.txt .claude/hooks/vendor.sh scripts/agent-workflow-tune.py scripts/agent-redline-vendor.sh; do
   mode="$(git -C "$CHECKOUT" ls-files --stage -- "$path" | cut -d' ' -f1)"
   [[ "$mode" == 100644 ]] || { echo "FAIL: unrelated $path mode is $mode, expected 100644" >&2; exit 2; }
 done

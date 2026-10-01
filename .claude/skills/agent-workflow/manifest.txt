@@ -38,11 +38,11 @@ agent-redline/references/per-checkpoint/red-zone-change.md	1902
 agent-redline/references/per-checkpoint/security-change-checkpoint.md	2171
 agent-redline/scripts/agent-redline-report.py	102307
 assets/schema/agent-workflow.schema.json	5067
-bootstrap-mode.md	25876
+bootstrap-mode.md	25904
 hooks/check-plan.py	4854
 hooks/check-plan.sh	888
 hooks/install-settings.py	8504
-hooks/merge-agents-section.py	5041
+hooks/merge-agents-section.py	5309
 hooks/reinforce-workflow.sh	565
 hooks/seed-workflow.sh	1591
 opencode/agent-workflow.mjs	3853
@@ -54,9 +54,9 @@ scripts/agent-workflow-runtime.sh	2276
 scripts/agent-workflow-tune.py	25349
 scripts/format-verdict-comment.py	38255
 templates/.github/workflows/agent-workflow.yml.template	17650
-templates/agent-workflow-consumer.gitattributes	472
+templates/agent-workflow-consumer.gitattributes	671
 templates/agent-workflow.yaml.template	2285
-templates/agents-section.md.template	2478
+templates/agents-section.md.template	2463
 templates/bootstrap-summary.md.template	3701
 templates/checkpoints/applicability.md	3018
 templates/checkpoints/assess-risk.md	3151

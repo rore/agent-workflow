@@ -105,6 +105,12 @@ Verification: actual source and dogfood YAML run blocks, same merge-base/head, d
 
 Pending.
 
+2026-10-01 independent clean-context `/root/bootstrap_hardening_result` (Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, turn `01a0f75c-be6e-74f2-99f1-d31f5381049c`, final `msg_0e19faea33c8ffbd016abe4ebcc4e887d28a3ea5c6a1e3611b`, reviewed candidate `43834bb28a497b0e2888f1af4a0e2acce38d4953`: not approved. Two P2 findings: the consumer agents-section still hardcodes the legacy checkpoint-doc destination; consumer LF attributes wildcard-match same-prefix scripts not owned by this install. Both are within approved criteria 4/5. Fix effective fresh/legacy references and enumerate owned scripts, with actual installed-marker and fresh-clone regressions. No human final approval or architecture result checkpoint is inferred.
+
+The independent clean-context closing exercise `/root/bootstrap_closing_exercise` (Luna/medium), thread `01a0f75c-7bc8-7242-8fbc-2d6e0d0b28e8`, turn `01a0f75c-848a-7300-8177-3f97505d8dcd`, final `msg_0d41f5b5c75117d3016abe4d34def087d2a70ac257ce95c490`, rendered both synthetic reports at candidate 43834bb from the installed bootstrap/summary instructions and the previously hashed input. Main read the complete output. Both delivered feedback disposition, effective docs path, actual interpreter/evidence, CI installed/proposed distinction, and honest native/remote/task-gate limits. Scenario B omitted the explicit empty exemption list; neither stated the no-boundary-backend fact. This is not perfect field coverage or a real consumer deployment. The smart reviewer found no additional material template failure in those omissions. Future agent compliance remains unproven; no chat-inspection checker or extra reminder is added.
+
+Result-review remediation: changed only the selected docs reference, a three-line optional fresh/legacy selector in the existing marker helper, its bootstrap pointer, explicit owned script attributes, and existing package regressions. Both focused package checks passed natively: session 12431, autocrlf chunk ccc46e, e2e final b6b00b, exit 0. Fresh/legacy references resolve to a shipped checkpoint file; legacy bytes/prose and idempotence are preserved. A real autocrlf clone retains CRLF and mode 100644 for unowned same-prefix scripts from both prefixes. This tests mechanical installation, not autonomous destination selection. Package and both local mirrors regenerated; skill validator and diff check pass. Bootstrap remains 4556/4600 tokens. Mandatory final nine-layer rerun is in progress; no approval inferred.
+
 ## Skill feedback (unsent)
 
 **Affected surface:** Combined CI evidence wiring, reporter suppression catalogs, and bootstrap verification/closing guidance at upstream main 468f1d5.
@@ -115,6 +121,6 @@ Pending.
 
 **Minimal reproduction:** Install the Node profile, execute the shipped CI reporter command on both installed catalog copies and an active source directive, then run the documented adapter probe with required Redline. Check the committed install through an autocrlf checkout.
 
-**Evidence:** Focused reporter and actual caller regressions reproduce and fix these paths; required-mode missing evidence remains blocking. The closing exercise is still pending. No guarantee of future agent compliance follows from instructions.
+**Evidence:** Focused reporter and actual caller regressions reproduce and fix these paths; required-mode missing evidence remains blocking. Independent closing reports were delivered, with field omissions recorded in Result review. No guarantee of future agent compliance follows from instructions.
 
 **Suggested owner:** `core/agent-redline/core/reporter/reporter.py`, combined CI template, and `core/skill/bootstrap-mode.md`. Addressed by this implementation; no separate public issue authorized or submitted. Execution/cwd permission mismatches are environment/handoff errors, not upstream product defects.

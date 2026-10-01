@@ -180,7 +180,7 @@ Write the committed artifacts. Branch each step on existing files; never overwri
 | 4.3h | `.claude/hooks/` + `.claude/settings.json`; `.codex/hooks.json` | Merge Claude seed/gate/reinforce hooks and Codex UserPromptSubmit/PreToolUse hooks without removing third-party hooks. Record installation and Codex project trust; do not infer mutation coverage. |
 | 4.3a | root `.gitattributes` | Preserve existing rules; append only missing lines from `templates/agent-workflow-consumer.gitattributes`. Preserve package Git modes; mark installed shell entrypoints executable. |
 | 4.3o | `.opencode/plugins/agent-workflow.mjs` | Install the stable OpenCode 1.x plugin with its seed and structured-mutation guard; OpenCode 2 beta is outside the support claim. |
-| 4.4 | root `AGENTS.md` owned reference section | Always create or reconcile only the marker-wrapped section in root `AGENTS.md`; preserve every other instruction file, surrounding prose, and third-party hooks. Existing markers are reconciled idempotently. |
+| 4.4 | root `AGENTS.md` owned reference section | Append rendered template (`docs/agent/` fresh; existing legacy path otherwise). Reconcile with `hooks/merge-agents-section.py --redline-docs-path <chosen path>`; default is `docs/agent/`. Preserve other instructions, prose, and hooks. |
 | 4.5 | `.agent-redline/suppressions.yaml` | Invoke redline's Phase 4 write step. |
 | 4.6 | Redline checkpoint docs | Fresh installs use `docs/agent/`. If checkpoint docs already live in `docs/agent-redline/skills/`, preserve and use that legacy path; don't create a second tree. |
 | 4.7 | `.agent-workflow/tasks/README.md` | Skeleton explaining the `{slug}.md` convention; references operating-mode.md. |
