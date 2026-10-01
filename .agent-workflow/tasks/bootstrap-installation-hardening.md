@@ -52,7 +52,7 @@ Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.templat
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -99,11 +99,15 @@ What is changing: active dogfood CI gains the same genuine diff/numstat evidence
 Why: filenames alone silently disable configured suppression and line-threshold analysis.
 Affected contract: CI evidence supplied to the reporter, preserving labels/owners, schema validation, artifacts and exit-code gates.
 Compatibility risk: medium; lossless inputs must preserve unusual names and strict malformed-evidence failure without relaxing merge controls.
-Verification: actual source and dogfood YAML run blocks, same merge-base/head, directive and size failures, captured statuses/artifacts; independent technical and separate human plan/result review. No active CI edit has begun.
+Verification: actual source and dogfood YAML run blocks, same merge-base/head, directive and size failures, captured statuses/artifacts. Active CI implementation is technically reviewed and locally verified; the separate human result checkpoint remains pending.
 
 ## Result review
 
-Pending.
+Agent technical review: `/root/bootstrap_hardening_result` (clean-context non-implementer, Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, final turn `01a0f778-62d2-7751-b9bc-e77d3d25df61`, message `msg_0e19faea33c8ffbd016abe55bdba5487d286e770381cbc63f9`.
+Reviewed revision: `4b8d90776a7bfd7b4ab102652c99c0e1b7144939`.
+Verification adequacy: Approved. Independent reviewer inspected original product/evidence, the two-finding remediation and exact hook mirror parity, then inspected the final nine-layer log and executor exit 0. Both P2 findings are resolved; no remaining code finding. Native/remote enforcement, human result approval, hosting CI and review-thread gates are not inferred from local tests.
+
+Unchanged-application reuse: final Ready-for-review/evidence commit changes only this canonical record. Source, generated package and tests remain exactly the reviewed and fully tested product revision. Main verified the diff; no additional agent review or full-suite rerun is needed for that record-only update. Separate human final result and active-CI architecture-review approval remain pending; no satisfying label is applied.
 
 2026-10-01 independent clean-context `/root/bootstrap_hardening_result` (Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, turn `01a0f75c-be6e-74f2-99f1-d31f5381049c`, final `msg_0e19faea33c8ffbd016abe4ebcc4e887d28a3ea5c6a1e3611b`, reviewed candidate `43834bb28a497b0e2888f1af4a0e2acce38d4953`: not approved. Two P2 findings: the consumer agents-section still hardcodes the legacy checkpoint-doc destination; consumer LF attributes wildcard-match same-prefix scripts not owned by this install. Both are within approved criteria 4/5. Fix effective fresh/legacy references and enumerate owned scripts, with actual installed-marker and fresh-clone regressions. No human final approval or architecture result checkpoint is inferred.
 
@@ -112,6 +116,8 @@ The independent clean-context closing exercise `/root/bootstrap_closing_exercise
 Result-review remediation: changed only the selected docs reference, a three-line optional fresh/legacy selector in the existing marker helper, its bootstrap pointer, explicit owned script attributes, and existing package regressions. Both focused package checks passed natively: session 12431, autocrlf chunk ccc46e, e2e final b6b00b, exit 0. Fresh/legacy references resolve to a shipped checkpoint file; legacy bytes/prose and idempotence are preserved. A real autocrlf clone retains CRLF and mode 100644 for unowned same-prefix scripts from both prefixes. This tests mechanical installation, not autonomous destination selection. Package and both local mirrors regenerated; skill validator and diff check pass. Bootstrap remains 4556/4600 tokens. Mandatory final nine-layer rerun is in progress; no approval inferred.
 
 Final full-suite run 91279 failed in hooks (exit 1), after budget/schema/Work Record/checker/Redline/tuner passed. Captured standalone hooks run 48830/e1a573 identified only the stale tracked `.claude/hooks/merge-agents-section.py` mirror; all helper behavior tests passed. The package installer updates the skill trees, not this separate dogfood hook directory. Synchronized only that helper's exact three-line reviewed source delta; no hook settings or shared-root files changed. Full-suite verification remains pending until a complete rerun passes.
+
+Final complete nine-layer rerun passed at unchanged product revision `4b8d90776a7bfd7b4ab102652c99c0e1b7144939`: native Windows Python 3.12.14 and Git Bash, session 79912, final chunk 997f1f, exit 0, `all layers ok`. Log `.local/bootstrap-hardening-final-suite.log`, SHA256 `32E637A0B453DCE8E42C95D88E2D858FD3BFB1C46989948E6783233CC9813E38`, records all nine layer passes. No product edits during or after the run; candidate was clean. Hook mirror and packaged helper both hash `8CBA28DFF3FD4D01C8170EDAF4330F62C231AC98B2F1556456E321BEBA302749`. The earlier failed full run is retained, not treated as a pass. Final technical acceptance requested via manager message `relay-msg-d8e1dff0b5e64eae9ee16ff6354b2d1d`; saved delivery does not establish receipt or approval.
 
 ## Skill feedback (unsent)
 
