@@ -75,7 +75,7 @@ You can install agent-workflow without the conversational bootstrap. Useful when
 2. Write `agent-workflow.yaml` and the risk-classification policy; vendor the checker, reporter, and `scripts/agent-workflow-runtime.py/.sh/.ps1` adapters.
 3. Merge Claude settings and `.codex/hooks.json` without removing third-party hooks; record Codex project trust. Install the stable OpenCode 1.x plugin with its structured-mutation guard; OpenCode 2 beta is excluded.
 4. Create `.agent-workflow/tasks/` with a `README.md` explaining the `{slug}.md` convention.
-5. Create or reconcile only the owned marker in root `AGENTS.md`; preserve all other instruction files. Read workflow checkpoint docs from the installed skill; copy Redline docs to `docs/agent-redline/skills/`. Leave any existing `docs/agent-workflow/` mirror and links intact on upgrades.
+5. Create or reconcile only the owned marker in root `AGENTS.md`; preserve all other instruction files. Read workflow checkpoint docs from the installed skill; fresh installs copy Redline docs to `docs/agent/`. Preserve existing legacy documentation destinations and links on upgrades; do not create a second tree.
 6. Install the CI workflow: copy [`core/templates/.github/workflows/agent-workflow.yml.template`](../core/templates/.github/workflows/agent-workflow.yml.template) to `.github/workflows/agent-workflow.yml`.
 
 Bootstrap mode does all eight steps for you and inspects the repo first so the drafts fit. **Skip manual install if you can.** The conversational path's value is in Phase 3 — calibrating the risk policy against your codebase. A copy-pasted policy without that step almost always over-classifies.
@@ -87,13 +87,15 @@ This is the part most teams need to think about explicitly. The CI workflow is w
 What you have to authorize:
 
 1. **A new workflow file** at `.github/workflows/agent-workflow.yml`. Bootstrap will not write it without your explicit yes in Phase 5; you can choose `proposal-only` and apply it yourself when ready.
-2. **Branch protection updates.** Add `agent-workflow / agent-workflow` and `agent-workflow / redline` to required status checks for PRs against `main`. Bootstrap cannot do this — it has no admin access. The proposal doc names the exact check names.
+2. **Branch protection updates.** Add the bare job names `agent-workflow` and `redline` to required status checks for PRs against the actual default branch. Workflow-prefixed names are display labels, not check names. Bootstrap proposes these changes; a human applies them.
 3. **CODEOWNERS additions.** Bootstrap proposes ownership for `agent-redline/` and `agent-workflow.yaml`. Again, you apply this; bootstrap only proposes.
 4. **Shadow → binding flip.** Bootstrap installs the risk classifier in `shadow` mode (advisory, never blocking). See [§Risk classification](#risk-classification-and-how-to-keep-it-useful) for when and how to flip.
 
 The CI workflow runs two jobs: the risk classifier (path-based classification, posts its own sticky) and agent-workflow (reads the classifier verdict + the Work Record, posts its own sticky). Both stickies stay independently legible in the PR conversation.
 
 ### Runtime support and limits
+
+Bootstrap's backend check uses the canonical bootstrap Work Record with a freshly generated reporter verdict for the complete change. A reachable checker that reports a missing prerequisite is not a successful task gate. The summary identifies the selected interpreter, evidence scope, effective suppression exemptions, and unresolved controls; it must also be shown in the closing response with the feedback disposition. A written summary or green CI cannot prove that an agent delivered that response.
 
 Bootstrap installs the same package for Claude Code and Codex, plus shared Python/POSIX-shell/PowerShell adapters and native hook settings. Stable OpenCode 1.x uses `tool.execute.before`; Codex requires explicit project trust. Bootstrap records installation/trust separately from native mutation coverage. Coverage is verified only for a recorded runtime version, execution surface, and mutation tool when denial leaves the target unchanged; installed hooks, trust, or a direct evaluator pass are insufficient. Everything else is degraded. After evaluation starts, unexpected failure returns a deny decision; actual prevention still requires the native evidence above. A hook that never runs cannot self-report, so CI remains authoritative. OpenCode 2 beta is excluded.
 

@@ -78,6 +78,8 @@ required_paths=(
   "core/templates/work-record-routine.md"
   "core/templates/work-record-expanded.md"
   "core/templates/bootstrap-summary.md.template"
+  "core/templates/agent-workflow-consumer.gitattributes"
+  "core/templates/agent-workflow-package.gitattributes"
   "core/templates/skill-feedback.md"
   "core/templates/agent-workflow.yaml.template"
   "core/templates/.github/workflows/agent-workflow.yml.template"
@@ -121,6 +123,7 @@ mkdir -p "$TARGET/templates/checkpoints" \
          "$TARGET/agent-redline/assets/templates" \
          "$TARGET/agent-redline/scripts" \
          "$TARGET/agent-redline/extensions"
+cp "$REPO_ROOT/core/templates/agent-workflow-package.gitattributes" "$TARGET/.gitattributes"
 
 # ---------------------------------------------------------------------
 # Path-substitution helpers.
@@ -278,6 +281,7 @@ cp "$REPO_ROOT/core/templates/agents-section.md.template"    "$TARGET/templates/
 cp "$REPO_ROOT/core/templates/work-record-routine.md"        "$TARGET/templates/"
 cp "$REPO_ROOT/core/templates/work-record-expanded.md"       "$TARGET/templates/"
 cp "$REPO_ROOT/core/templates/bootstrap-summary.md.template" "$TARGET/templates/"
+cp "$REPO_ROOT/core/templates/agent-workflow-consumer.gitattributes" "$TARGET/templates/"
 cp "$REPO_ROOT/core/templates/skill-feedback.md"             "$TARGET/templates/"
 sed 's/\r$//' "$REPO_ROOT/core/templates/agent-workflow.yaml.template" > "$TARGET/templates/agent-workflow.yaml.template"
 cp "$REPO_ROOT/core/templates/.github/workflows/agent-workflow.yml.template" \

@@ -223,9 +223,11 @@ Marker categories:
 | `annotations` | word-bounded token | `@SuppressWarnings`, `@ArchIgnore` |
 | `configEdits` | structural-assignment match in declared config files | `ignore_imports = [...]` in `**/pyproject.toml` |
 
+Suppression catalogs contain marker definitions, not active directives. The reporter masks only exact marker-valued YAML scalars in a valid catalog, using the exact diff-head postimage. Trailing comments and other additions still scan; malformed or uncertain evidence receives no mask. Catalog changes retain their normal governance classification. This is not a vendored-directory or test exclusion.
+
 Vendored defaults ship per-extension at `.agent-redline/suppressions.yaml`. The policy declares overrides-only via the `suppressions:` block (`add` / `remove` / `exemptPaths`).
 
-**Opt-in:** a policy with no `suppressions:` block keeps detection OFF. agent-workflow's bootstrap installs the block with `exemptPaths: ["**/tests/**"]` by default.
+**Opt-in:** a policy with no `suppressions:` block keeps detection OFF. Bootstrap selects the extension's defaults and reports the actual policy's `exemptPaths`; Node starts with `[]` so contract tests remain guarded. Exemptions are not inferred from directory names.
 
 ## Language extensions
 
