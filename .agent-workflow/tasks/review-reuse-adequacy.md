@@ -32,6 +32,8 @@ Implementation: SPEC amended first, then one shared reuse rule in operating-mode
 
 Verification exposed two public checkpoint copies in docs/agent-workflow/ that packaging does not regenerate. They were synchronized exactly using existing declared public-link rewrites in ee61077. This is instruction propagation only, not changed behavior or authorization scope. Existing technical review reused for unchanged source; reviewer inspected only this uncovered mirror delta.
 
+PR https://github.com/rore/agent-workflow/pull/47 opened at 907936f; full CI suite and both governance checks passed. CodeRabbit completed with two valid minor wording findings and the known pending architecture checkpoint. In 70d676b, result-checklist guidance now explicitly covers every Risk level, matching unchanged SPEC 9.7 without changing Routine reviewer identity; the new DECISIONS entry moved unchanged to the required newest-first position. Source/native/dist/public copies synchronized and reinstalled. Budget remains within unchanged ceilings (result 655/700); final combined affected instruction cost decreases by 17 tokens. Independent reviewer revalidated only this delta and preserved the earlier broad review.
+
 ## Plan review
 
 Agent technical review: /root/review_reuse_technical, clean-context non-implementer Sol/high, inspected b3887e11413b383c041743707f9189213401f6d9: baseline/plan, SPEC 9.4/9.7/13.3/13.4, source modes/checkpoints, governance, authoring, packaging and checks. Approved High/Simple plan; no blockers. Shared reuse belongs in operating-mode with checkpoint references. Preserve all destination, independent/human, applicability/record and trust duties; scenario review covers missing identity, changed destination and insufficient failure-path/fake evidence. Plan only; final agent/human result and architecture checkpoint remain required. Placement correction accepted before implementation.
@@ -42,12 +44,15 @@ Agent technical review: /root/review_reuse_technical, clean-context non-implemen
 - Regression gate -> bash tests/run-all.sh at b9df47b: budget, schema, work-record, checker, redline, tuner and hooks passed; links failed only on the two unsynchronized public copies, so package was not reached. After mirror-only fix at ee61077, bash tests/run-all.sh --only links and --only package both passed (exit 0). All nine layers now have passing evidence; earlier seven not repeated because neither their inputs nor product semantics changed. Final CI will run the complete suite on the PR head.
 - Package/references/budgets -> install-skill-locally.sh completed, source/dist/native copies consistent; unchanged budget ceilings pass and combined affected instruction cost decreases by 14 tokens. Link check verifies public parity and references; package check verifies generated artifact drift. git diff --check passes.
 - Root preservation -> root .codex/hooks.json SHA256 remains 6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E; original branch/local hook preview untouched.
+- Review-correction propagation -> budget check and bash tests/run-all.sh --only links / --only package passed at 70d676b (exit 0). Prior broad review and unaffected verification remain valid; current-head CI runs automatically after push. CI full suite at 907936f: https://github.com/rore/agent-workflow/actions/runs/36827184965; governance: https://github.com/rore/agent-workflow/actions/runs/36827184980.
 
 ## Result review
 
 Agent technical review: /root/review_reuse_technical, clean-context non-implementer Sol/high.
-Reviewed revision: b9df47b76ab5766711f7b90ee3bfcb416eac962f; public-mirror delta revalidated at ee61077899a07f287b29212a524f255a5f2b5404.
+Reviewed revision: b9df47b76ab5766711f7b90ee3bfcb416eac962f; public-mirror delta revalidated at ee61077899a07f287b29212a524f255a5f2b5404; all-Risk wording/order delta revalidated at 70d676bedcd987485e78f2a0cf5199bc7b335dc9.
 Verification adequacy: approved semantics and instruction propagation. Inspected full edited instructions, SPEC 9.4/9.7 against 13.3/13.4, baseline/plan, DECISIONS, package/native diffs and public link rewrites. Scenarios: compatible unchanged local application reuses original independent plan/result evidence; unknown/mismatched revision cannot reuse; incompatible destination exposes uncovered decisions; materially changed decisions get scoped review; unexercised failure-triggering path and fake encoding an invalid real interface require the smallest targeted check. Trimming preserves scope/update/read-only/exact-checkout/recovery directives. No findings. This verifies guidance, not deterministic future agent behavior. Reviewer did not rerun the suite. Final CI, separate human result review and architecture checkpoint remain required before acceptance.
+
+Bounded revalidation at 70d676b: all-Risk checklist matches unchanged SPEC; Routine still permits normal PR review with no new independent-agent/human-review duty. Public/native/dist propagation and DECISIONS ordering verified. No findings; prior review remains valid for unchanged material.
 
 ## Checkpoint: architecture-review
 
@@ -56,3 +61,7 @@ Why: avoid duplicate unchanged technical judgment and expose tests that miss fai
 Affected contract: SPEC 9.4 and 9.7; no schema/checker/runtime change.
 Compatibility risk: low implementation complexity, High governance consequence; no exemption or waived approval/trust duties.
 Verification: independent plan/result scenario review, unchanged budget ceilings, nine repository layers with passing evidence after public mirror correction; final CI and human architecture/result review pending.
+
+## Recovery / next action
+
+Canonical task: agent-workflow:review-reuse-adequacy, branch feat/review-reuse-adequacy, PR #47. Focused checks and delta review passed at 70d676b; push record/corrections, reply and resolve the two corrected bot findings, then verify current-head CI. The third finding (architecture/human result) remains open until manager coordinates the separate final human approval; do not label or merge before it. Root checkout/local hook preview remains preserved. No new plan permission or broad review is needed for record-only bookkeeping or unchanged copies.
