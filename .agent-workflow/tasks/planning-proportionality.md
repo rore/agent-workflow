@@ -35,13 +35,13 @@ Conventions: source-first edits, existing checkpoint load points, canonical rela
 - No recurring budget growth beyond existing ceilings; packaged/native guidance parity → before/after budget measurements, existing package/link tests and skill validator after install.
 - Verified delivery → final unchanged-product nine-layer suite, independent verification-adequacy acceptance, actual PR CI and disposition of every review finding before match-head merge.
 
-**Plan review:** Pending; implementation blocked.
+**Plan review:** Agent technical review: /root/mechanism_guidance_plan_review, clean-context non-implementer Sol/high, approved dead3afa632858aad0d8d6b1a9ff87602f0a3971; risk and verification adequacy accepted, no blocking findings. Full disposition below.
 
 **Approvals:** Not required at this risk level. Direct user authorization to perform the separate task is verified below; it is not a fabricated later review.
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -63,3 +63,9 @@ Pre-edit clean-context classifier /root/proportionality_scope_risk confirmed gra
 ## Result review
 
 Pending.
+
+## Plan review
+
+/root/mechanism_guidance_plan_review inspected the complete record and authoritative attachment, planning/result/behavioral-integrity templates, SPEC §§9.1/9.4/9.7, contribution discipline and effective policy at clean revision dead3af. Approved: Elevated classification and verification plan appropriate, no blocking finding. New wording must apply existing Task Context/plan/result judgment and preserve verification mapping and protected behavior. No SPEC/High gate is needed for the bounded clarification; a new mandatory criterion, scope expansion or protected-behavior change would require SPEC-first reclassification and review. This is plan-only acceptance, not result approval.
+
+Implementation pickup: source targets are exactly core/templates/checkpoints/plan-and-review.md and review-result.md; required dist/native copies and manifests are generated. No other product file is approved for edits. Context baseline remains unchanged; user authority is already verified. State advanced after plan acceptance, before source edits.
