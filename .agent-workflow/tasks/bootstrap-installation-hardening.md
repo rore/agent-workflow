@@ -111,6 +111,8 @@ The independent clean-context closing exercise `/root/bootstrap_closing_exercise
 
 Result-review remediation: changed only the selected docs reference, a three-line optional fresh/legacy selector in the existing marker helper, its bootstrap pointer, explicit owned script attributes, and existing package regressions. Both focused package checks passed natively: session 12431, autocrlf chunk ccc46e, e2e final b6b00b, exit 0. Fresh/legacy references resolve to a shipped checkpoint file; legacy bytes/prose and idempotence are preserved. A real autocrlf clone retains CRLF and mode 100644 for unowned same-prefix scripts from both prefixes. This tests mechanical installation, not autonomous destination selection. Package and both local mirrors regenerated; skill validator and diff check pass. Bootstrap remains 4556/4600 tokens. Mandatory final nine-layer rerun is in progress; no approval inferred.
 
+Final full-suite run 91279 failed in hooks (exit 1), after budget/schema/Work Record/checker/Redline/tuner passed. Captured standalone hooks run 48830/e1a573 identified only the stale tracked `.claude/hooks/merge-agents-section.py` mirror; all helper behavior tests passed. The package installer updates the skill trees, not this separate dogfood hook directory. Synchronized only that helper's exact three-line reviewed source delta; no hook settings or shared-root files changed. Full-suite verification remains pending until a complete rerun passes.
+
 ## Skill feedback (unsent)
 
 **Affected surface:** Combined CI evidence wiring, reporter suppression catalogs, and bootstrap verification/closing guidance at upstream main 468f1d5.
