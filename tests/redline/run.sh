@@ -50,3 +50,13 @@ for layer in "${LAYERS[@]}"; do
   echo "  redline.$layer ..."
   bash tests/run-all.sh --only "$layer"
 done
+
+echo "  redline.node-profile ..."
+if [[ -n "${PYTHON:-}" ]]; then
+  NODE_PY="$PYTHON"
+elif command -v python >/dev/null 2>&1; then
+  NODE_PY=python
+else
+  NODE_PY=python3
+fi
+"$NODE_PY" "$REPO_ROOT/tests/redline/check-node-profile.py"

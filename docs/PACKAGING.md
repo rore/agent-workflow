@@ -45,7 +45,8 @@ agent-workflow/
     ├── scripts/agent-redline-report.py       # vendored reporter (the source for the consumer-side vendor)
     └── extensions/
         ├── jvm-archunit/                     # JVM/ArchUnit profile + adapter
-        └── python/                           # Python/import-linter profile + adapter + scripts/
+        ├── python/                           # Python/import-linter profile + adapter + scripts/
+        └── node/                             # JS/TS bootstrap profile; no boundary backend
 ```
 
 The CI checker source (`core/checker/`), the parser (`core/work_record/`), and the dev-repo tests do **not** ship as part of the skill — only the pre-built `agent-workflow-check.py` does, so consumers can install without running any build.

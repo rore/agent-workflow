@@ -65,7 +65,7 @@ version: 1
 
 project:
   name: <repo-name>
-  extension: <extension-name>           # optional; jvm-archunit | python | other; omit for zone-only
+  extension: <extension-name>           # optional; jvm-archunit | python | node | other
 
 zones:
   red:
@@ -235,9 +235,12 @@ A language extension provides the ecosystem-specific defaults: zone globs, bound
 |---|---|---|
 | JVM (Java, Kotlin) — generic + Spring addendum | `jvm-archunit` | [ArchUnit](https://www.archunit.org/) → JUnit XML |
 | Python services and libraries (incl. Django) | `python` | [import-linter](https://import-linter.readthedocs.io/) → JSON violations |
+| Node.js / JavaScript / TypeScript | `node` | zone-only; boundary backend not configured |
 | Other stacks | none shipped | zone-only (no boundary backend); pick a third-party tool such as dependency-cruiser, go-arch-lint, cargo-deny, or Semgrep |
 
 Bootstrap detects the stack from build files and source layout (Gradle/Maven + Spring deps → `jvm-archunit` + Spring; pyproject + FastAPI/Flask/Django → `python`; nothing matches → zone-only fallback). For the layered-vs-library-vs-zone-only shape selection logic, see `core/agent-redline/core/skill/bootstrap-mode.md` §"JVM shape selection" / "Python shape selection".
+
+For Node, tracked root, nested, or workspace `package.json` files are positive evidence. Bootstrap inspects scripts, entry points, TypeScript/test configuration, actual source and test roots, manifests/locks, and generated mirrors before proposing narrow zones. Mixed builds require a developer choice; JavaScript files without a manifest retain the generic fallback. Defaults are proposals, not an approved repository policy. Sensitive source is not automatically blue, and generated mirrors or locks are not automatically excluded. Existing mirror-parity checks remain necessary. The Node profile configures no boundary backend and must be reported as **not configured**, not as a successful dependency check.
 
 ## Calibrating the policy
 
@@ -325,7 +328,7 @@ In **push-driven flow** the workflow fails on `EXIT != 0` (RED and BOUNDARY_VIOL
 
 ## What this page does NOT cover
 
-- **Building a new language extension.** The two shipped extensions cover JVM and Python. Adding a third stack requires authoring an `extensions/<name>/` folder with `profile.md`, `scaffold.md`, `adapter.yaml`, and (optionally) an adapter script. The relevant upstream doc is `docs/EXTENSIONS.md` in the agent-redline source repo.
+- **Building a new language extension.** Shipped extensions cover JVM, Python, and zone-only Node. Another stack requires an `extensions/<name>/` folder with `profile.md`, `scaffold.md`, `adapter.yaml`, and suppression defaults; a boundary adapter script is optional. The relevant upstream doc is `docs/EXTENSIONS.md` in the agent-redline source repo.
 - **The full reporter implementation.** Source lives at [`core/agent-redline/core/reporter/`](../core/agent-redline/core/reporter/). Read it when authoring a new boundary backend or debugging a verdict.
 - **The skill-side operating-mode loop.** That's the agent's discipline, not the developer's. Read it if you're working on agent-workflow's `assess-risk` checkpoint or porting redline changes from upstream — file is at [`core/agent-redline/core/skill/operating-mode.md`](../core/agent-redline/core/skill/operating-mode.md).
 

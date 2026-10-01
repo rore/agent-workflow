@@ -93,7 +93,7 @@ Then invoke redline's Phase 1 (extension pick, build files, source layout, bound
 
 **YAML-formatting gate:** <yes (Spotless/jackson-YAML — `agent-workflow.yaml` + policy must be canonical) / no>
 **Detected flow mode:** <PR-driven / push-driven / mixed>
-**Detected language extension** (from redline's Phase 1): <jvm-archunit / python / other / zone-only>
+**Detected language extension** (from redline's Phase 1): <jvm-archunit / python / node / other / zone-only>
 **Detected language shape** (if applicable): <layered service / library / zone-only fallback>
 **Boundary-rule backend setup found:** <yes (path) / no>
 **Pre-push hook found:** <yes (path) / no>

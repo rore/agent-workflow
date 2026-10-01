@@ -98,6 +98,10 @@ require "agent-redline/assets/templates/pre-push-check.sh"
 require "agent-redline/scripts/agent-redline-report.py"
 require "agent-redline/extensions/jvm-archunit/profile.md"
 require "agent-redline/extensions/python/profile.md"
+require "agent-redline/extensions/node/profile.md"
+require "agent-redline/extensions/node/scaffold.md"
+require "agent-redline/extensions/node/adapter.yaml"
+require "agent-redline/extensions/node/suppressions.yaml"
 
 # SKILL.md frontmatter sanity.
 "$PY" - "$PROBE/SKILL.md" <<'PYEOF' || errors+=("SKILL.md frontmatter invalid")

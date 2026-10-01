@@ -8,6 +8,14 @@ Routine session work doesn't go here — only decisions a future maintainer woul
 
 ---
 
+## 2026-10-01 — Small Node bootstrap profile without a boundary backend
+
+**Decision:** Ship a zone-only `node` extension through the existing profile/scaffold/adapter/suppression mechanism. Bootstrap uses actual package manifests, scripts, entry points, configuration, source/test layouts, and generated mirrors as evidence for human-approved, narrow policy candidates. Mixed builds defer extension choice to the developer. Reuse zone-only size thresholds; retain classification of locks and generated mirrors and explicit mirror-parity verification. Report the missing boundary backend as not configured.
+
+**Alternatives considered:** Keep generic fallback only; add a dependency analyzer or production detector; impose a framework taxonomy, canonical `src/` layout, blanket JavaScript/UI blue zones, or automatic generated/lock exclusions.
+
+**Rationale:** Minimap exposes a repeatable bootstrap-defaults gap, not a need for another analysis engine. A small optional extension makes layout and sensitive-path discovery concrete without changing shared gates or treating language as evidence of safety. Existing schemas, reporter, packaging, and approval stages already provide the necessary mechanism.
+
 ## 2026-10-01 — Reuse reviewed applications and probe test blind spots
 
 **Decision:** Applying an unchanged reviewed change reuses completed technical plan/result reviews after checking source identity/revision and destination compatibility. Records cite the original evidence; destination verification, applicability, human review/approval and runtime trust remain separate. Only materially uncovered decisions need further technical review. Existing result review explicitly checks the relevant failure-triggering path and whether fakes reflect the real interface; uncertainty calls for the smallest targeted behavioral check.
