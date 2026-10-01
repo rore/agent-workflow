@@ -46,13 +46,13 @@ Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.templat
 - Evidence limits -> existing shared runtime/installation tests plus supported installed adapter checks; native interception/trust/remote enforcement labeled degraded/unverified unless authoritative live proof exists.
 - Delivery -> package/install sync, one full mandatory nine-layer suite at final product revision, independent smart plan/result reviews, separate human High-risk plan/result gates, real GitHub CI and every review thread resolved before merge.
 
-**Plan review:** Agent technical review: /root/bootstrap_hardening_plan_review at 06805505568b98503c456d3868e252a7a85bc37e, approved with the exact-patch-head interpretation below. Separate human plan approval pending.
+**Plan review:** Agent technical review: /root/bootstrap_hardening_plan_review at 06805505568b98503c456d3868e252a7a85bc37e, approved with the exact-patch-head interpretation below. Human reviewed and approved concrete plan 2cdff04, including active CI scope; provenance below.
 
-**Approvals:** Pending separate human approval of the concrete reviewed plan.
+**Approvals:** Approved by user 2026-10-01: "approved"
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -65,6 +65,8 @@ Pallium Relay assignment `relay-msg-b9886b1c5467439581aeb65b02e24066`, delivery 
 - Isolated branch `feat/bootstrap-installation-hardening` starts at current main `468f1d5fa5cf856bfd45ebb4ff041bbacc714b02`. Shared root and consumers untouched.
 - Pre-edit classification: native clean-context agent `/root/bootstrap_install_risk`, main468f1d5. Gray/watch core and generated harness; blue tests/scripts/docs. Conditional SPEC or active CI edits require architecture-review. No boundary dependency introduced.
 - State Blocked means plan not yet established/approved; bounded read-only discovery may proceed. Next: reproduce findings, write concrete plan, obtain technical review and request the separate human plan gate via manager.
+- 2026-10-01 resumed after direct human approval of plan 2cdff04, independently verified in manager thread 01a0d7cd-696b-76a0-8f2f-48a80a201905: user item 01a0f71d-789e-7603-ac7b-6a86d3c08a3d, exact quote "approved", responding to the concrete plan including repository CI. Relay relay-reply-a344efb0b4dba2bd190e426eaef3daec0c8c5da2aa4976e350e6c07a4c5054be, delivery relay-delivery-b56a2641f9814431b6fac390b4b4c6f3 forwards that approval; app message is activation fallback only. No duplicate assignment or scope expansion. Separate final human result review remains required.
+- Implementation target files are the exact targets enumerated in Plan; bounded delegates own reporter/evidence callers and bootstrap/package/tuner respectively, main owns canonical record and synthesis/docs. Product changes begin only after this State transition is checked and committed.
 
 ## Evidence
 
