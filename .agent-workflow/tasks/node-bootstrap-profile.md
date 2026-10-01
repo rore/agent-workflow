@@ -20,7 +20,7 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 **Plan review:** Agent technical review: /root/node_profile_review, approved at f0311496ed783e3fbcb14af04872a1f307c4ee26; see independent Plan review below. Verification refinements include ambiguous mixed builds and protected contract tests beneath test trees, with narrow suppression exemptions.
 **Approvals:** Not required at Elevated; additional High-risk or expanded scope gates go through the manager.
 **Exceptions:** —
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -45,11 +45,13 @@ Independent clean-context non-implementer `/root/node_profile_review` approved t
 - Blind forward use: independent `/root/node_bootstrap_blind` consumed source instructions without this plan/tests/diff. A/B (representative nested Minimap-like and distinct TypeScript workspace) produced concrete schema-valid inert proposals; actual owned roots, manifest/script/config paths, risk candidates, both mirror/parity obligations, empty Node suppression exemptions and shared policy/checkpoint/mode gates were preserved. C no-package fallback, D mixed FastAPI/Node human choice, E JVM ignoring fixture manifests, F Python library routing were correctly retained. Initial sketch format and ambiguous input shorthand were corrected before counting draft validity; no live consumer validation is claimed. Final scaffold SHA256 `B709948C38FC144D4551B0D956794427AFB01AAAA1894FD00B26F865DE3F73AD`. Contract PR-execution/authority evidence remains explicitly unresolved in inert proposals; no approvals or dependency enforcement were fabricated.
 - `scripts/install-skill-locally.sh` regenerated the package and identical isolated native installs (70 manifest entries). The seven changed tracked Claude mirror files were committed in `5a1bdc05e485c99478d6bf4da937456dbb10bd28`; independent review verified their SHA256 parity with dist.
 - Mandatory `bash tests/run-all.sh` passed all nine layers under native Git Bash with the repository-venv interpreter, including the integrated Node check and package checks. Unchanged Python/JVM bootstrap-detect simulator passed all eight fixtures. Unified execution session `38122`, final chunk `7c73b6`, exit 0. Tested working content is committed at `5a1bdc05e485c99478d6bf4da937456dbb10bd28`; this resolves the earlier WSL wrapper limitation, not a skipped gate.
+- Interpreter-selection delta: actual Node checks passed 2/2 with only `python3` available (`python` absent), and 2/2 with preferred `python`; explicit `PYTHON` was exercised by the mandatory full-suite rerun. Session `95383`, final chunk `d7793e`, exit 0: all nine layers passed at unchanged product `2f7503c4f1acd88321b5104077fadbc69e64ed12`. No profile/package changes or repeated blind exercise were needed.
+- Delivery/review surface: https://github.com/rore/agent-workflow/pull/48. CodeRabbit's full review at `dd57913` had only the decision-log ordering finding; declined with the log's explicit newest-first rule and resolved. No bot review of the later interpreter delta is claimed; independent technical delta review covers it.
 
 ## Result review
 
 Agent technical review: independent non-implementer `/root/node_profile_review`, final approval after full-suite evidence; no outstanding findings.
 
-Reviewed revision: `5a1bdc05e485c99478d6bf4da937456dbb10bd28` (record blob `69101bf2343bc4f1d095015cf104222caa4c9516`).
+Reviewed revision: `2f7503c4f1acd88321b5104077fadbc69e64ed12`; carry completed broad product review at `5a1bdc05e485c99478d6bf4da937456dbb10bd28` (record blob `69101bf2343bc4f1d095015cf104222caa4c9516`) and approved interpreter-only delta review by the same independent non-implementer. No findings. The subsequent required full-suite completion condition was satisfied by the actual exit-0 run recorded above; no new technical judgment or broad review was required.
 
 Verification adequacy: sufficient for the scoped profile. Inspected real schema/reporter/adapter/suppression paths, both representative layouts, blind A/B draft artifacts and actual C-F routing results, shared approvals/self-protection, guarded gray roots, contract-doc handling, and generated mirror parity. The missing tracked native mirror was corrected and independently verified. All nine mandatory layers and eight unchanged Python/JVM fixture checks passed on the reviewed content; no duplicate suite run was required. Limits: representative instruction use is not live consumer installation or automatic detection; Node supplies no boundary backend. Repository-specific policy and approval gates remain authoritative. Work Record-only final evidence/State bookkeeping does not invalidate this review.
