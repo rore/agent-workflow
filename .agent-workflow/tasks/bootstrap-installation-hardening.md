@@ -48,11 +48,11 @@ Conventions/targets: core/templates/.github/workflows/agent-workflow.yml.templat
 
 **Plan review:** Agent technical review: /root/bootstrap_hardening_plan_review at 06805505568b98503c456d3868e252a7a85bc37e, approved with the exact-patch-head interpretation below. Human reviewed and approved concrete plan 2cdff04, including active CI scope; provenance below.
 
-**Approvals:** Approved by user 2026-10-01: "approved"
+**Approvals:** Plan approved by user 2026-10-01: "approved". Separate final result and active-CI architecture review approved by user 2026-10-01: "i approve"; direct provenance and bounded-delta acceptance below.
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -99,15 +99,19 @@ What is changing: active dogfood CI gains the same genuine diff/numstat evidence
 Why: filenames alone silently disable configured suppression and line-threshold analysis.
 Affected contract: CI evidence supplied to the reporter, preserving labels/owners, schema validation, artifacts and exit-code gates.
 Compatibility risk: medium; lossless inputs must preserve unusual names and strict malformed-evidence failure without relaxing merge controls.
-Verification: actual source and dogfood YAML run blocks, same merge-base/head, directive and size failures, captured statuses/artifacts. Active CI implementation is technically reviewed and locally verified; the separate human result checkpoint remains pending.
+Verification: actual source and dogfood YAML run blocks, same merge-base/head, directive and size failures, captured statuses/artifacts. Active CI implementation is technically reviewed and locally verified. Separate human result and architecture checkpoint approval is recorded below; GitHub label and current-head CI evidence remain separate delivery steps.
 
 ## Result review
 
-Agent technical review: `/root/bootstrap_hardening_result` (clean-context non-implementer, Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, final turn `01a0f778-62d2-7751-b9bc-e77d3d25df61`, message `msg_0e19faea33c8ffbd016abe55bdba5487d286e770381cbc63f9`.
-Reviewed revision: `4b8d90776a7bfd7b4ab102652c99c0e1b7144939`.
-Verification adequacy: Approved. Independent reviewer inspected original product/evidence, the two-finding remediation and exact hook mirror parity, then inspected the final nine-layer log and executor exit 0. Both P2 findings are resolved; no remaining code finding. Native/remote enforcement, human result approval, hosting CI and review-thread gates are not inferred from local tests.
+Agent technical review: `/root/bootstrap_hardening_result` (clean-context non-implementer, Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, final turn `01a0f7a6-8394-7bf2-ac1f-7dc163dccc24`, message `msg_0e19faea33c8ffbd016abe61daa2f487d2adf543ea374bccf7`.
+Reviewed revision: `24823ae2718345db690aad5d332cb6f135052405`.
+Verification adequacy: Approved. Independent reviewer reused accepted product review at 4b8d907 and inspected the three CodeRabbit fixes, focused regressions, generated mirrors, final nine-layer log and executor exit 0. The fixes preserve approved scope; no remaining actionable delta issue. Native/remote enforcement, human result approval, hosting CI and review-thread gates are not inferred from local tests. Historical 4b8d907 approval: turn `01a0f778-62d2-7751-b9bc-e77d3d25df61`, message `msg_0e19faea33c8ffbd016abe55bdba5487d286e770381cbc63f9`.
 
-Unchanged-application reuse: final Ready-for-review/evidence commit changes only this canonical record. Source, generated package and tests remain exactly the reviewed and fully tested product revision. Main verified the diff; no additional agent review or full-suite rerun is needed for that record-only update. Separate human final result and active-CI architecture-review approval remain pending; no satisfying label is applied.
+Unchanged-application reuse: final Ready-for-review/evidence commit changes only this canonical record. Source, generated package and tests remain exactly the reviewed and fully tested product revision 24823ae. Main verified the diff; no additional agent review or full-suite rerun is needed for that record-only update. Historical pending-approval statements below describe earlier checkpoints, not the current approval state.
+
+Human final approval independently verified in manager thread `01a0d7cd-696b-76a0-8f2f-48a80a201905`, direct user source item `01a0f782-ca4c-7380-88d1-1bd8f8a5980a`: "i approve", responding to presented PR #49 result including active CI. Forwarded via `relay-msg-989c96e536d045c4aa7d0eda169a4c80`. Approval preceded late CodeRabbit findings and covers the presented result, not an unreviewed material decision. The independent 24823ae delta review confirms these bounded failure fixes preserve approved scope. No new human decision is introduced; approval is retained, while fresh technical acceptance, CI and review-thread resolution remain independently required.
+
+Final review-fix full suite passed on unchanged clean product `24823ae2718345db690aad5d332cb6f135052405`: native Windows Python 3.12.14/Git Bash, session 73175, final chunk 6351dc, executor exit 0, all nine layers ok. Log `.local/bootstrap-hardening-review-suite.log`, SHA256 `E81412BEA1BE15B3D2101910FE6C645245A3A6F46D007E0DDE9C735881D7F6D2`. It includes 170 reporter units, actual CI callers, tuner, hooks, fresh checkout and both mixed/committed installed-adapter regressions. Main read the final output and verified the clean tested head; the smart reviewer independently inspected the final log and accepted adequacy. Shared root remains at 49abbc2 with only its original hooks.json change and unchanged hash.
 
 2026-10-01 independent clean-context `/root/bootstrap_hardening_result` (Sol/high), thread `01a0f75c-bca9-7222-a502-5db066f85e4c`, turn `01a0f75c-be6e-74f2-99f1-d31f5381049c`, final `msg_0e19faea33c8ffbd016abe4ebcc4e887d28a3ea5c6a1e3611b`, reviewed candidate `43834bb28a497b0e2888f1af4a0e2acce38d4953`: not approved. Two P2 findings: the consumer agents-section still hardcodes the legacy checkpoint-doc destination; consumer LF attributes wildcard-match same-prefix scripts not owned by this install. Both are within approved criteria 4/5. Fix effective fresh/legacy references and enumerate owned scripts, with actual installed-marker and fresh-clone regressions. No human final approval or architecture result checkpoint is inferred.
 
