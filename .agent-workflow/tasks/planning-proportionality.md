@@ -66,6 +66,8 @@ Result reviewer /root/mechanism_guidance_plan_review found one valid trim error 
 
 Skill feedback trigger 4 dropped: the old shared-checkout install versus current isolated install was a local version-selection mistake, not contradictory upstream instructions. The requested judgment clarification is addressed here rather than submitted as a separate feature-request defect. No public issue or private incident detail is published.
 
+Native full suite at corrected fc9aa8 stopped in links (session 96612, final chunk d74fa2, exit 1): the required public checkpoint mirrors docs/agent-workflow/plan-and-review.md and review-result.md differ beyond tests/links/check-links.py's declared rewrite map. Budget/schema/Work Record/checker/Redline/tuner/hooks passed, but the full suite did not. Before further edits, add those two exact public destinations to the implementation target list as required mirrors of already-approved source; they are blue and preserve the Elevated overall floor. No source or normative behavior expansion. Main read both public files and parity rule; there is no standalone generator, so apply the exact reviewed source delta with existing public-link rewrites preserved. Independent reviewer confirms this missing-mirror finding and requires focused validation plus final full rerun. Latest budgets after restoring concreteness: planning 898/900 (+22), result 671/700 (+16), total +38 estimated tokens; no ceiling raised.
+
 ## Result review
 
 Pending.
