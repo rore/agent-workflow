@@ -41,7 +41,7 @@ Conventions: source-first edits, existing checkpoint load points, canonical rela
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Authoritative request
@@ -68,9 +68,15 @@ Skill feedback trigger 4 dropped: the old shared-checkout install versus current
 
 Native full suite at corrected fc9aa8 stopped in links (session 96612, final chunk d74fa2, exit 1): the required public checkpoint mirrors docs/agent-workflow/plan-and-review.md and review-result.md differ beyond tests/links/check-links.py's declared rewrite map. Budget/schema/Work Record/checker/Redline/tuner/hooks passed, but the full suite did not. Before further edits, add those two exact public destinations to the implementation target list as required mirrors of already-approved source; they are blue and preserve the Elevated overall floor. No source or normative behavior expansion. Main read both public files and parity rule; there is no standalone generator, so apply the exact reviewed source delta with existing public-link rewrites preserved. Independent reviewer confirms this missing-mirror finding and requires focused validation plus final full rerun. Latest budgets after restoring concreteness: planning 898/900 (+22), result 671/700 (+16), total +38 estimated tokens; no ceiling raised.
 
+Final complete native suite passed at unchanged clean product c30d62856859703b7e115c3b280babee263c70fd: session 16481, final chunk 0adc1f, executor exit 0, all nine layers ok. Log .local/planning-proportionality-final-native-suite.log SHA256 `84907233F82F17DD557585BDD43EDD511F720EB5331AF493C75955D1C33EE54F`; Windows Python 3.12.14 and native Git Bash. Includes package/install/public parity and relative links, all budget ceilings, schema/Work Record/checker, reporter/actual CI callers, tuner, hooks and two-layout bootstrap transitions. Focused links also passed all 200 files after public sync. Earlier failed native log SHA256 `57C9A28EC20D840DCD1CE1C93DF37C1A8A73451C15A7F6CD5E2A7A36DBDE4572` remains retained, not counted as success. Current final budget +38 estimated recurring tokens; no new framework/fields/gates or protected test changes. Subsequent readiness commit changes only this record, reusing reviewed and verified unchanged product identity.
+
 ## Result review
 
-Pending.
+Agent technical review: /root/mechanism_guidance_plan_review, clean-context non-implementer Sol/high; final independent result and adequacy approval at c30d62856859703b7e115c3b280babee263c70fd.
+Reviewed revision: c30d62856859703b7e115c3b280babee263c70fd.
+Verification adequacy: Approved. Reviewer inspected source/normative limits, protected behavior, all required native/dist/public mirrors, three scenarios, final clean head, final log and hash; authoritative parent executor exit 0 referenced. Compact-plan concreteness and public-mirror findings are both resolved, no open finding. PR CI/thread resolution/merge are not inferred from local verification.
+
+Independent lightweight scenario outcomes from actual installed guidance: (1) replace the bespoke copy wrapper when the supported alternative preserves byte identity, access restrictions and error reporting and no mechanism is mandated; (2) retain the wrapper until concurrency exclusion and legacy-format compatibility are preserved; (3) reject deletion of a protected contract test and weaker isolation verification. Explicitly user-required mechanisms need user authority to change; unknown external failure calls for causal evidence and assumption validation, not an unsupported extra abstraction. These are review exercises, not deployed changes or proof of future agent compliance. Same non-implementer reviewer reused unchanged source/scenario review for the two bounded remediation deltas and independently accepted the final full-run evidence; no broader review restart or fabricated human approval.
 
 ## Plan review
 
