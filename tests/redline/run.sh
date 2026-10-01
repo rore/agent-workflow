@@ -50,3 +50,6 @@ for layer in "${LAYERS[@]}"; do
   echo "  redline.$layer ..."
   bash tests/run-all.sh --only "$layer"
 done
+
+echo "  redline.node-profile ..."
+"${PYTHON:-python}" "$REPO_ROOT/tests/redline/check-node-profile.py"

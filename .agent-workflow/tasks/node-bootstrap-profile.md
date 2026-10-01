@@ -27,7 +27,9 @@ Source: manager assignment `relay-msg-7ebb00749f5a452e9d57c1ec185a6785`, based o
 
 - Baseline established on `feat/node-bootstrap-profile` at current main `b94cb5017923f3d7fa3090a315058d3b6f3bcad2`, in the reused clean isolated checkout. Discovery and implementation have not begun. Blocked only on normal discovery/planning/review gates.
 - Discovery: existing profile/scaffold/adapter/suppression shape and automatic extension packaging suffice. No new parser, policy schema, framework taxonomy, or boundary service is needed. Proposed plan awaits independent technical review.
-- Plan approved. Exact intended edits: `core/agent-redline/extensions/node/{profile.md,scaffold.md,adapter.yaml,suppressions.yaml}`, both bootstrap mode files, `tests/budget/budget.yaml`, `tests/redline/{run.sh,check-node-profile.py}`, `tests/package/check-install-probe.sh`, `docs/{REDLINE.md,PACKAGING.md,DECISIONS.md}`, and generated `dist/agent-workflow/` plus native mirrors. No edits to test-only detection logic. Existing Python/JVM regression simulator runs unchanged. Implementation and tests delegated together within these paths; main retains synthesis and reviews.
+- Plan approved. Exact intended edits: `core/agent-redline/extensions/node/{profile.md,scaffold.md,adapter.yaml,suppressions.yaml}`, both bootstrap mode files, `tests/budget/budget.yaml`, `tests/redline/{run.sh,check-node-profile.py}`, `tests/package/check-install-probe.sh`, `docs/{REDLINE.md,PACKAGING.md,DECISIONS.md}`, and generated `dist/agent-workflow/` plus native mirrors. No test-only detection logic changes. Main retains docs, packaging/install, verification synthesis, review and delivery.
+- Added the Node zone-only extension, positive owned-manifest routing with mixed-build deferral, test-tree suppression exemption override, and two representative policy adaptations through the shipped schema/reporter.
+- Forward-use refinements: owned nested manifests and generic sensitive write/lifecycle responsibilities are explicit; ordinary docs exclude canonical contracts; guarded roots include gray code. Blind draft omission of shared self-protection led to an explicit shared-template scaffold pointer, not a new governance rule. Documentation/decision rationale updated; package/native mirrors regenerated once. No applicable canonical roadmap item found in the existing board.
 
 ## Plan review
 
@@ -36,6 +38,11 @@ Independent clean-context non-implementer `/root/node_profile_review` approved t
 ## Evidence
 
 - Initial classification: core extension/bootstrap and generated skill surfaces are gray/watch; no configured red paths intended. Whole-change documentation exemption does not apply.
+- Focused Node check: 2/2 representative policies passed schema and reporter assertions for red/blue/gray/watch, retained mirrors, policy/checkpoint self-protection, adapter `none`, and source/protected-test suppression behavior. Narrow unit-test exemption preserves protected contract detections.
+- `bash tests/budget/check-budget.sh`: all 22 files within budget. `git diff --check`: pass.
+- Curated redline wrapper's schema, skill-YAML, and reporter-golden layers passed; its final Node invocation could not resolve the Windows interpreter path from this WSL Bash context. The focused check passed directly with `C:\Dev\rore\agent-workflow\.venv\Scripts\python.exe`.
+- Blind forward use: independent `/root/node_bootstrap_blind` consumed source instructions without this plan/tests/diff. A/B (representative nested Minimap-like and distinct TypeScript workspace) produced concrete schema-valid inert proposals; actual owned roots, manifest/script/config paths, risk candidates, both mirror/parity obligations, empty Node suppression exemptions and shared policy/checkpoint/mode gates were preserved. C no-package fallback, D mixed FastAPI/Node human choice, E JVM ignoring fixture manifests, F Python library routing were correctly retained. Initial sketch format and ambiguous input shorthand were corrected before counting draft validity; no live consumer validation is claimed. Final scaffold SHA256 `B709948C38FC144D4551B0D956794427AFB01AAAA1894FD00B26F865DE3F73AD`. Contract PR-execution/authority evidence remains explicitly unresolved in inert proposals; no approvals or dependency enforcement were fabricated.
+- `scripts/install-skill-locally.sh` regenerated the package and identical isolated native installs (70 manifest entries). Mandatory full suite running under native Git Bash, avoiding the earlier WSL path limitation.
 
 ## Result review
 
