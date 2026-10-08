@@ -41,7 +41,7 @@ Authoritative source: direct human item `01a11a38-9c89-7290-8ab6-836b08eed871` i
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -52,6 +52,10 @@ Shared root remains `feat/requirement-baseline-history` at `49abbc2f56e9314ec9a2
 
 Implemented the approved four-file source scope plus the declared public mirror and generated package/install mirrors. Guidance covers optional exact source-item references, pickup/resume/leaving Pallium routing, source-item-to-PR linkage, verified contribution/remaining scope, and owner updates pending in the Work Record. Follow-up wording is ready after first suite commit `b9841132889450faef1518115d861f5ceba1bdfd`. Current isolated branch `feat/source-item-lifecycle`; next: commit the bounded wording correction after root diagnoses the unrelated OpenCode guard failure, then run the final suite.
 
+Final product revision `2f5c7c7449e5866a511672fe54fc06adb4bf5e07` clarified PR linkage from the source item at creation and avoided inferring whole-feature completion from one PR. Existing generic roadmap reconciliation and operational gates remain. Independent result review accepted the verified instruction-only scope; State advanced to Ready for review. Next: publish the PR, inspect actual CI and review threads, merge only after those gates clear, and report upstream readiness to the workflow manager. Consumer refresh remains with the coordinator.
+
+Trigger 2 dropped: the cheap classifier's watch-as-blue conclusion was an agent misread; main retained Elevated. Trigger 3 dropped: the first suite failure was an isolated Windows checkout test prerequisite, not an upstream instruction or runtime defect. No separate product feedback submission is needed for this assigned instruction change.
+
 ## Evidence
 
 Baseline and context recorded before implementation discovery. Focused evidence: all 22 budget entries pass (operating-mode 1900/1900; review-result 685/700; no ceiling changes). Final correction installer passed; `tests/links/run.sh` passed (200 markdown files) and `tests/package/check-committed-skill.sh` passed. At `b9841132889450faef1518115d861f5ceba1bdfd`, `tests/package/check-references.sh`, `tests/package/check-install-sync.sh` (one-build install parity/bootstrap mirror guidance), `tests/package/check-package.sh`, and `git diff --check` passed. First full suite command `.local/native-run.sh bash tests/run-all.sh --verbose` exited 1 at that HEAD: `tests/hooks/test_opencode_plugin.mjs:49` expected rejection `/DENY.*agent-workflow\.yaml/` but got no rejection; `hooks tests FAILED`. Output log `.local/source-item-lifecycle-suite.log`, SHA256 `D9DBD33E3F4B09C4F9073D217B018C149FB0519F1AAF7C5B6C45A37607709475`; executor session 57830 captured `EXECUTOR_EXIT=1`. No hook/test workaround was made. Root requested pausing final suite rerun until this failure is understood.
@@ -60,10 +64,20 @@ Initial baseline check at 1d227b9: genuine reporter exit 0, checker exit 2; only
 
 Independent plan reviewer /root/source_lifecycle_review at 9b3df1e identified ambiguous unconditional PR wording. Clarified before product edits: only an applicable authoritative source item, under its tracker's existing rules; no universal tracker duty or new merge gate. Task Context/baseline and assigned outcome are unchanged. Review of this bounded clarification remains pending.
 
+Final verification at exact clean product `2f5c7c7449e5866a511672fe54fc06adb4bf5e07`: `.local/final-source-suite.sh` invoked `.local/native-run.sh bash tests/run-all.sh --verbose`; executor session 87914, final chunk e9370c, exit 0 and `FINAL_SUITE_EXIT=0`; all nine layers passed. Log `.local/source-item-lifecycle-final-suite.log`, SHA256 `AB5E9EC968E7DD5B2688EE70702FA30ABF8EEB80308D19A16EB5AD59B420F1D1`. Checks include 51 schema, 80 Work Record, 261 checker and 170 reporter tests, hooks including the unchanged OpenCode guard, 200 markdown links, package/install parity and isolated bootstrap simulation. Skill quick validator also passed (chunk 40de7d, exit 0). All 22 budgets pass without ceiling increases: operating 1900/1900 (+43), result 685/700 (+14), routine 346/400 (+17), expanded 530/550 (+17).
+
+The earlier b984 suite failure is retained above. Root cause: the unchanged Windows OpenCode fixture chooses the checkout's `.venv/Scripts/python.exe`, absent in the fresh worktree. A temporary ignored worktree-only junction to the existing repository test runtime supplied that prerequisite; focused guard and final full suite passed without test/runtime edits. The validated junction alone was removed afterward (chunk 4be45d, exit 0); its runtime target remains. No install, PATH, persistent environment, service or consumer configuration changed.
+
+Independent paper exercise `/root/source_lifecycle_scenarios` applied the installed instructions to eight raw situations at b984: no integrations, tracker only, Pallium only, both, Jira source tracker, partial feature/multiple PRs, owner-managed handoff, and unavailable tools/identity. The Minimap/Jira cases omitted explicit creation-link direction; final wording corrected it. Fresh read-only `/root/source_link_recheck` at final 2f5 rechecked both creation stages and verified-merge/remaining scope; Jira's local Work Record backend was explicit. Both now link the PR from the source item at creation, claim delivery only after verified merge, and retain unfinished scope. Jira creation was supplied in a bounded follow-up after its first response covered merge only. Final installed operating SHA256 `AAAFEC98FA4FDCE4AA6A464594760B6996EA2BB8DAA3A4DF05C3572FA8E8E727`; other consulted instruction hashes match the first exercise. These paper checks are instruction evidence, not live tracker/Pallium E2E or guaranteed future compliance. No real provider identities or participation were fabricated.
+
 ## Plan review
 
 Agent technical review: /root/source_lifecycle_review (Sol/high, no history fork, read-only non-implementer). Reviewed revision: d4b3e19. Approved after inspecting the clean record-only delta from 9b3df1e; sole unconditional-duty finding resolved, unchanged prior review retained. Inspected canonical record/files, applicable policy/authoring discipline, SPEC source/lifecycle/review clauses, and installed Pallium association guidance. Optional template prompts, reference-only routing, owner handoff, unchanged ceilings and scenario/full-suite verification accepted. No new normative contract/gate or live environment change; no edits or tests performed by reviewer. State advanced on this approval, not on a tool result or inferred human consent. Implementation targets are the four canonical files and required docs/dist/native mirrors listed in Plan; no other product files authorized.
 
 ## Result review
 
-Pending implementation and verification.
+Agent technical review: `/root/source_lifecycle_result` (Sol/high, clean-context non-implementer, read-only).
+
+Reviewed revision: `2f5c7c7449e5866a511672fe54fc06adb4bf5e07` against main `06d8e633eb63e6761454c49ba6422ccffe1de3ae`.
+
+Verification adequacy: approved for this instruction-only change; no actionable findings. Inspected the four canonical diffs and full instructions/templates, public/generated mirrors, Work Record/plan, authoring discipline, SPEC sections 6/9.7/10, policy, and installed Pallium association guidance. Optional references, conditional source-item-to-PR linkage, verified contribution/remaining scope, owner-pending updates and reference-only optional association routing satisfy the criteria. Derivable vocabulary/CI trims preserve operational gates and commands. Final exact-revision nine-layer suite, 22 unchanged budgets, validator and paper exercises are sufficient within this scope. Earlier failed prerequisite evidence is retained, not claimed as success. Actual PR CI and review-thread disposition remain separate premerge gates; no live integration or consumer rollout claim.
