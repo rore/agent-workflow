@@ -72,6 +72,8 @@ Independent paper exercise `/root/source_lifecycle_scenarios` applied the instal
 
 ## Plan review
 
+Post-transition check at `d3b2137a90ddfaefad46dc21dbc00eac6afbf561`: genuine reporter exit 1, GRAY with additive watch, no red/checkpoint/boundary finding; shadow warning is expected, not a clean reporter claim. Workflow checker exit 0/status clean (chunk 1c6308). Only this Work Record's review/evidence prose changed after the independently reviewed and fully tested product revision.
+
 Agent technical review: /root/source_lifecycle_review (Sol/high, no history fork, read-only non-implementer). Reviewed revision: d4b3e19. Approved after inspecting the clean record-only delta from 9b3df1e; sole unconditional-duty finding resolved, unchanged prior review retained. Inspected canonical record/files, applicable policy/authoring discipline, SPEC source/lifecycle/review clauses, and installed Pallium association guidance. Optional template prompts, reference-only routing, owner handoff, unchanged ceilings and scenario/full-suite verification accepted. No new normative contract/gate or live environment change; no edits or tests performed by reviewer. State advanced on this approval, not on a tool result or inferred human consent. Implementation targets are the four canonical files and required docs/dist/native mirrors listed in Plan; no other product files authorized.
 
 ## Result review
