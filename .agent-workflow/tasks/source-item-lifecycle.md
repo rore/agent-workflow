@@ -50,9 +50,11 @@ Authoritative source: direct human item `01a11a38-9c89-7290-8ab6-836b08eed871` i
 
 Shared root remains `feat/requirement-baseline-history` at `49abbc2f56e9314ec9a2ec6a93249ae747ed3c05`, only original `.codex/hooks.json` dirty, SHA256 `6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E`. The former isolated checkout was absent; a fresh managed worktree was created without altering the shared checkout. No everyday installations, services or consumer repositories changed.
 
+Implemented the approved four-file source scope plus the declared public mirror and generated package/install mirrors. Guidance covers optional exact source-item references, pickup/resume/leaving Pallium routing, PR creation, verified contribution/remaining scope, and owner updates pending in the Work Record. Current isolated branch `feat/source-item-lifecycle`, product base `fbc4b17283c5f42ba83ad43715a089e423160fb6`; focused validation passed. Next: commit product and record, then run the required full suite against that clean commit.
+
 ## Evidence
 
-Baseline and context recorded before implementation discovery. Checkpoint evidence pending.
+Baseline and context recorded before implementation discovery. Focused evidence: all 22 budget entries pass (operating-mode 1898/1900; review-result 685/700; no ceiling changes). `tests/links/run.sh` passed (198 markdown files); `tests/package/check-references.sh`, `tests/package/check-install-sync.sh` (one-build install parity/bootstrap mirror guidance), `tests/package/check-committed-skill.sh`, `tests/package/check-package.sh`, and `git diff --check` passed. Installer/package ran only in the isolated checkout. Full suite remains pending until the corrected product is committed.
 
 Initial baseline check at 1d227b9: genuine reporter exit 0, checker exit 2; only blocking predicate is missing Elevated technical plan review, with advisory unmapped placeholder verification. These are pending planning evidence, not a passing verification claim. An earlier inline shell invocation failed before checks (reporter/checker 127) due argument interpolation; literal ignored .local/check-source-item-lifecycle.sh rerun produced the genuine result. No product workaround or environment change. All 22 pre-edit budgets pass (command chunk 565078, exit 0). Cheap classifier /root/source_lifecycle_risk incorrectly treated watch as blue; main rejected that floor, read policy and retained Elevated. No red/checkpoint/boundary finding remains.
 
