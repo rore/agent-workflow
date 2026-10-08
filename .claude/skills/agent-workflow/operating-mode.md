@@ -38,7 +38,7 @@ Applicable authoritative item: keep exact ID/link in Work Record prose outside m
 |Pickup/resume/leaving|Optional Pallium association: follow installed `pallium-memory` attach/detach guidance; never duplicate/remove hook-owned branch/Work Record refs.|
 |PR creation|Link PR from source item under tracker rules.|
 |Verified merge|Record delivered contribution/remaining scope; don't infer whole-feature completion from one PR.|
-|Owner-managed tracker/checkout|Hand owner item/PR/contribution/remaining scope; keep Work Record update pending until confirmed.|
+|Owner-managed tracker/checkout|Hand owner item/PR/contribution/remaining scope; keep update pending in Work Record until confirmed.|
 |Missing tracker/Pallium/tools/identity|Don't block work or invent refs.|
 
 ## Step 1 — Read the config
