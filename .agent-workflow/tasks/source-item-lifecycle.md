@@ -41,7 +41,7 @@ Authoritative source: direct human item `01a11a38-9c89-7290-8ab6-836b08eed871` i
 
 **Exceptions:** —
 
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -57,6 +57,8 @@ Final product revision `2f5c7c7449e5866a511672fe54fc06adb4bf5e07` clarified PR l
 Trigger 2 dropped: the cheap classifier's watch-as-blue conclusion was an agent misread; main retained Elevated. Trigger 3 dropped: the first suite failure was an isolated Windows checkout test prerequisite, not an upstream instruction or runtime defect. No separate product feedback submission is needed for this assigned instruction change.
 
 ## Evidence
+
+PR #51: https://github.com/rore/agent-workflow/pull/51. Its first published head `0a3a7efb196408781554462c8ac39ebbd4d38216` passed GitHub tests, workflow and Redline jobs. CodeRabbit completed review with one valid authoring nitpick (lifecycle per-case rules belong in a table); no inline threads. The section is now an equivalent compact Markdown lookup table, preserving conditionality, lifecycle rules and ceilings. State returned to Ready to implement while this formatting correction and generated mirrors are verified. Initial product review remains valid for unchanged behavior; bounded independent review and final-suite evidence for the table will supersede delivery readiness before pushing again. Consumer rollout remains pending separately.
 
 Baseline and context recorded before implementation discovery. Focused evidence: all 22 budget entries pass (operating-mode 1900/1900; review-result 685/700; no ceiling changes). Final correction installer passed; `tests/links/run.sh` passed (200 markdown files) and `tests/package/check-committed-skill.sh` passed. At `b9841132889450faef1518115d861f5ceba1bdfd`, `tests/package/check-references.sh`, `tests/package/check-install-sync.sh` (one-build install parity/bootstrap mirror guidance), `tests/package/check-package.sh`, and `git diff --check` passed. First full suite command `.local/native-run.sh bash tests/run-all.sh --verbose` exited 1 at that HEAD: `tests/hooks/test_opencode_plugin.mjs:49` expected rejection `/DENY.*agent-workflow\.yaml/` but got no rejection; `hooks tests FAILED`. Output log `.local/source-item-lifecycle-suite.log`, SHA256 `D9DBD33E3F4B09C4F9073D217B018C149FB0519F1AAF7C5B6C45A37607709475`; executor session 57830 captured `EXECUTOR_EXIT=1`. No hook/test workaround was made. Root requested pausing final suite rerun until this failure is understood.
 

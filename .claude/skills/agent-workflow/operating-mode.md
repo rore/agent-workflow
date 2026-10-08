@@ -31,7 +31,15 @@ At pickup, pause, resume, handoff, and completion, if an applicable canonical ro
 
 ## Source-item lifecycle
 
-Applicable authoritative item: keep exact ID/link in Work Record prose outside markers; follow tracker rules. At pickup/resume/leaving, route optional Pallium association to installed `pallium-memory` attach/detach guidance; never duplicate/remove hook-owned branch/Work Record refs. At PR creation, link it from the source item under tracker rules. After verified merge, record delivered contribution and remaining scope; don't infer whole-feature completion from one PR. For owner-managed tracker/checkout, hand owner item/PR/contribution/remaining scope; keep update pending in Work Record until confirmed. Missing tracker/Pallium/tools/identity don't block work; don't invent refs.
+Applicable authoritative item: keep exact ID/link in Work Record prose outside markers; follow tracker rules.
+
+|When|Action|
+|---|---|
+|Pickup/resume/leaving|Optional Pallium association: follow installed `pallium-memory` attach/detach guidance; never duplicate/remove hook-owned branch/Work Record refs.|
+|PR creation|Link PR from source item under tracker rules.|
+|Verified merge|Record delivered contribution/remaining scope; don't infer whole-feature completion from one PR.|
+|Owner-managed tracker/checkout|Hand owner item/PR/contribution/remaining scope; keep Work Record update pending until confirmed.|
+|Missing tracker/Pallium/tools/identity|Don't block work or invent refs.|
 
 ## Step 1 — Read the config
 
