@@ -20,15 +20,20 @@ Authoritative source: direct human item `01a11a38-9c89-7290-8ab6-836b08eed871` i
 
 **Complexity:** Simple
 
-**Reason:** Complete intended scope includes gray/watch canonical and packaged instructions; public mirrors/record are blue. No intended red, API/schema/security/persistence or boundary surface. Provisional pending bounded classifier and conceptual-contract inspection.
+**Reason:** Complete intended scope includes gray/watch canonical and packaged instructions; public mirrors/record are blue. Watch is additive, not a blue zone. No red, API/schema/security/persistence or boundary surface; existing SPEC source/roadmap duties already cover these conditional instructions.
 
-**Discovery:** Pending; no implementation discovery performed before this baseline.
+**Discovery:** SPEC section 6 already requires authoritative identity, owner-managed reconciliation and preserving unfinished broader scope; sections 9.7/10 cover result reconciliation and parent/delivery separation. Establish-context links the authoritative item but neither template prompts for it. Operating-mode has generic roadmap transitions; result review has generic reconciliation, neither explicit PR contribution linkage nor optional Pallium routing. Installed Pallium work-associations.md owns exact-pair list/attach/detach and structural-reference restrictions. Source/public parity and package/install mirrors are existing tests. Budgets before edits: operating 1857/1900, result 671/700, routine 329/400, expanded 513/550. No new contract, field, gate, provider dependency or normative SPEC change is planned.
 
 **Material assumptions:** This clarifies existing source/context/roadmap duties rather than introducing a normative requirement; disproof requires SPEC-first reclassification and affected approval. Installed integrations own their procedures and may be absent; no provider or identity will be fabricated. Shared checkout is not available for edits.
 
-**Plan:** Pending discovery and independent technical plan review; do not edit product guidance yet.
+**Plan:** Four canonical edits only: core/skill/operating-mode.md, core/templates/work-record-routine.md, core/templates/work-record-expanded.md, core/templates/checkpoints/review-result.md. Add the same short visible optional source-item ID/link prompt outside both marker blocks, retaining task-local context. Replace the generic lifecycle sentence with a Source-item lifecycle section: exact optional authoritative tracker identity and existing transitions; link PR from item at creation; after verified merge record contribution and remaining scope, never complete a whole feature merely from one PR; hand concrete item/PR/contribution/remaining-scope updates to designated owner and keep obligation in Work Record until confirmed. At pickup/resume/leaving applicable source-item work route to installed pallium-memory association guidance when available, without copying commands or inventing/duplicating/removing hook-owned structural refs; absent integrations/tools/exact identity do not block ordinary work. Result review cross-references this canonical section. If needed, trim only derivable Work Record vocabulary and generic CI-result explanation in operating-mode, preserving operational gates/commands and all non-derivable constraints; no budget ceilings raised. Sync docs/agent-workflow/review-result.md using existing declared public-link rewrites and regenerate dist/.claude/.agents mirrors exclusively in this isolated checkout. Validate, obtain independent result/adequacy review, publish/attach PR and resolve actual CI/review gates before authorized upstream merge. Stop/reclassify for a genuine normative contract change or materially uncovered scope. Consumer refresh stays with Astra/owners, not this task.
 
-**Verification plan:** Pending mapping after discovery; preserve all assigned scenarios and full existing test/package gates.
+**Verification plan:**
+- Both templates prompt optional exact authoritative ID/link outside markers without schema changes -> independent source/template review plus existing Work Record parser tests.
+- Tracker PR creation, verified delivery/remaining scope, and owner handoff are actionable without false feature completion -> independent concise scenario walkthroughs covering tracker-only, other tracker, partial feature/multiple PRs and owner-managed checkout/handoff.
+- Optional Pallium routing preserves exact identity and structural origins without copied mechanics -> independent scenarios for Pallium-only, both integrations, no integrations and unavailable tools/identity; compare installed owning association guidance.
+- Slim text and correct required mirrors -> before/after bash tests/budget/run.sh --verbose, skill quick validator, tests/links/run.sh and package/parity checks; all ceilings unchanged.
+- Required workflow/result/delivery gates and isolation hold -> genuine reporter/checker after State transitions; bash tests/run-all.sh at exact clean product; independent clean-context technical plan/result reviews; actual PR CI and full review-thread disposition; verify merge tree/main ancestry and unchanged shared-root branch/head/hooks hash. Source readiness report names consumer rollout as separately pending.
 
 **Plan review:** Pending clean-context non-implementer review.
 
@@ -48,6 +53,8 @@ Shared root remains `feat/requirement-baseline-history` at `49abbc2f56e9314ec9a2
 ## Evidence
 
 Baseline and context recorded before implementation discovery. Checkpoint evidence pending.
+
+Initial baseline check at 1d227b9: genuine reporter exit 0, checker exit 2; only blocking predicate is missing Elevated technical plan review, with advisory unmapped placeholder verification. These are pending planning evidence, not a passing verification claim. An earlier inline shell invocation failed before checks (reporter/checker 127) due argument interpolation; literal ignored .local/check-source-item-lifecycle.sh rerun produced the genuine result. No product workaround or environment change. All 22 pre-edit budgets pass (command chunk 565078, exit 0). Cheap classifier /root/source_lifecycle_risk incorrectly treated watch as blue; main rejected that floor, read policy and retained Elevated. No red/checkpoint/boundary finding remains.
 
 ## Result review
 
