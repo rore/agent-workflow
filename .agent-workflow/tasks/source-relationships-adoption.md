@@ -1,6 +1,6 @@
 # Source relationships delivery and adoption distinction
 
-Current recovery: exact sentence/mirrors and roadmap reconciliation at 640d440c2497f4da4d37023f9819aec00dbc520e passed independent focused result review and all nine required local layers. State Ready for review; run the genuine checker, push/open PR, capture the returned URL in this normal record edit, then verify actual current-head CI/review threads and merge normally. Do not duplicate completed tests or request another human approval. Preserve the canonical dirty hook; manager owns canonical fast-forward and exact-file consumer refresh, with Pallium hold retained.
+Current recovery: PR https://github.com/rore/agent-workflow/pull/54 is open. Exact sentence/mirrors and roadmap reconciliation at 640d440c2497f4da4d37023f9819aec00dbc520e passed independent focused result review and all nine required local layers. State Ready for review; verify this PR's actual current-head CI and review threads, resolve any findings and merge normally. Do not open a duplicate PR, repeat completed tests or request another human approval. Preserve the canonical dirty hook; manager owns canonical fast-forward and exact-file consumer refresh, with Pallium hold retained.
 
 <!-- agent-workflow:start -->
 **Outcome:** The shipped producer roadmap is accurate and result-review guidance distinguishes tested/installed behavior from observed natural adoption.
@@ -17,7 +17,7 @@ Current recovery: exact sentence/mirrors and roadmap reconciliation at 640d440c2
 {"source":"Workflow manager chat 01a0d7cd-696b-76a0-8f2f-48a80a201905: authorized adoption clarification and canonical reconciliation","outcome":"The shipped producer roadmap is accurate and result-review guidance distinguishes tested/installed behavior from observed natural adoption.","scope":"Reconcile roadmap/features/add-work-record-source-relationships.md and its existing board entry; add the manager-approved single sentence to core/templates/checkpoints/review-result.md; regenerate its public doc, dist/native mirrors and manifests; this Work Record and focused verification/PR delivery.","constraints":"No new tracker, automation, mandatory monitor, pre-merge gate, product code, schema, policy, SPEC concept, installation/service changes or collection-rule duplication. Preserve parent Astra's existing adoption monitor and owner-managed Pallium hold; no historical backfill counts. Canonical dirty hook and source branch stay untouched until a separately coordinated ordinary fast-forward. Keep the producer checkout for installed-UI evidence.","completion_criteria":"Producer status and board placement are Done, with rollout hold and October 17–31 adoption pending explicit. The exact approved sentence reaches all required mirrors within unchanged budgets. Focused links/package/parity and required repository checks pass; independent review and actual PR checks/threads are clear before normal merge. Report exact changed artifact hashes for the manager-owned consumer refresh."}
 
 **Relationships:**
-{"schema_version":1,"sources":[{"provider":"minimap","scope_ref":"roadmap:v1:git:github.com/rore/agent-workflow#roadmap","local_ref":"item:v1:add-work-record-source-relationships"}],"pull_requests":[]}
+{"schema_version":1,"sources":[{"provider":"minimap","scope_ref":"roadmap:v1:git:github.com/rore/agent-workflow#roadmap","local_ref":"item:v1:add-work-record-source-relationships"}],"pull_requests":["https://github.com/rore/agent-workflow/pull/54"]}
 
 **Risk:** Elevated
 
@@ -53,6 +53,8 @@ Requested sentence: "For agent-instruction changes, distinguish tested/installed
 Independent Sol/high plan review is clear at 82c18bb. It reviewed this record, SPEC 9.7, checkpoint, skill-authoring discipline, collection guidance and roadmap diff, not live installation pixels or monitor configuration. Pre-edit budget is 685/700 tokens; shorten only the existing plan-versus-result explanatory recap equivalently to fit the exact sentence, retaining every approval obligation and unchanged ceiling. This is not a new adoption gate.
 
 ## Implementation
+
+Owning GitHub CLI created https://github.com/rore/agent-workflow/pull/54 at d4e06dc235f8f0a39c3509a04c7370108b68ab81; app artifact attached. This same PR-creation record edit appends only that returned real URL to Relationships, preserving the exact feature tuple, baseline and reviewed product. Read back through the actual trusted packaged decoder; actual updated-head checks and inline reviews still gate merge. This implementation/release follow-up is not counted as natural adoption.
 
 Final verification completed naturally at product 640d440 by native:/root/relationships_final_verification, suite and child exit 0, all nine layers pass. Independent result review is clear. This record-only evidence/state update changes no instruction or product. Temporary isolated runtime junction was removed after verifying its exact target; original source Python remains present. Final PR CI and review-thread closure precede merge; canonical checkout and live consumers have not been updated by this task.
 
