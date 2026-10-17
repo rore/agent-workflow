@@ -98,8 +98,8 @@ There is no trustworthy structured creation-input API today. Integrate relations
 
 ### Existing evidence and subsequent implementation surfaces
 
-- `core/work_record/parser.py:244` optional JSON pattern; `:307` single marker-block extraction; `:350` field extraction; `:369` existing comment removal needs care to preserve comment-like bytes inside relationship JSON strings; `:538` strict JSON duplicate-key handling; `:974` render seam. Both shapes and round trips already exist.
-- `core/work_record/local_backend.py:54` slug safety, `:74` taskPath validation, `:122` read, `:128` write/prose preservation, `:161` configured resolution/containment. Reuse this owner; two configured layouts are required.
+- `core/work_record/parser.py:244` optional JSON pattern; `:310` single marker-block extraction; `:349` field extraction; `:368` existing comment removal needs care to preserve comment-like bytes inside relationship JSON strings; `:550` strict JSON load; `:962` render seam. Both shapes and round trips already exist.
+- `core/work_record/local_backend.py:55` slug safety, `:74` taskPath validation, `:122` read, `:128` write/prose preservation, `:168` configured resolution/containment. Reuse this owner; two configured layouts are required.
 - `core/checker/checker.py:892` exact v1 result, `:918` supplied-ref authority, `:935` configured backend, `:1033` bounded output. Existing resolver clients must not change meaning.
 - `core/config/loader.py:139` YAML decoding and `:189` configured taskPath; current consumer runtime evidence: Minimap `package.json` is Node ESM with no production dependencies, `package/minimap/src/roadmap.js` owns JSON config/limited frontmatter, and `package/minimap/src/pallium.js` returns exact scope/local reference pairs. These were inspected as data through GitHub; no consumer code was run.
 - Follow-up scope after agreement: SPEC first, optional parser/renderer field, write/capture/checker read surface, trusted portable owner reader/packaging and shared conformance fixtures, both templates/transition guidance/public/package mirrors. Normative SPEC/schema changes imply High-risk reclassification and the corresponding reviews/approval; this phase does not grant them.
@@ -108,6 +108,8 @@ There is no trustworthy structured creation-input API today. Integrate relations
 ### Handoff
 
 The first proposal is ready for workflow-manager/Minimap/Astra discussion, not approved implementation. Portable config binding and final limits/handshake remain explicit decisions. Workflow manager owns canonical feature progress and returns agreement before a separately reviewed implementation plan. No product files changed; no tests or synthetic load run. Current branch and canonical record are above; the next action is manager contract reconciliation, not coding.
+
+Last good proposal revision: `3ff4f525a51282a599d3ae63c1822e552b36ac9c` on `feat/work-record-source-contract`; only this record differs from main. Its post-proposal check reports reporter 0 and checker 2, solely the pending Elevated technical plan review (ebd359, independently inspected 9c60ee). Source-citation/handoff prose corrections follow that revision; Task Context/baseline are unchanged. No passing readiness, shared agreement or implementation completion is claimed. Shared root branch/head/status and original dirty-hook hash still match pickup (358586). No consumer/global installation, environment or service changes occurred.
 
 ## Result review
 
