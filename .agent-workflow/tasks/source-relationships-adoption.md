@@ -1,6 +1,6 @@
 # Source relationships delivery and adoption distinction
 
-Current recovery: roadmap-only commit 87ba3df was legitimately exempt. The manager then authorized one exact review-result instruction, so normal workflow applies. Focused independent plan review is clear at 82c18bb; implement the exact sentence with a small equivalent recap trim to stay within the unchanged 700-token ceiling, then regenerate isolated mirrors and verify. No further human approval is missing. Preserve the canonical checkout's dirty hook.
+Current recovery: exact sentence/mirrors and roadmap reconciliation are implemented at 640d440c2497f4da4d37023f9819aec00dbc520e; independent focused result review is clear. One required full suite is running under native:/root/relationships_final_verification in this isolated checkout, log .local/full-suite-640d440.log. Do not duplicate it. When it passes, record evidence/Ready for review, run the genuine checker, push/open PR, inspect current-head CI and review threads, then merge normally. No further human approval is missing. Preserve the canonical dirty hook and owner-managed rollout; no live consumer updates by this task.
 
 <!-- agent-workflow:start -->
 **Outcome:** The shipped producer roadmap is accurate and result-review guidance distinguishes tested/installed behavior from observed natural adoption.
@@ -64,4 +64,6 @@ Prior product evidence is reused only for unchanged code. Current budget22, exac
 
 ## Result review
 
-Pending final focused independent review and actual verification evidence.
+Agent technical review: native:/root/relationships_corrected_result_review
+Reviewed revision: 640d440c2497f4da4d37023f9819aec00dbc520e
+Verification adequacy: Independent Sol/high focused result review found no blockers. Exact authorized sentence appears once per required copy; recap trim preserves plan/result timing and separate agent/human/PR obligations. All packaged/native hashes match BF128947DBCF383C93F51F0307844396679C8FDA0EAA0609E2FD711E072F3F29. Roadmap Done placement is honest while Pallium hold and zero-observation October 17–31 assessment remain explicit. Elevated/Simple is appropriate; no new gate or SPEC concept. Budget, parity, skill validation and focused prose inspection are proportionate; no product test or text-matching framework needed. Full suite and actual PR checks/thread closure remain pending, not waived or claimed complete. Reuse this review for record-only evidence/state updates, not new instructions.
