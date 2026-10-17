@@ -688,6 +688,44 @@ A local `taskPath` **MUST** contain exactly one `{slug}`, be repository-relative
 
 The lookup only selects and parses a Work Record. It **MUST NOT** decide readiness, Redline, applicability, consumer scope, merge or release state; create, update, or scan records; or change stored identity. Missing configuration and detached HEAD are absence, not workflow exemption. Automatic consumers **MUST NOT** execute a repository-provided resolver; without a trusted provider-owned locator they remain degraded or require explicit agent invocation.
 
+#### Optional source relationships
+
+Both local Work Record shapes **MAY** carry one `Relationships` field inside the marker block. Its value is strict JSON, at most 65536 UTF-8 bytes excluding surrounding whitespace and template hint comments:
+
+```json
+{"schema_version":1,"sources":[{"provider":"minimap","scope_ref":"<exact provider scope>","local_ref":"<exact provider item>"}],"pull_requests":["https://github.com/rore/agent-workflow/pull/53"]}
+```
+
+The object **MUST** contain exactly `schema_version`, `sources`, and `pull_requests`. Version is integer `1`, not boolean. `sources` is `null` for unverified input, `[]` only for established no-source, or an array of source objects containing exactly nonempty string `provider`, `scope_ref`, and `local_ref`, with optional safe HTTPS navigation `url`. Strings **MUST NOT** contain controls. Identity is the exact three-string tuple; case-folding, Unicode normalization, title matching, reconstructed references, and duplicate tuples are invalid. Navigation URLs are never identity. A missing field is legacy/unknown, not an empty source set.
+
+`pull_requests` is an array of recorded PR URL strings, not proof that no other PR exists or that a PR merged. The initial supported profile is `https://github.com/<owner>/<repository>/pull/<positive-decimal-number>` with ordinary ASCII owner/repository name characters and no credentials, port, query, fragment, encoded/unsafe path or leading-zero number. GitHub host/owner/repository case is ignored for deduplication, not source identity. Stored URLs **MUST NOT** be silently rewritten. Non-HTTPS URLs, credentials, controls, backslashes or missing host are invalid; otherwise safe unsupported PR hosts/profiles are unsupported. Duplicate PR identities are invalid. No remote status lookup is required.
+
+Agents **MUST** copy authoritative supplied sources in the **same initial record edit**, preserve/correct them during normal pickup/resume/handoff, and append the owning PR tool's URL in the **same PR/transition edit**. They **MUST** read back and compare exact expected references when supplied; missing expected input remains unverified. This first slice is an agent-performed edit/check, **not** automatic capture or detection of references never supplied. It introduces no human backlink task, capture service or evidence sidecar.
+
+The Python parser/renderer **MUST** retain the exact optional field and readable core record, including unsupported metadata. Relationship validation is separate: malformed JSON/known structure, duplicate decoded keys (including escaped-equivalent keys), duplicate identities, unsafe URLs, overflow and parser/stack failures are invalid; future schema or safe unsupported PR profile is unsupported. Identical bytes have identical outcomes regardless of age. Invalid declarations block the relationship predicate; unsupported metadata is a nonblocking diagnostic and **MUST NOT** turn the whole record into `malformed_record`. Neither permits guessed or salvaged relationship data. Preserve comment-like JSON string bytes; ignore only surrounding template hints, never comments between JSON tokens. Resolver-v1 meanings, fields and output bounds above **MUST** remain unchanged.
+
+#### Trusted passive metadata decoder
+
+Workflow owns a data-only Node ESM decoder bundled with its pinned maintained YAML dependency and license in the trusted distribution. Consumers **MUST NOT** execute inspected-repository code, require Python solely for display, or add a consumer installation step. There is no second CLI, locator, export file, registry or capture API. Public functions accept raw UTF-8 bytes and lexical paths as data:
+
+```text
+decodeConfig(configBytes) -> {status: "ok", task_path}
+                         | {status: "invalid"|"unsupported", reason}
+decodeRecord(recordBytes, {task_path, record_path})
+  -> {status: "declared"|"legacy", work_record_ref, title, recorded_state, relationships}
+   | {status: "invalid"|"unsupported", reason}
+```
+
+Both functions **MUST** reject malformed UTF-8 without replacement. Successful legacy results use `relationships: null`; declared results return the validated v1 object unchanged. Record decoding enforces one marker block, unique fields, supported core shape/state, exact slug/template mapping and the relationship grammar. Title is the first Markdown H1 when present, otherwise Outcome. This profile does not decide readiness. Failure results contain only status and a stable reason, never invented decoded core/source fields.
+
+Config decoding validates a **metadata profile**, not whole-Workflow validity: version `1`, mappings `workRecord`/`workRecord.local`, backend `local`, and string `taskPath` under existing lexical rules are required. No missing-field defaults; other versions/backends are unsupported. Config input is bounded at 65536 bytes independently of Relationships; there is **no whole-record cap**. Consumer file/scan caps must surface incomplete coverage, not empty relationships.
+
+YAML supports one mapping document, block/flow mappings, quoted/plain strings, JSON-like scalars and bounded aliases/merge with fixture-defined YAML 1.1-compatible scalar behavior. Explicit keys override merged keys. Duplicate explicit keys, cycles and custom tags are invalid; unsupported constructed standard-tag containers (Set, Date, binary) are unsupported. Library limits bound collection depth to 100, aliases to 100 and merge-key work to 10000. A bounded active/visited traversal rejects unsupported container types before descending, rejects cycles, visits shared objects once and caps unique containers at 10000; it **MUST NOT** serialize/expand aliases. Parser/stack failures are invalid. This bounded profile does not claim general PyYAML parity or alter the ordinary Python loader.
+
+Consumers own filesystem reads/containment/reparse points, selected checkout/source, configured discovery, Git/content provenance, reverse indexing, snapshots, paging and UI. Unsupported results retain original input/context for partial/error display and record navigation, **not** verified decoded source indexing or authoritative empty lists. Other valid records/sources remain usable. Recorded state/checkout versions do not prove delivery/merge. One source may have many canonical records/PRs; distinguish canonical identities from checkout versions and unique PR counts from relationship counts without silently truncating completeness.
+
+Shared fixtures owned here **MUST** prove Python/Node and actual packaged-import conformance: both shapes, legacy/null/none/many, exact Unicode, comment-like strings, escaped duplicate keys, malformed UTF-8/deep JSON, two configured layouts/unsafe paths, URLs/versions, YAML scalar/duplicate/merge behavior and every resource bound. Consumers reuse them and add filesystem/provenance/partial-result/navigation checks. The ordinary resolver remains a separate compatibility contract.
+
 ### 13.2 Readiness Validation
 
 In this contract, **readiness** means the objective state of the Work Record, evidence, approvals, policy signals, and findings — not correctness or quality. A task is ready when the structural artifacts the workflow requires are present, well-formed, and consistent with each other; whether those artifacts describe a sound plan or sufficient evidence is a reviewer judgment outside the harness's scope (see §5 Judgment Boundary).
