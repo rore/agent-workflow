@@ -54,11 +54,13 @@ Independent Sol/high plan review is clear at 82c18bb. It reviewed this record, S
 
 ## Implementation
 
+Implemented the exact authorized sentence after verified delivery, with only an equivalent shortening of the plan-versus-result recap. All 22 unchanged budgets pass; review-result is exactly 700/700 tokens. Public doc updated and existing script regenerated only validated isolated dist/.claude/.agents targets, all 76 manifest entries. Actual packaged/native review-result SHA256 is BF128947DBCF383C93F51F0307844396679C8FDA0EAA0609E2FD711E072F3F29 in all three copies; source/public retain their existing source-relative link and checkout newline conventions. Skill quick validation and whitespace checks pass. No runtime/checker/decoder source or live consumer changes. Final focused result review and the single mandatory full suite follow this candidate commit.
+
 The initial two-file documentation scope passed genuine workflow.applicability before commit 87ba3df. On the subsequent instruction-scope expansion, created this record before changing the checkpoint source. Roadmap reconciliation remains unchanged in purpose; no existing baseline or approved requirement chain was rewritten.
 
 ## Evidence
 
-Prior product evidence is reused only for unchanged code. Current instruction delta, mirrors and final repository checks remain pending.
+Prior product evidence is reused only for unchanged code. Current budget22, exact mirror hashes, skill quick validation and inspected minimal source/public delta pass. Full suite, focused independent result review, links/package assertions and final PR checks remain pending.
 
 ## Result review
 
