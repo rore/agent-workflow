@@ -1,6 +1,6 @@
 # Source relationships delivery and adoption distinction
 
-Current recovery: exact sentence/mirrors and roadmap reconciliation are implemented at 640d440c2497f4da4d37023f9819aec00dbc520e; independent focused result review is clear. One required full suite is running under native:/root/relationships_final_verification in this isolated checkout, log .local/full-suite-640d440.log. Do not duplicate it. When it passes, record evidence/Ready for review, run the genuine checker, push/open PR, inspect current-head CI and review threads, then merge normally. No further human approval is missing. Preserve the canonical dirty hook and owner-managed rollout; no live consumer updates by this task.
+Current recovery: exact sentence/mirrors and roadmap reconciliation at 640d440c2497f4da4d37023f9819aec00dbc520e passed independent focused result review and all nine required local layers. State Ready for review; run the genuine checker, push/open PR, capture the returned URL in this normal record edit, then verify actual current-head CI/review threads and merge normally. Do not duplicate completed tests or request another human approval. Preserve the canonical dirty hook; manager owns canonical fast-forward and exact-file consumer refresh, with Pallium hold retained.
 
 <!-- agent-workflow:start -->
 **Outcome:** The shipped producer roadmap is accurate and result-review guidance distinguishes tested/installed behavior from observed natural adoption.
@@ -43,7 +43,7 @@ Current recovery: exact sentence/mirrors and roadmap reconciliation are implemen
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Plan review
@@ -54,16 +54,18 @@ Independent Sol/high plan review is clear at 82c18bb. It reviewed this record, S
 
 ## Implementation
 
+Final verification completed naturally at product 640d440 by native:/root/relationships_final_verification, suite and child exit 0, all nine layers pass. Independent result review is clear. This record-only evidence/state update changes no instruction or product. Temporary isolated runtime junction was removed after verifying its exact target; original source Python remains present. Final PR CI and review-thread closure precede merge; canonical checkout and live consumers have not been updated by this task.
+
 Implemented the exact authorized sentence after verified delivery, with only an equivalent shortening of the plan-versus-result recap. All 22 unchanged budgets pass; review-result is exactly 700/700 tokens. Public doc updated and existing script regenerated only validated isolated dist/.claude/.agents targets, all 76 manifest entries. Actual packaged/native review-result SHA256 is BF128947DBCF383C93F51F0307844396679C8FDA0EAA0609E2FD711E072F3F29 in all three copies; source/public retain their existing source-relative link and checkout newline conventions. Skill quick validation and whitespace checks pass. No runtime/checker/decoder source or live consumer changes. Final focused result review and the single mandatory full suite follow this candidate commit.
 
 The initial two-file documentation scope passed genuine workflow.applicability before commit 87ba3df. On the subsequent instruction-scope expansion, created this record before changing the checkpoint source. Roadmap reconciliation remains unchanged in purpose; no existing baseline or approved requirement chain was rewritten.
 
 ## Evidence
 
-Prior product evidence is reused only for unchanged code. Current budget22, exact mirror hashes, skill quick validation and inspected minimal source/public delta pass. Full suite, focused independent result review, links/package assertions and final PR checks remain pending.
+Required `bash tests/run-all.sh --verbose` passed all nine layers at product 640d440c2497f4da4d37023f9819aec00dbc520e (subsequent 54ff9c0 is record-only), wrapper SUITE_EXIT_CODE=0 and child exit 0. Log `.local/full-suite-640d440.log`: budget22, schema51, Python work-record93, Node95 relationship/13 config fixtures/generated bounds, checker261, Redline unit170 plus schema/skill-YAML/goldens/Node2/CI8, tuner23 plus five calibration cases, hooks, links201, package/import/install/autocrlf/bootstrap. Focused review, skill quick validation, exact packaged/native parity and whitespace checks pass. Review-result is 700/700 under the unchanged ceiling. The only local workflow advisory is commit order because legitimately exempt roadmap commit 87ba3df preceded the newly required record; the instruction edit followed plan review/record. This is disclosed, not waived or a blocker. Actual PR checks/threads remain before merge.
 
 ## Result review
 
 Agent technical review: native:/root/relationships_corrected_result_review
 Reviewed revision: 640d440c2497f4da4d37023f9819aec00dbc520e
-Verification adequacy: Independent Sol/high focused result review found no blockers. Exact authorized sentence appears once per required copy; recap trim preserves plan/result timing and separate agent/human/PR obligations. All packaged/native hashes match BF128947DBCF383C93F51F0307844396679C8FDA0EAA0609E2FD711E072F3F29. Roadmap Done placement is honest while Pallium hold and zero-observation October 17–31 assessment remain explicit. Elevated/Simple is appropriate; no new gate or SPEC concept. Budget, parity, skill validation and focused prose inspection are proportionate; no product test or text-matching framework needed. Full suite and actual PR checks/thread closure remain pending, not waived or claimed complete. Reuse this review for record-only evidence/state updates, not new instructions.
+Verification adequacy: Independent Sol/high focused result review found no blockers. Exact authorized sentence appears once per required copy; recap trim preserves plan/result timing and separate agent/human/PR obligations. All packaged/native hashes match BF128947DBCF383C93F51F0307844396679C8FDA0EAA0609E2FD711E072F3F29. Roadmap Done placement is honest while Pallium hold and zero-observation October 17–31 assessment remain explicit. Elevated/Simple is appropriate; no new gate or SPEC concept. Budget, parity, skill validation and focused prose inspection are proportionate; no product test or text-matching framework needed. The required full suite now passes as recorded above; actual PR checks/thread closure remain pending. Reuse this review for record-only evidence/state updates, not new instructions.
