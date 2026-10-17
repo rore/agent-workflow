@@ -1,6 +1,6 @@
 # Work Record source relationships — reviewed implementation plan
 
-Current recovery: product candidate `dea308dd985266911315e34ba5681514d4491409` passes the full nine-layer suite, but independent result review leaves one URL host-profile parity blocker. State Blocked pending the workflow manager's exact human decision on the narrower ASCII/punycode profile; no profile narrowing, PR or push yet. The original four approved implementation changes remain active, baseline unchanged. No live installation/service changes are authorized.
+Current recovery: human approval for the narrower optional source-navigation hostname profile is independently verified below. State Ready to implement; resume the same bounded correction, shared regressions, regenerated artifact and focused independent recheck. Product candidate `dea308d` already passes the full nine-layer suite; new affected behavior must be verified. The original four approved implementation changes remain active, baseline unchanged. No live installation/service changes are authorized.
 
 Source feature: https://github.com/rore/agent-workflow/blob/main/roadmap/features/add-work-record-source-relationships.md
 
@@ -54,10 +54,12 @@ Assignment: `relay-msg-02b8bdaef9044184b7955123fe0dc2b4` from workflow manager. 
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
+
+URL-profile requirement adjustment approved: main independently read direct human item `01a149e4-914c-73b1-9c6c-be89c3d41b58` in Astra reviewer chat `01a07bef-18c8-71b2-89ab-c0cbe91e73ad`, turn `01a149e4-89b6-7712-83f3-d74ca8f03339`, verbatim `ok`. It answers the preceding recommendation `msg_04aa05a5553b6431016ad36d87abbc87d2a531ea094b0ad58c` and explicit question `msg_04aa05a5553b6431016ad36c55cb6087d28c45e926564bd91c`: accept ASCII/punycode hostnames and make literal Unicode hostnames unsupported in optional `Relationships.sources[i].url`; exact source tuples, GitHub PR profile and Unicode titles/descriptions are unaffected. This is an approved narrowing of the earlier DNS/IDN promise, not equivalent unchanged behavior. No stored format/API, Task Context replacement, baseline/approved chain rewrite, live install or new dependency is authorized. State Ready to implement immediately; SPEC-first lexical host/port/bounds correction, shared regressions, regenerate mirrors and focused smart review follow. Separate final High-risk human result/architecture gate remains before merge.
 
 Genuine source-link capture: workflow manager supplied the trusted read-only Minimap `roadmap item-ref add-work-record-source-relationships --repo C:/Dev/rore/agent-workflow --json` result, independently confirmed by the Minimap manager. Contract `minimap-roadmap-item/v1` returns exact `scope_ref` `roadmap:v1:git:github.com/rore/agent-workflow#roadmap` and `local_ref` `item:v1:add-work-record-source-relationships`; provider is `minimap`. This same normal record edit replaces previously unverified `sources: null` with that supplied tuple; optional navigation URL is omitted. No PR exists, so `pull_requests` stays empty. Baseline, approved behavior-change chain, Approvals and Blocked state are unchanged. Earlier unknown-source statements remain historical, not the current relationship declaration. Exact read-back and trusted decoder results accompany the genuine record/config handoff; this is not the isolated lifecycle fixture, automatic capture, or acceptance of the pending URL-profile narrowing.
 
