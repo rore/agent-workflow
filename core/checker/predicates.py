@@ -61,6 +61,7 @@ from core.work_record import (
     find_block_span,
     parse_exceptions,
 )
+from core.work_record.relationships import decode_relationships
 
 from .redline_verdict import RedlineVerdict, risk_at_least
 from .verdict import PredicateResult
@@ -406,6 +407,40 @@ def workrecord_state_valid(ctx: CheckerContext) -> PredicateResult:
             f"state {state!r} is not one of "
             + ", ".join(repr(s) for s in _ALLOWED_STATES)
         ),
+        blocking=True,
+    )
+
+
+def workrecord_relationships_valid(ctx: CheckerContext) -> PredicateResult:
+    """Validate declared Relationships without making core parsing depend on them."""
+    if ctx.record is None:
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=True,
+            detail="skipped — Work Record could not be parsed.",
+            blocking=False,
+        )
+    result = decode_relationships(ctx.record.get("relationships"))
+    status = result["status"]
+    if status == "invalid":
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=False,
+            detail=f"Relationships are invalid ({result['reason']}).",
+            blocking=True,
+        )
+    if status == "unsupported":
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=True,
+            detail=f"Relationships are unsupported ({result['reason']}); metadata was retained.",
+            blocking=False,
+        )
+    detail = "Relationships are legacy/unknown." if status == "legacy" else "Relationships are valid."
+    return PredicateResult(
+        name="workrecord.relationships_valid",
+        passed=True,
+        detail=detail,
         blocking=True,
     )
 
@@ -1604,6 +1639,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "workrecord.routine_fields_present": "core",
     "workrecord.expanded_fields_present": "core",
     "workrecord.state_valid": "core",
+    "workrecord.relationships_valid": "core",
     "workrecord.implementation_ready": "core",
     "exceptions.well_formed": "core",
     "exceptions.not_against_boundary": "core",
@@ -1860,6 +1896,7 @@ PREDICATES: tuple = (
     shape_matches_classification,
     workrecord_fields_present,
     workrecord_state_valid,
+    workrecord_relationships_valid,
     # --- redline predicates (slice B) -------------------------------
     risk_redline_findings_available,
     risk_boundary_violation_absent,

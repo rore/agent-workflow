@@ -6,6 +6,22 @@ Newest entries on top. Each entry: date, decision, alternatives considered, rati
 
 Routine session work doesn't go here — only decisions a future maintainer would want the reasoning behind.
 
+## 2026-10-17 — Navigation hostnames use a shared lexical profile
+
+**Decision:** Optional source navigation supports literal ASCII hostname syntax (including punycode), canonical IPv4 and bracketed IPv6, with explicit hostname/port bounds. Literal Unicode hostnames are unsupported, not silently normalized. Punycode labels do not promise IDNA validity or DNS resolution. Exact source tuples, Unicode titles/content and the canonical GitHub PR profile are unchanged. The human explicitly approved this narrowing of the initial DNS/IDN promise.
+
+**Alternatives considered:** Native Python IDNA2003 and Node WHATWG mapping, incremental Unicode exceptions, another dependency, or a custom IDNA implementation.
+
+**Rationale:** The native mappings disagree on the same bytes. A small shared lexical profile keeps validation consistent without pretending to implement an internationalized-domain standard or changing stored identifiers. Unsupported navigation metadata remains preserved with explicit diagnostics.
+
+## 2026-10-17 — Source relationships are optional metadata, not another locator
+
+**Decision:** Store one versioned JSON Relationships field on either Work Record shape. Preserve exact provider scope/item tuples and recorded PR URLs; keep resolver v1 unchanged. Workflow owns Python validation, one trusted pure Node decoder and shared fixtures. Consumers own filesystem discovery, provenance, reverse lookup and partial/paged display. Bundle the published self-contained js-yaml 5.5.0 Node ESM artifact and MIT notice; use finite library limits and a small bounded cycle/type check, not a YAML parser or bundler. Unsupported metadata retains original bytes/core and explicit diagnostics, never an authoritative empty result. First-slice capture is the same normal agent edit and exact read-back, not automatic incoming-reference capture; the human explicitly approved that limit.
+
+**Alternatives considered:** Prose parsing, duplicated source backlinks, another read CLI/export, capture service, consumer Python/npm setup, custom YAML parsing, or the yaml 2.9.1 Node runtime closure (219 files across Minimap's three copies versus six runtime/license files for js-yaml).
+
+**Rationale:** A feature can have many records/PRs without another registry or completion inference. One owned passive contract keeps non-Python consumers portable and prevents inspected-repository execution. Exact inputs, bounded parsing, legacy compatibility and visible unsupported states matter more than pretending automatic completeness. Published runtime size/license and conformance are verified in the delivery artifact, not inferred from whole-package npm metadata.
+
 ---
 
 ## 2026-10-01 — Genuine diff evidence and semantic catalog handling at bootstrap

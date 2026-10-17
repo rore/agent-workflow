@@ -43,6 +43,11 @@
           "blocking": true
         },
         {
+          "name": "workrecord.relationships_valid",
+          "passed": true,
+          "blocking": true
+        },
+        {
           "name": "risk.redline_findings_available",
           "passed": true,
           "blocking": true

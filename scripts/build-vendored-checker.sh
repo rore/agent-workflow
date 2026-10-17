@@ -58,6 +58,7 @@ OUTPUT = Path(sys.argv[2]) if sys.argv[2] != "/dev/stdout" else None
 # Order matters: each file may only reference symbols defined above it.
 SOURCES = [
     "core/work_record/parser.py",
+    "core/work_record/relationships.py",
     "core/work_record/backend.py",
     "core/work_record/local_backend.py",
     "core/config/applicability.py",
