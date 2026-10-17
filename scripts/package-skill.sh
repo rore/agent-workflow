@@ -84,6 +84,10 @@ required_paths=(
   "core/templates/agent-workflow.yaml.template"
   "core/templates/.github/workflows/agent-workflow.yml.template"
   "core/schema/agent-workflow.schema.json"
+  "core/work_record/relationships.mjs"
+  "core/work_record/vendor/js-yaml.mjs"
+  "core/work_record/vendor/LICENSE.js-yaml"
+  "core/work_record/vendor/NOTICE.js-yaml"
   "core/agent-redline/core/skill/agent-redline.md"
   "core/agent-redline/core/skill/bootstrap-mode.md"
   "core/agent-redline/core/skill/operating-mode.md"
@@ -115,7 +119,7 @@ rm -rf "$TARGET"
 mkdir -p "$TARGET/templates/checkpoints" \
          "$TARGET/templates/.github/workflows" \
          "$TARGET/assets/schema" \
-         "$TARGET/scripts" \
+         "$TARGET/scripts/vendor" \
          "$TARGET/hooks" \
          "$TARGET/opencode" \
          "$TARGET/agent-redline/references/per-checkpoint" \
@@ -304,6 +308,10 @@ cp "$REPO_ROOT/scripts/agent-workflow-tune.py"     "$TARGET/scripts/"
 cp "$REPO_ROOT/scripts/agent-workflow-runtime.py"  "$TARGET/scripts/"
 cp "$REPO_ROOT/scripts/agent-workflow-runtime.sh"  "$TARGET/scripts/"
 cp "$REPO_ROOT/scripts/agent-workflow-runtime.ps1" "$TARGET/scripts/"
+cp "$REPO_ROOT/core/work_record/relationships.mjs" "$TARGET/scripts/work-record-relationships.mjs"
+cp "$REPO_ROOT/core/work_record/vendor/js-yaml.mjs" \
+   "$REPO_ROOT/core/work_record/vendor/LICENSE.js-yaml" \
+   "$REPO_ROOT/core/work_record/vendor/NOTICE.js-yaml" "$TARGET/scripts/vendor/"
 chmod +x "$TARGET/scripts/agent-workflow-runtime.py" "$TARGET/scripts/agent-workflow-runtime.sh" 2>/dev/null || true
 
 # Claude Code hooks (verbatim — shell + python, no path substitution).

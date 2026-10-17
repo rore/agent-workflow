@@ -29,6 +29,7 @@ import json
 import re
 from dataclasses import dataclass
 from typing import Literal, NotRequired, TypedDict
+from .relationships import _strip_surrounding_hints
 
 # ---------------------------------------------------------------------------
 # Public types
@@ -116,6 +117,7 @@ class WorkRecord(TypedDict):
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
     behavior_changes: NotRequired[list[BehaviorChange]]
+    relationships: NotRequired[str]
 
 
 class ExpandedWorkRecord(TypedDict):
@@ -158,6 +160,7 @@ class ExpandedWorkRecord(TypedDict):
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
     behavior_changes: NotRequired[list[BehaviorChange]]
+    relationships: NotRequired[str]
 
 
 Shape = Literal["routine", "expanded"]
@@ -245,11 +248,16 @@ _OPTIONAL_JSON_FIELDS: dict[str, str] = {
     "Requirement baseline": "requirement_baseline",
     "Behavior changes": "behavior_changes",
 }
+_OPTIONAL_RAW_FIELDS: dict[str, str] = {"Relationships": "relationships"}
 _EXPANDED_OPTIONAL_EXTRA_FIELDS: dict[str, str] = {
     **_OPTIONAL_JSON_FIELDS,
+    **_OPTIONAL_RAW_FIELDS,
     "Exceptions": "exceptions",
 }
-_ROUTINE_OPTIONAL_EXTRA_FIELDS: dict[str, str] = dict(_OPTIONAL_JSON_FIELDS)
+_ROUTINE_OPTIONAL_EXTRA_FIELDS: dict[str, str] = {
+    **_OPTIONAL_JSON_FIELDS,
+    **_OPTIONAL_RAW_FIELDS,
+}
 
 # Fields whose value is allowed to be empty on each shape. Everything
 # else is rejected as malformed when its value is blank. On the routine
@@ -365,7 +373,12 @@ def _extract_fields(block: str) -> dict[str, str]:
         label = match.group(1).strip()
         value_start = match.end()
         value_end = matches[i + 1].start() if i + 1 < len(matches) else len(block)
-        value = _HTML_COMMENT_RE.sub("", block[value_start:value_end]).strip()
+        raw_value = block[value_start:value_end]
+        value = (
+            _strip_surrounding_hints(raw_value)
+            if label == "Relationships"
+            else _HTML_COMMENT_RE.sub("", raw_value).strip()
+        )
         if label in out:
             raise WorkRecordParseError(
                 f"duplicate field {label!r} in Work Record block — "
@@ -731,6 +744,8 @@ def _parse_optional_integrity_fields(
         )
     if "Behavior changes" in found:
         record["behavior_changes"] = parse_behavior_changes(found["Behavior changes"])
+    if "Relationships" in found:
+        record["relationships"] = found["Relationships"]
 
 
 # ---------------------------------------------------------------------------
@@ -1058,11 +1073,17 @@ def _render_against(
             # ``record.get`` works because TypedDicts are dicts at runtime;
             # emit the field only when present.
             value = record.get(key)  # type: ignore[misc]
-            if value is None or (key not in _OPTIONAL_JSON_FIELDS.values() and value == ""):
+            if value is None or (
+                key not in _OPTIONAL_JSON_FIELDS.values()
+                and key not in _OPTIONAL_RAW_FIELDS.values()
+                and value == ""
+            ):
                 continue
             rendered = (
                 _integrity_json_value(key, value)
                 if key in _OPTIONAL_JSON_FIELDS.values()
+                else str(value)
+                if key in _OPTIONAL_RAW_FIELDS.values()
                 else str(value)
             )
             line = f"**{label}:** {rendered}"

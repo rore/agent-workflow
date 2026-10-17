@@ -38,4 +38,5 @@ if [[ -n "$DIFF_OUTPUT" ]]; then
   exit 2
 fi
 
-echo "ok: dist/agent-workflow/ matches sources."
+node "$REPO_ROOT/tests/work-record/test_relationships.mjs" "$TMP/agent-workflow/scripts/work-record-relationships.mjs"
+echo "ok: dist/agent-workflow/ matches sources and its passive decoder imports."

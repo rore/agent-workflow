@@ -29,6 +29,7 @@ protocol and :mod:`local_backend` for the local Markdown implementation.
 
 from .backend import WorkRecordBackend
 from .local_backend import LocalBackend
+from .relationships import decode_relationships
 from .parser import (
     ALLOWED_COMPLEXITY,
     ALLOWED_RISK,
@@ -78,6 +79,7 @@ __all__ = [
     "WorkRecordBackend",
     "WorkRecordParseError",
     "extract_requirement_baseline",
+    "decode_relationships",
     "find_block_span",
     "parse",
     "parse_behavior_changes",

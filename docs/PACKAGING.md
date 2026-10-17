@@ -31,6 +31,9 @@ agent-workflow/
 │   └── schema/agent-workflow.schema.json
 ├── scripts/
 │   ├── agent-workflow-check.py               # vendored CI checker (pre-built)
+│   ├── work-record-relationships.mjs         # trusted passive metadata decoder
+│   ├── vendor/js-yaml.mjs                    # pinned published Node ESM runtime
+│   ├── vendor/LICENSE.js-yaml, NOTICE.js-yaml
 │   ├── agent-workflow-runtime.py/.sh/.ps1    # shared runtime guard adapters
 │   ├── format-verdict-comment.py             # CI sticky renderer
 │   └── agent-workflow-tune.py                # one-shot calibration tuner
@@ -52,6 +55,8 @@ agent-workflow/
 The package carries scoped LF attributes to preserve manifest byte sizes after checkout. Bootstrap also merges narrow LF rules for deployed scripts/hooks and records executable Git modes for shell entrypoints, preserving consumer attributes. Verification includes a fresh `core.autocrlf=true` checkout; comparing the just-copied directories alone does not establish portability.
 
 The CI checker source (`core/checker/`), the parser (`core/work_record/`), and the dev-repo tests do **not** ship as part of the skill — only the pre-built `agent-workflow-check.py` does, so consumers can install without running any build.
+
+The passive `work-record-relationships.mjs` decoder is the exception: its source module and published js-yaml runtime/license/notice ship verbatim at the paths above. Trusted non-Python consumers copy/import this artifact with its relative vendor directory; they never import code from a viewed repository. It accepts bytes and lexical path data only, requires no extra consumer install, and does not replace resolver v1 or the workflow checker. The manifest records the actual shipped byte sizes. Shared conformance tests exercise both the source module and a newly built isolated package import; broad YAML/Python parity, automatic source capture and consumer UI verification are not implied. See [the metadata contract](SPEC.md#optional-source-relationships) for supported/unsupported outcomes and bounds.
 
 Bootstrap also merges Claude settings and `.codex/hooks.json` without removing third-party hooks, and installs the stable OpenCode 1.x plugin. Codex requires project trust. OpenCode 2 beta is excluded. Hook installation and trust do not prove native mutation coverage; bootstrap records verified denial separately and marks every unverified path degraded. Shell mutations bypass runtime guarding, while PR CI validates final artifacts and applicability only. Inside `agent-redline/`, the layout intentionally mirrors what `agent-redline`'s own packaged release produces; the skill text inside it reads as if redline were installed standalone, and the path substitutions `scripts/package-skill.sh` applies make that true.
 

@@ -47,6 +47,8 @@ Disposition column legend:
 
 ### Behavioral integrity — do requirements remain traceable
 
+Optional Relationships metadata is validated separately from the readable core record. `workrecord.relationships_valid` blocks malformed/unsafe known declarations; unsupported versions or safe PR profiles produce an advisory diagnostic, preserve the original field/core and do not alter resolver v1. A missing field remains legacy unknown. This syntax check cannot prove that all incoming references were captured; the normal agent edit/read-back comparison needs supplied expected inputs. Trusted passive consumers follow [SPEC §13.1](SPEC.md#optional-source-relationships), not repository-provided code.
+
 | Predicate | Checks | Disposition | Fix |
 |---|---|---|---|
 | `requirements.baseline_present` | The record carries the initial Outcome, Scope, Constraints, and Completion criteria baseline. Legacy records remain parseable but cannot advance without it. | Blocking, non-waivable | Establish the baseline from the task owner or an authoritative source; do not guess or reconstruct it silently. |

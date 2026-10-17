@@ -4,7 +4,9 @@ Routine path. Five fields, each one line where possible: **Outcome**, **Target**
 
 If the task arrived from an authoritative source item, link it in surrounding prose and record only task-local context; do not copy it into a competing local specification.
 
-The point of this checkpoint is to write down what you would otherwise *infer*. Agents fill gaps confidently and silently; the marker block makes the gap-filling visible to a reviewer.
+## Relationships
+
+In the same initial/transition record edit, copy supplied exact `(provider, scope_ref, local_ref)` tuples into Relationships; preserve/correct them on pickup/resume/handoff and append the owning PR tool's URL at PR creation. Read back and compare supplied inputs. Never reconstruct references, normalize source identity, reset unknown to none, or rewrite the baseline. `sources: null` is unverified; `[]` is known none; missing field stays legacy unknown. This agent edit/check is not automatic incoming capture or proof no reference was dropped. No separate human backlink task. Field/decoder rules: SPEC §13.1.
 
 ## Field-by-field
 

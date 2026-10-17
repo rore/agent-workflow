@@ -21,4 +21,5 @@ fi
 
 # -q: quiet (one dot per test); the run-all orchestrator suppresses
 # everything anyway when --verbose isn't passed.
-exec "$PY" -m pytest tests/work-record -q
+node tests/work-record/test_relationships.mjs
+"$PY" -m pytest tests/work-record -q
