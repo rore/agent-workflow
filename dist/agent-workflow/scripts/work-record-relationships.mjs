@@ -191,9 +191,9 @@ function validateRelationships(raw) {
     if (![source.provider, source.scope_ref, source.local_ref].every(validString)) throw INVALID("invalid_relationships");
     if (Object.hasOwn(source, "url")) {
       if (!validString(source.url)) throw INVALID("invalid_relationships");
-      const sourceUrlStatus = sourceNavigationUrlStatus(source.url);
-      if (!sourceUrlStatus) throw INVALID("invalid_relationships");
-      if (sourceUrlStatus === "unsupported") unsupportedSourceUrl = true;
+      const sourceUrlProfile = httpsUrlAuthority(source.url);
+      if (!sourceUrlProfile) throw INVALID("invalid_relationships");
+      if (sourceUrlProfile.status === "unsupported") unsupportedSourceUrl = true;
     }
     const identity = JSON.stringify([source.provider, source.scope_ref, source.local_ref]);
     if (identities.has(identity)) throw INVALID("invalid_relationships");
@@ -204,16 +204,13 @@ function validateRelationships(raw) {
   let unsupportedPr = false;
   for (const url of value.pull_requests) {
     if (!validString(url) || /[\\\u0000-\u0020\u007f]/u.test(url)) throw INVALID("invalid_relationships");
+    const profile = httpsUrlAuthority(url);
+    if (!profile || profile.hasPort) throw INVALID("invalid_relationships");
     const match = /^https:\/\/github\.com\/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)\/([A-Za-z0-9_.-]+)\/pull\/([1-9][0-9]*)$/i.exec(url);
-    if (/^https:\/\/[^/]+:\d+(?:\/|$)/i.test(url)) throw INVALID("invalid_relationships");
     if (!match) {
-      if (isSafeHttpsUrl(url)) {
-        const parsed = new URL(url);
-        if (/^https:\/\/[^/]+:\d+(?:\/|$)/i.test(url) || (parsed.hostname.toLowerCase() === "github.com" && (parsed.search || parsed.hash || url.includes("%")))) throw INVALID("invalid_relationships");
-        unsupportedPr = true;
-        continue;
-      }
-      throw INVALID("invalid_relationships");
+      if (profile.host.toLowerCase() === "github.com" && (profile.hasQuery || profile.hasFragment || profile.encodedPath)) throw INVALID("invalid_relationships");
+      unsupportedPr = true;
+      continue;
     }
     if ([".", ".."].includes(match[2])) throw INVALID("invalid_relationships");
     const identity = `${match[1].toLowerCase()}/${match[2].toLowerCase()}/${match[3]}`;
@@ -225,11 +222,16 @@ function validateRelationships(raw) {
   return value;
 }
 
-function sourceNavigationUrlStatus(value) {
+function httpsUrlAuthority(value) {
   if (typeof value !== "string" || !/^https:\/\//i.test(value) || !wellFormed(value) || /[\\\p{White_Space}\p{Cc}]/u.test(value)) return null;
-  const match = /^https:\/\/([^/?#]+)(?:[/?#]|$)/i.exec(value);
+  const match = /^https:\/\/([^/?#]+)/i.exec(value);
   if (!match || /[@%]/u.test(match[1])) return null;
   const authority = match[1];
+  const suffix = value.slice(match[0].length);
+  const queryIndex = suffix.indexOf("?");
+  const fragmentIndex = suffix.indexOf("#");
+  const path = suffix.split(/[?#]/u, 1)[0];
+  const urlFields = { hasQuery: queryIndex >= 0 && (fragmentIndex < 0 || queryIndex < fragmentIndex), hasFragment: fragmentIndex >= 0, encodedPath: path.includes("%") };
   if (authority.startsWith("[")) {
     const closing = authority.indexOf("]");
     if (closing < 0 || (authority.slice(closing + 1) !== "" && !/^:[0-9]+$/u.test(authority.slice(closing + 1)))) return null;
@@ -237,7 +239,7 @@ function sourceNavigationUrlStatus(value) {
     if (authority.slice(closing + 1).startsWith(":") && Number(port) > 65535) return null;
     try {
       new URL(`https://[${authority.slice(1, closing)}]/`);
-      return "supported";
+      return { status: "supported", host: authority.slice(0, closing + 1), hasPort: authority.slice(closing + 1) !== "", ...urlFields };
     } catch {
       return null;
     }
@@ -256,44 +258,13 @@ function sourceNavigationUrlStatus(value) {
     if ([...hostWithoutDot].length > 253 || labels.some((label) => [...label].length > 63)) return null;
     if (labels.some((label) => !/^(?:[A-Za-z0-9_-]|[^\x00-\x7F])+$/u.test(label))) return null;
     if (/^(?:[0-9]+|0x[0-9a-f]*)$/iu.test(labels.at(-1))) return null;
-    return "unsupported";
+    return { status: "unsupported", host, hasPort: port !== null, ...urlFields };
   }
   if (hostWithoutDot.length > 253 || labels.some((label) => label.length > 63) || labels.some((label) => !/^[A-Za-z0-9_-]+$/u.test(label))) return null;
   if (/^(?:[0-9]+|0x[0-9a-f]*)$/iu.test(labels.at(-1))) {
     if (finalDot || labels.length !== 4 || labels.some((label) => !/^(?:0|[1-9][0-9]*)$/u.test(label) || Number(label) > 255)) return null;
   }
-  return "supported";
-}
-
-function isSafeHttpsUrl(value) {
-  if (typeof value !== "string" || !/^https:\/\//i.test(value) || !wellFormed(value) || /[\\\p{Cc}\u0020]/u.test(value)) return false;
-  const authorityMatch = /^https:\/\/([^/?#]+)(?:[/?#]|$)/i.exec(value);
-  if (!authorityMatch || /[@%]/u.test(authorityMatch[1])) return false;
-  const authority = authorityMatch[1];
-  let rawHost;
-  if (authority.startsWith("[")) {
-    const closing = authority.indexOf("]");
-    if (closing < 0) return false;
-    rawHost = authority.slice(1, closing);
-  } else {
-    rawHost = authority.includes(":") ? authority.slice(0, authority.lastIndexOf(":")) : authority;
-  }
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "https:" || !url.hostname || url.username || url.password) return false;
-    if (authority.startsWith("[")) return true;
-    const asciiHost = new URL(`https://${rawHost}/`).hostname;
-    const labels = asciiHost.split(".");
-    if (labels.at(-1) === "") labels.pop();
-    if (!labels.length || labels.some((label) => !/^[A-Za-z0-9_-]+$/u.test(label))) return false;
-    if (/^(?:[0-9]+|0x[0-9a-f]*)$/i.test(labels.at(-1))) {
-      const octets = rawHost.split(".");
-      if (octets.length !== 4 || octets.some((octet) => !/^(?:0|[1-9][0-9]*)$/u.test(octet) || Number(octet) > 255)) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+  return { status: "supported", host, hasPort: port !== null, ...urlFields };
 }
 
 function validateSlug(slug) {

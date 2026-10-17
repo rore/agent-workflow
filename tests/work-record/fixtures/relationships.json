@@ -229,8 +229,20 @@
       "reason": "invalid_relationships"
     },
     {
+      "name": "source-long-s-scheme",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"httpſ://example.com/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
       "name": "pr-missing-authority",
       "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https:github.com/rore/agent-workflow/pull/53\"]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "pr-long-s-scheme",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"httpſ://github.com/rore/agent-workflow/pull/53\"]}",
       "status": "invalid",
       "reason": "invalid_relationships"
     },
@@ -284,8 +296,8 @@
     {
       "name": "empty-port-profile",
       "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://github.com:/rore/agent-workflow/pull/1\"]}",
-      "status": "unsupported",
-      "reason": "unsupported_pr_url"
+      "status": "invalid",
+      "reason": "invalid_relationships"
     },
     {
       "name": "json-surrounding-whitespace",
@@ -486,6 +498,42 @@
       "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://github.com/Kore/agent-workflow/pull/1\"]}",
       "status": "unsupported",
       "reason": "unsupported_pr_url"
+    },
+    {
+      "name": "pr-unicode-joiner-host",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://a‍b.example/r/r/pull/1\"]}",
+      "status": "unsupported",
+      "reason": "unsupported_pr_url"
+    },
+    {
+      "name": "pr-oversized-host-label",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example/r/r/pull/1\"]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "pr-punycode-host-lexical",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://xn--a.example/r/r/pull/1\"]}",
+      "status": "unsupported",
+      "reason": "unsupported_pr_url"
+    },
+    {
+      "name": "pr-ipv6-explicit-port",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://[2001:db8::1]:443/r/r/pull/1\"]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "pr-github-percent-path",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://github.com/rore/repo%2fprivate/pull/1\"]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "invalid-pr-after-unsupported-source",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://éxample.com/item\"}],\"pull_requests\":[\"https://example.com:443/r/r/pull/1\"]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
     }
   ],
   "config_cases": [

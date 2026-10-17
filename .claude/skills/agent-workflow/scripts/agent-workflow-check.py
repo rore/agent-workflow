@@ -1372,7 +1372,6 @@ def find_block_span(text: str) -> tuple[int, int] | None:
 
 import math
 import unicodedata
-from urllib.parse import urlsplit
 
 
 def _object(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -1388,66 +1387,23 @@ def _control(value: str) -> bool:
     return any(unicodedata.category(char) == "Cc" for char in value)
 
 
-def _url_parts(value: str):
-    if _control(value) or _has_surrogate(value) or "\\" in value or " " in value:
-        return None
-    authority_match = re.match(r"^https://([^/?#]+)(?:[/?#]|$)", value, re.IGNORECASE)
-    if not authority_match:
-        return None
-    authority = authority_match.group(1)
-    if "@" in authority or "%" in authority:
-        return None
-    is_ipv6 = authority.startswith("[")
-    if is_ipv6:
-        closing = authority.find("]")
-        if closing < 0:
-            return None
-        raw_host = authority[1:closing]
-        try:
-            from ipaddress import IPv6Address
-
-            IPv6Address(raw_host)
-        except ValueError:
-            return None
-    else:
-        raw_host = authority.rsplit(":", 1)[0] if ":" in authority else authority
-    try:
-        parts = urlsplit(value)
-        host = parts.hostname
-        _ = parts.port
-        ascii_host = host.encode("idna").decode("ascii") if host and not is_ipv6 else ""
-    except ValueError:
-        return None
-    if parts.scheme.lower() != "https" or not host or parts.username is not None or parts.password is not None:
-        return None
-    if any(char.isspace() for char in parts.netloc):
-        return None
-    if not is_ipv6:
-        labels = ascii_host.split(".")
-        if labels[-1] == "":
-            labels.pop()
-        if not labels or any(not re.fullmatch(r"[A-Za-z0-9_-]+", label) for label in labels):
-            return None
-        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1]):
-            octets = raw_host.split(".")
-            if len(octets) != 4 or any(
-                not re.fullmatch(r"(?:0|[1-9][0-9]*)", octet) or int(octet) > 255
-                for octet in octets
-            ):
-                return None
-    return parts
-
-
-def _source_url_status(value: str) -> str | None:
-    """Validate the literal source-navigation authority without IDNA repair."""
+def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] | None:
+    """Validate one literal HTTPS authority without IDNA or URL-parser repair."""
     if _control(value) or _has_surrogate(value) or any(char.isspace() for char in value) or "\\" in value:
         return None
-    match = re.match(r"^https://([^/?#]+)(?:[/?#]|$)", value, re.IGNORECASE)
+    match = re.match(r"^https://([^/?#]+)", value, re.IGNORECASE | re.ASCII)
     if not match:
         return None
     authority = match.group(1)
     if "@" in authority or "%" in authority:
         return None
+    suffix = value[match.end():]
+    query = suffix.find("?")
+    fragment = suffix.find("#")
+    has_query = query >= 0 and (fragment < 0 or query < fragment)
+    has_fragment = fragment >= 0
+    path = suffix.split("#", 1)[0].split("?", 1)[0]
+    encoded_path = "%" in path
     if authority.startswith("["):
         closing = authority.find("]")
         if closing < 0 or authority[closing + 1:] not in ("",) and not re.fullmatch(r":[0-9]+", authority[closing + 1:], re.ASCII):
@@ -1462,7 +1418,7 @@ def _source_url_status(value: str) -> str | None:
             IPv6Address(authority[1:closing])
         except ValueError:
             return None
-        return "supported"
+        return "supported", authority[:closing + 1], bool(authority[closing + 1:]), has_query, has_fragment, encoded_path
 
     if authority.count(":") > 1:
         return None
@@ -1487,7 +1443,7 @@ def _source_url_status(value: str) -> str | None:
             return None
         if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1], re.ASCII):
             return None
-        return "unsupported"
+        return "unsupported", host, bool(separator), has_query, has_fragment, encoded_path
     if len(host_without_dot) > 253 or any(len(label) > 63 for label in labels):
         return None
     if any(not re.fullmatch(r"[A-Za-z0-9_-]+", label, re.ASCII) for label in labels):
@@ -1498,7 +1454,7 @@ def _source_url_status(value: str) -> str | None:
             for octet in labels
         ):
             return None
-    return "supported"
+    return "supported", host, bool(separator), has_query, has_fragment, encoded_path
 
 
 def _strip_surrounding_hints(raw: str) -> str:
@@ -1569,10 +1525,10 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
                 url = source["url"]
                 if not isinstance(url, str):
                     return {"status": "invalid", "reason": "invalid_relationships"}
-                url_status = _source_url_status(url)
-                if url_status is None:
+                url_profile = _https_url_authority(url)
+                if url_profile is None:
                     return {"status": "invalid", "reason": "invalid_relationships"}
-                unsupported_source_url |= url_status == "unsupported"
+                unsupported_source_url |= url_profile[0] == "unsupported"
 
     pull_requests = value["pull_requests"]
     if not isinstance(pull_requests, list):
@@ -1582,8 +1538,11 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
     for url in pull_requests:
         if not isinstance(url, str):
             return {"status": "invalid", "reason": "invalid_relationships"}
-        parts = _url_parts(url)
-        if parts is None:
+        profile = _https_url_authority(url)
+        if profile is None:
+            return {"status": "invalid", "reason": "invalid_relationships"}
+        _, host, has_port, has_query, has_fragment, encoded_path = profile
+        if has_port:
             return {"status": "invalid", "reason": "invalid_relationships"}
         match = re.fullmatch(
             r"https://github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)/"
@@ -1592,10 +1551,7 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
             re.IGNORECASE | re.ASCII,
         )
         if not match:
-            if re.match(r"https://[^/]+:[0-9]+(?:/|$)", url, re.IGNORECASE) or (
-                parts.hostname.lower() == "github.com"
-                and (parts.query or parts.fragment or "%" in parts.path)
-            ):
+            if host.lower() == "github.com" and (has_query or has_fragment or encoded_path):
                 return {"status": "invalid", "reason": "invalid_relationships"}
             unsupported_pr = True
             continue
