@@ -69,6 +69,13 @@ assert.equal(decodeRecord(bytes(recordFor(null)), { ...recordOptions, record_pat
 assert.deepEqual(decodeRecord(bytes(recordFor(null)), { ...recordOptions, record_path: ".agent-workflow/tasks/\u00a0.md" }), { status: "invalid", reason: "invalid_slug" });
 const sourcePort = `{"schema_version":1,"sources":[{"provider":"minimap","scope_ref":"scope","local_ref":"item","url":"https://example.com:8443/item"}],"pull_requests":[]}`;
 assert.equal(decodeRecord(bytes(recordFor(sourcePort)), recordOptions).status, "declared");
+const relationshipForSourceHost = (host) => JSON.stringify({ schema_version: 1, sources: [{ provider: "p", scope_ref: "s", local_ref: "i", url: `https://${host}/item` }], pull_requests: [] });
+for (const [host, status] of [
+  ["a".repeat(63) + ".example", "declared"],
+  ["a".repeat(64) + ".example", "invalid"],
+  [["a".repeat(63), "b".repeat(63), "c".repeat(63), "d".repeat(61)].join("."), "declared"],
+  [["a".repeat(63), "b".repeat(63), "c".repeat(63), "d".repeat(62)].join("."), "invalid"],
+]) assert.equal(decodeRecord(bytes(recordFor(relationshipForSourceHost(host))), recordOptions).status, status, host);
 const sourceMissingAuthority = `{"schema_version":1,"sources":[{"provider":"minimap","scope_ref":"scope","local_ref":"item","url":"https:example.com/item"}],"pull_requests":[]}`;
 assert.deepEqual(decodeRecord(bytes(recordFor(sourceMissingAuthority)), recordOptions), { status: "invalid", reason: "invalid_relationships" });
 const prMissingAuthority = `{"schema_version":1,"sources":[],"pull_requests":["https:github.com/rore/repo/pull/1"]}`;

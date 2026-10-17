@@ -1438,6 +1438,69 @@ def _url_parts(value: str):
     return parts
 
 
+def _source_url_status(value: str) -> str | None:
+    """Validate the literal source-navigation authority without IDNA repair."""
+    if _control(value) or _has_surrogate(value) or any(char.isspace() for char in value) or "\\" in value:
+        return None
+    match = re.match(r"^https://([^/?#]+)(?:[/?#]|$)", value, re.IGNORECASE)
+    if not match:
+        return None
+    authority = match.group(1)
+    if "@" in authority or "%" in authority:
+        return None
+    if authority.startswith("["):
+        closing = authority.find("]")
+        if closing < 0 or authority[closing + 1:] not in ("",) and not re.fullmatch(r":[0-9]+", authority[closing + 1:], re.ASCII):
+            return None
+        if authority[closing + 1:].startswith(":"):
+            port = authority[closing + 2:].lstrip("0") or "0"
+            if len(port) > 5 or (len(port) == 5 and port > "65535"):
+                return None
+        try:
+            from ipaddress import IPv6Address
+
+            IPv6Address(authority[1:closing])
+        except ValueError:
+            return None
+        return "supported"
+
+    if authority.count(":") > 1:
+        return None
+    host, separator, port = authority.partition(":")
+    if separator:
+        if not re.fullmatch(r"[0-9]+", port, re.ASCII):
+            return None
+        port = port.lstrip("0") or "0"
+        if len(port) > 5 or (len(port) == 5 and port > "65535"):
+            return None
+    if not host:
+        return None
+    final_dot = host.endswith(".")
+    host_without_dot = host[:-1] if final_dot else host
+    labels = host_without_dot.split(".")
+    if not host_without_dot or any(not label for label in labels):
+        return None
+    if any(ord(char) > 127 for char in host):
+        if len(host_without_dot) > 253 or any(len(label) > 63 for label in labels):
+            return None
+        if any(not re.fullmatch(r"(?:[A-Za-z0-9_-]|[^\x00-\x7f])+", label) for label in labels):
+            return None
+        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1], re.ASCII):
+            return None
+        return "unsupported"
+    if len(host_without_dot) > 253 or any(len(label) > 63 for label in labels):
+        return None
+    if any(not re.fullmatch(r"[A-Za-z0-9_-]+", label, re.ASCII) for label in labels):
+        return None
+    if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1], re.ASCII):
+        if final_dot or len(labels) != 4 or any(
+            not re.fullmatch(r"(?:0|[1-9][0-9]*)", octet, re.ASCII) or int(octet) > 255
+            for octet in labels
+        ):
+            return None
+    return "supported"
+
+
 def _strip_surrounding_hints(raw: str) -> str:
     raw = raw.strip(" \t\r\n")
     while raw.startswith("<!--"):
@@ -1485,6 +1548,7 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
     if sources is not None and not isinstance(sources, list):
         return {"status": "invalid", "reason": "invalid_relationships"}
     source_ids: set[tuple[str, str, str]] = set()
+    unsupported_source_url = False
     if sources is not None:
         for source in sources:
             if not isinstance(source, dict) or set(source) - {"provider", "scope_ref", "local_ref", "url"} or not {"provider", "scope_ref", "local_ref"} <= set(source):
@@ -1503,8 +1567,12 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
             source_ids.add(identity)
             if "url" in source:
                 url = source["url"]
-                if not isinstance(url, str) or _url_parts(url) is None or _has_surrogate(url):
+                if not isinstance(url, str):
                     return {"status": "invalid", "reason": "invalid_relationships"}
+                url_status = _source_url_status(url)
+                if url_status is None:
+                    return {"status": "invalid", "reason": "invalid_relationships"}
+                unsupported_source_url |= url_status == "unsupported"
 
     pull_requests = value["pull_requests"]
     if not isinstance(pull_requests, list):
@@ -1540,6 +1608,8 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
         pr_ids.add(identity)
     if unsupported_pr:
         return {"status": "unsupported", "reason": "unsupported_pr_url"}
+    if unsupported_source_url:
+        return {"status": "unsupported", "reason": "unsupported_source_url"}
     return {"status": "declared", "relationships": value}
 
 

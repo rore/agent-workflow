@@ -46,6 +46,24 @@ def test_shared_relationship_cases_match_status_and_reason() -> None:
         assert result.get("reason") == case.get("reason"), case["name"]
 
 
+def test_source_url_hostname_boundaries_and_raw_field_retention() -> None:
+    def raw_for_host(host: str) -> str:
+        return json.dumps({"schema_version": 1, "sources": [{"provider": "p", "scope_ref": "s", "local_ref": "i", "url": f"https://{host}/item"}], "pull_requests": []})
+
+    hosts = (
+        ("a" * 63 + ".example", "declared"),
+        ("a" * 64 + ".example", "invalid"),
+        (".".join(("a" * 63, "b" * 63, "c" * 63, "d" * 61)), "declared"),
+        (".".join(("a" * 63, "b" * 63, "c" * 63, "d" * 62)), "invalid"),
+    )
+    for host, status in hosts:
+        result = decode_relationships(raw_for_host(host))
+        assert result["status"] == status, host
+
+    raw = next(case["raw"] for case in FIXTURE["cases"] if case["name"] == "source-authority-idn")
+    assert parse_record(_fixture_record(raw)).record["relationships"] == raw
+
+
 def test_relationships_round_trip_on_both_record_shapes() -> None:
     raw = FIXTURE["cases"][3]["raw"]
     for text in (_fixture_record(raw), _expanded_record(raw)):
