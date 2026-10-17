@@ -180,9 +180,10 @@ def test_invalid_utf8_fixture_vectors_are_rejected_before_record_parsing() -> No
 
 
 def test_relationship_predicate_blocks_invalid_and_advises_unsupported() -> None:
-    for case, blocking in (("malformed-json", True), ("future-version", False)):
+    for case, blocking in (("malformed-json", True), ("future-version", False), ("pr-explicit-default-port", False)):
         raw = next(item["raw"] for item in FIXTURE["cases"] if item["name"] == case)
         parsed = parse_record(_fixture_record(raw))
+        assert parsed.record["relationships"] == raw
         ctx = CheckerContext(
             backend=LocalBackend(ROOT, ".agent-workflow/tasks/{slug}.md"),
             slug="fixture",
@@ -197,6 +198,8 @@ def test_relationship_predicate_blocks_invalid_and_advises_unsupported() -> None
         result = workrecord_relationships_valid(ctx)
         assert result.passed is (not blocking)
         assert result.blocking is blocking
+        if case == "pr-explicit-default-port":
+            assert "unsupported_pr_url" in result.detail
 
 
 def test_existing_integrity_json_comment_stripping_is_unchanged() -> None:

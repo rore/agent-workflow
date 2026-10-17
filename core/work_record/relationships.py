@@ -21,7 +21,7 @@ def _control(value: str) -> bool:
     return any(unicodedata.category(char) == "Cc" for char in value)
 
 
-def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] | None:
+def _https_url_authority(value: str) -> str | None:
     """Validate one literal HTTPS authority without IDNA or URL-parser repair."""
     if _control(value) or _has_surrogate(value) or any(char.isspace() for char in value) or "\\" in value:
         return None
@@ -31,13 +31,6 @@ def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] 
     authority = match.group(1)
     if "@" in authority or "%" in authority:
         return None
-    suffix = value[match.end():]
-    query = suffix.find("?")
-    fragment = suffix.find("#")
-    has_query = query >= 0 and (fragment < 0 or query < fragment)
-    has_fragment = fragment >= 0
-    path = suffix.split("#", 1)[0].split("?", 1)[0]
-    encoded_path = "%" in path
     if authority.startswith("["):
         closing = authority.find("]")
         if closing < 0 or authority[closing + 1:] not in ("",) and not re.fullmatch(r":[0-9]+", authority[closing + 1:], re.ASCII):
@@ -52,7 +45,7 @@ def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] 
             IPv6Address(authority[1:closing])
         except ValueError:
             return None
-        return "supported", authority[:closing + 1], bool(authority[closing + 1:]), has_query, has_fragment, encoded_path
+        return "supported"
 
     if authority.count(":") > 1:
         return None
@@ -77,7 +70,7 @@ def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] 
             return None
         if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1], re.ASCII):
             return None
-        return "unsupported", host, bool(separator), has_query, has_fragment, encoded_path
+        return "unsupported"
     if len(host_without_dot) > 253 or any(len(label) > 63 for label in labels):
         return None
     if any(not re.fullmatch(r"[A-Za-z0-9_-]+", label, re.ASCII) for label in labels):
@@ -88,7 +81,7 @@ def _https_url_authority(value: str) -> tuple[str, str, bool, bool, bool, bool] 
             for octet in labels
         ):
             return None
-    return "supported", host, bool(separator), has_query, has_fragment, encoded_path
+    return "supported"
 
 
 def _strip_surrounding_hints(raw: str) -> str:
@@ -162,7 +155,7 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
                 url_profile = _https_url_authority(url)
                 if url_profile is None:
                     return {"status": "invalid", "reason": "invalid_relationships"}
-                unsupported_source_url |= url_profile[0] == "unsupported"
+                unsupported_source_url |= url_profile == "unsupported"
 
     pull_requests = value["pull_requests"]
     if not isinstance(pull_requests, list):
@@ -175,9 +168,6 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
         profile = _https_url_authority(url)
         if profile is None:
             return {"status": "invalid", "reason": "invalid_relationships"}
-        _, host, has_port, has_query, has_fragment, encoded_path = profile
-        if has_port:
-            return {"status": "invalid", "reason": "invalid_relationships"}
         match = re.fullmatch(
             r"https://github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)/"
             r"([A-Za-z0-9_.-]+)/pull/([1-9][0-9]*)",
@@ -185,8 +175,6 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
             re.IGNORECASE | re.ASCII,
         )
         if not match:
-            if host.lower() == "github.com" and (has_query or has_fragment or encoded_path):
-                return {"status": "invalid", "reason": "invalid_relationships"}
             unsupported_pr = True
             continue
         owner, repository, number = match.groups()

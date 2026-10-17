@@ -6,7 +6,7 @@ If the task arrived from an authoritative source item, link it in surrounding pr
 
 ## Relationships
 
-At creation/pickup, copy supplied exact tuples; if an identified feature/issue lacks refs, resolve through its owning tool. Never guess/title-match or normalize identity. Write returned `(provider, scope_ref, local_ref)` tuples in the same normal record edit; preserve/correct on resume/handoff and append the owning PR tool's URL at creation. Read back against expected refs; never rewrite the baseline. Unavailable/ambiguous resolution: keep `sources: null`/unverified, report the gap, continue safe independent work. `[]` means known no-source; missing stays legacy unknown. This agent discovery/edit/check is not automatic capture or proof no input was missed. No human backlink task. Rules: SPEC §13.1.
+At creation/pickup, copy supplied exact tuples; if an identified feature/issue lacks refs, resolve through its owning tool. Never guess/title-match or normalize identity. Write `(provider, scope_ref, local_ref)` tuples in the same record edit; preserve/correct on resume/handoff. Append the owning PR tool's returned URL in the PR-creation edit. Read back against expected refs; never rewrite the baseline. Unavailable/ambiguous resolution: keep `sources: null`/unverified, report the gap, continue safe independent work. `[]` means known no-source; missing stays legacy unknown. This discovery/edit/check is not automatic capture or proof no input was missed. No human backlink task. Rules: SPEC §13.1.
 
 ## Field-by-field
 
