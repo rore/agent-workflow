@@ -99,6 +99,17 @@ def test_pr_number_identity_does_not_require_integer_conversion() -> None:
     assert decode_relationships(raw)["relationships"]["pull_requests"] == [url]
 
 
+def test_relationship_byte_limit_accepts_exact_boundary() -> None:
+    def value(ref: str) -> str:
+        return json.dumps({"schema_version": 1, "sources": [{"provider": "p", "scope_ref": "s", "local_ref": ref}], "pull_requests": []})
+
+    length = 65536 - len(value("").encode("utf-8"))
+    assert decode_relationships(value("x" * length))["status"] == "declared"
+    assert decode_relationships(value("x" * (length + 1))) == {
+        "status": "invalid", "reason": "relationships_too_large",
+    }
+
+
 def test_config_layout_profiles_use_current_pyyaml_and_path_validator() -> None:
     for case in FIXTURE["config_cases"]:
         if case["status"] != "ok" and case["name"] != "yaml11-bool-not-path":

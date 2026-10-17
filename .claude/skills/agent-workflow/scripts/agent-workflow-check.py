@@ -329,6 +329,7 @@ class WorkRecord(TypedDict):
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
     behavior_changes: NotRequired[list[BehaviorChange]]
+    relationships: NotRequired[str]
 
 
 class ExpandedWorkRecord(TypedDict):
@@ -371,6 +372,7 @@ class ExpandedWorkRecord(TypedDict):
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
     behavior_changes: NotRequired[list[BehaviorChange]]
+    relationships: NotRequired[str]
 
 
 Shape = Literal["routine", "expanded"]
@@ -458,11 +460,16 @@ _OPTIONAL_JSON_FIELDS: dict[str, str] = {
     "Requirement baseline": "requirement_baseline",
     "Behavior changes": "behavior_changes",
 }
+_OPTIONAL_RAW_FIELDS: dict[str, str] = {"Relationships": "relationships"}
 _EXPANDED_OPTIONAL_EXTRA_FIELDS: dict[str, str] = {
     **_OPTIONAL_JSON_FIELDS,
+    **_OPTIONAL_RAW_FIELDS,
     "Exceptions": "exceptions",
 }
-_ROUTINE_OPTIONAL_EXTRA_FIELDS: dict[str, str] = dict(_OPTIONAL_JSON_FIELDS)
+_ROUTINE_OPTIONAL_EXTRA_FIELDS: dict[str, str] = {
+    **_OPTIONAL_JSON_FIELDS,
+    **_OPTIONAL_RAW_FIELDS,
+}
 
 # Fields whose value is allowed to be empty on each shape. Everything
 # else is rejected as malformed when its value is blank. On the routine
@@ -578,7 +585,12 @@ def _extract_fields(block: str) -> dict[str, str]:
         label = match.group(1).strip()
         value_start = match.end()
         value_end = matches[i + 1].start() if i + 1 < len(matches) else len(block)
-        value = _HTML_COMMENT_RE.sub("", block[value_start:value_end]).strip()
+        raw_value = block[value_start:value_end]
+        value = (
+            _strip_surrounding_hints(raw_value)
+            if label == "Relationships"
+            else _HTML_COMMENT_RE.sub("", raw_value).strip()
+        )
         if label in out:
             raise WorkRecordParseError(
                 f"duplicate field {label!r} in Work Record block — "
@@ -944,6 +956,8 @@ def _parse_optional_integrity_fields(
         )
     if "Behavior changes" in found:
         record["behavior_changes"] = parse_behavior_changes(found["Behavior changes"])
+    if "Relationships" in found:
+        record["relationships"] = found["Relationships"]
 
 
 # ---------------------------------------------------------------------------
@@ -1271,11 +1285,17 @@ def _render_against(
             # ``record.get`` works because TypedDicts are dicts at runtime;
             # emit the field only when present.
             value = record.get(key)  # type: ignore[misc]
-            if value is None or (key not in _OPTIONAL_JSON_FIELDS.values() and value == ""):
+            if value is None or (
+                key not in _OPTIONAL_JSON_FIELDS.values()
+                and key not in _OPTIONAL_RAW_FIELDS.values()
+                and value == ""
+            ):
                 continue
             rendered = (
                 _integrity_json_value(key, value)
                 if key in _OPTIONAL_JSON_FIELDS.values()
+                else str(value)
+                if key in _OPTIONAL_RAW_FIELDS.values()
                 else str(value)
             )
             line = f"**{label}:** {rendered}"
@@ -1344,6 +1364,153 @@ def find_block_span(text: str) -> tuple[int, int] | None:
 # ---------------------------------------------------------------------------
 # Internal helpers (kept private)
 # ---------------------------------------------------------------------------
+
+# ----- core/work_record/relationships.py -----
+
+"""Strict validator for the optional Work Record Relationships field."""
+
+
+import math
+import unicodedata
+from urllib.parse import urlsplit
+
+
+def _object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate key")
+        result[key] = value
+    return result
+
+
+def _control(value: str) -> bool:
+    return any(unicodedata.category(char) == "Cc" for char in value)
+
+
+def _url_parts(value: str):
+    if _control(value) or _has_surrogate(value) or "\\" in value or " " in value:
+        return None
+    try:
+        parts = urlsplit(value)
+        host = parts.hostname
+        _ = parts.port
+    except ValueError:
+        return None
+    if parts.scheme.lower() != "https" or not host or parts.username is not None or parts.password is not None:
+        return None
+    if any(char.isspace() for char in parts.netloc):
+        return None
+    return parts
+
+
+def _strip_surrounding_hints(raw: str) -> str:
+    raw = raw.strip()
+    while raw.startswith("<!--"):
+        end = raw.find("-->", 4)
+        if end < 0:
+            break
+        raw = raw[end + 3:].strip()
+    while raw.endswith("-->"):
+        start = raw.rfind("<!--", 0, len(raw) - 3)
+        if start < 0:
+            break
+        raw = raw[:start].strip()
+    return raw
+
+
+def decode_relationships(raw: str | None) -> dict[str, object]:
+    """Return ``status`` plus a validated v1 object or a stable failure reason."""
+    if raw is None:
+        return {"status": "legacy"}
+    try:
+        text = _strip_surrounding_hints(raw)
+        if len(text.encode("utf-8", errors="strict")) > 65536:
+            return {"status": "invalid", "reason": "relationships_too_large"}
+        value = json.loads(
+            text,
+            object_pairs_hook=_object,
+            parse_constant=lambda _: (_ for _ in ()).throw(ValueError("invalid constant")),
+        )
+    except (TypeError, ValueError, RecursionError, UnicodeError):
+        return {"status": "invalid", "reason": "invalid_json"}
+
+    if not isinstance(value, dict) or set(value) != {"schema_version", "sources", "pull_requests"}:
+        return {"status": "invalid", "reason": "invalid_relationships"}
+    version = value["schema_version"]
+    if isinstance(version, bool) or not isinstance(version, (int, float)):
+        return {"status": "invalid", "reason": "invalid_relationships"}
+    if isinstance(version, float) and (not math.isfinite(version) or not version.is_integer()):
+        return {"status": "invalid", "reason": "invalid_relationships"}
+    if version > 1:
+        return {"status": "unsupported", "reason": "unsupported_relationship_version"}
+    if version != 1:
+        return {"status": "invalid", "reason": "invalid_relationships"}
+
+    sources = value["sources"]
+    if sources is not None and not isinstance(sources, list):
+        return {"status": "invalid", "reason": "invalid_relationships"}
+    source_ids: set[tuple[str, str, str]] = set()
+    if sources is not None:
+        for source in sources:
+            if not isinstance(source, dict) or set(source) - {"provider", "scope_ref", "local_ref", "url"} or not {"provider", "scope_ref", "local_ref"} <= set(source):
+                return {"status": "invalid", "reason": "invalid_relationships"}
+            identity = tuple(source[key] for key in ("provider", "scope_ref", "local_ref"))
+            if any(
+                not isinstance(item, str)
+                or not item.strip()
+                or _control(item)
+                or _has_surrogate(item)
+                for item in identity
+            ):
+                return {"status": "invalid", "reason": "invalid_relationships"}
+            if identity in source_ids:
+                return {"status": "invalid", "reason": "invalid_relationships"}
+            source_ids.add(identity)
+            if "url" in source:
+                url = source["url"]
+                if not isinstance(url, str) or _url_parts(url) is None or _has_surrogate(url):
+                    return {"status": "invalid", "reason": "invalid_relationships"}
+
+    pull_requests = value["pull_requests"]
+    if not isinstance(pull_requests, list):
+        return {"status": "invalid", "reason": "invalid_relationships"}
+    pr_ids: set[tuple[str, str, str]] = set()
+    unsupported_pr = False
+    for url in pull_requests:
+        if not isinstance(url, str):
+            return {"status": "invalid", "reason": "invalid_relationships"}
+        parts = _url_parts(url)
+        if parts is None:
+            return {"status": "invalid", "reason": "invalid_relationships"}
+        match = re.fullmatch(
+            r"https://github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)/"
+            r"([A-Za-z0-9_.-]+)/pull/([1-9][0-9]*)",
+            url,
+            re.IGNORECASE,
+        )
+        if not match:
+            if re.match(r"https://[^/]+:[0-9]+(?:/|$)", url, re.IGNORECASE) or (
+                parts.hostname.lower() == "github.com"
+                and (parts.query or parts.fragment or "%" in parts.path)
+            ):
+                return {"status": "invalid", "reason": "invalid_relationships"}
+            unsupported_pr = True
+            continue
+        owner, repository, number = match.groups()
+        if repository in {".", ".."}:
+            return {"status": "invalid", "reason": "invalid_relationships"}
+        identity = (owner.lower(), repository.lower(), number)
+        if identity in pr_ids:
+            return {"status": "invalid", "reason": "invalid_relationships"}
+        pr_ids.add(identity)
+    if unsupported_pr:
+        return {"status": "unsupported", "reason": "unsupported_pr_url"}
+    return {"status": "declared", "relationships": value}
+
+
+def _has_surrogate(value: str) -> bool:
+    return any(0xD800 <= ord(char) <= 0xDFFF for char in value)
 
 # ----- core/work_record/backend.py -----
 
@@ -3000,6 +3167,40 @@ def workrecord_state_valid(ctx: CheckerContext) -> PredicateResult:
     )
 
 
+def workrecord_relationships_valid(ctx: CheckerContext) -> PredicateResult:
+    """Validate declared Relationships without making core parsing depend on them."""
+    if ctx.record is None:
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=True,
+            detail="skipped — Work Record could not be parsed.",
+            blocking=False,
+        )
+    result = decode_relationships(ctx.record.get("relationships"))
+    status = result["status"]
+    if status == "invalid":
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=False,
+            detail=f"Relationships are invalid ({result['reason']}).",
+            blocking=True,
+        )
+    if status == "unsupported":
+        return PredicateResult(
+            name="workrecord.relationships_valid",
+            passed=True,
+            detail=f"Relationships are unsupported ({result['reason']}); metadata was retained.",
+            blocking=False,
+        )
+    detail = "Relationships are legacy/unknown." if status == "legacy" else "Relationships are valid."
+    return PredicateResult(
+        name="workrecord.relationships_valid",
+        passed=True,
+        detail=detail,
+        blocking=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Redline predicates (slice B)
 # ---------------------------------------------------------------------------
@@ -4194,6 +4395,7 @@ PREDICATE_SOURCE: dict[str, str] = {
     "workrecord.routine_fields_present": "core",
     "workrecord.expanded_fields_present": "core",
     "workrecord.state_valid": "core",
+    "workrecord.relationships_valid": "core",
     "workrecord.implementation_ready": "core",
     "exceptions.well_formed": "core",
     "exceptions.not_against_boundary": "core",
@@ -4450,6 +4652,7 @@ PREDICATES: tuple = (
     shape_matches_classification,
     workrecord_fields_present,
     workrecord_state_valid,
+    workrecord_relationships_valid,
     # --- redline predicates (slice B) -------------------------------
     risk_redline_findings_available,
     risk_boundary_violation_absent,

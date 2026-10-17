@@ -80,6 +80,12 @@ const zeroVersion = `{"schema_version":0,"sources":[],"pull_requests":[]}`;
 assert.deepEqual(decodeRecord(bytes(recordFor(zeroVersion)), recordOptions), { status: "invalid", reason: "invalid_relationships" });
 const tooLargeRelationships = `{"schema_version":1,"sources":[],"pull_requests":[],"padding":"${"x".repeat(65536)}"}`;
 assert.deepEqual(decodeRecord(bytes(recordFor(tooLargeRelationships)), recordOptions), { status: "invalid", reason: "relationships_too_large" });
+const relationshipWithRef = (ref) => JSON.stringify({ schema_version: 1, sources: [{ provider: "p", scope_ref: "s", local_ref: ref }], pull_requests: [] });
+const exactRefLength = 65536 - bytes(relationshipWithRef("")).byteLength;
+assert.equal(bytes(relationshipWithRef("x".repeat(exactRefLength))).byteLength, 65536);
+assert.equal(decodeRecord(bytes(recordFor(relationshipWithRef("x".repeat(exactRefLength)))), recordOptions).status, "declared");
+assert.deepEqual(decodeRecord(bytes(recordFor(relationshipWithRef("x".repeat(exactRefLength + 1)))), recordOptions), { status: "invalid", reason: "relationships_too_large" });
+assert.equal(decodeRecord(bytes(recordFor(null) + "x".repeat(100000)), recordOptions).status, "legacy");
 
 const deeplyNested = `{"schema_version":1,"sources":[],"pull_requests":[],"extra":${"[".repeat(3000)}0${"]".repeat(3000)}}`;
 const deepResult = decodeRecord(bytes(recordFor(deeplyNested)), recordOptions);
