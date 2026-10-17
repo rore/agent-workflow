@@ -1,6 +1,6 @@
 # Source relationships delivery and adoption distinction
 
-Current recovery: roadmap-only commit 87ba3df was legitimately exempt. The manager then authorized one exact review-result instruction, so normal workflow now applies before that edit. Await focused independent plan review, not another human approval. Preserve the canonical checkout's dirty hook; all implementation stays in this isolated checkout.
+Current recovery: roadmap-only commit 87ba3df was legitimately exempt. The manager then authorized one exact review-result instruction, so normal workflow applies. Focused independent plan review is clear at 82c18bb; implement the exact sentence with a small equivalent recap trim to stay within the unchanged 700-token ceiling, then regenerate isolated mirrors and verify. No further human approval is missing. Preserve the canonical checkout's dirty hook.
 
 <!-- agent-workflow:start -->
 **Outcome:** The shipped producer roadmap is accurate and result-review guidance distinguishes tested/installed behavior from observed natural adoption.
@@ -37,18 +37,20 @@ Current recovery: roadmap-only commit 87ba3df was legitimately exempt. The manag
 - Complete compatible artifact -> unchanged budget ceilings, links, package parity/manifests and skill quick validation; no runtime/checker decoder changes.
 - Safe delivery -> one required full local suite, genuine workflow checker, exact-head PR CI/review-thread inspection and protected normal merge; canonical hook hash unchanged.
 
-**Plan review:** Pending focused independent technical review; no instruction edit yet.
+**Plan review:** Agent technical review: native:/root/relationships_corrected_result_review, independent focused plan review of 82c18bbe67098ee5397d511a3ed2cc65f21a0521; no blockers. Placement, reporting-only semantics, Elevated/Simple risk, honest roadmap/adoption distinction and verification plan are adequate. No SPEC expansion or duplicate collection rule needed; see below.
 
 **Approvals:** Not required at Elevated risk. Workflow manager forwarded Astra's explicit authorization for the exact sentence and this bounded reconciliation. Existing human green-gated delivery authorization remains; no live consumer change is executed here.
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Plan review
 
 Requested sentence: "For agent-instruction changes, distinguish tested/installed behavior from observed real-use adoption; record any agreed bounded follow-up in the existing feature/release record with its owner and evidence."
+
+Independent Sol/high plan review is clear at 82c18bb. It reviewed this record, SPEC 9.7, checkpoint, skill-authoring discipline, collection guidance and roadmap diff, not live installation pixels or monitor configuration. Pre-edit budget is 685/700 tokens; shorten only the existing plan-versus-result explanatory recap equivalently to fit the exact sentence, retaining every approval obligation and unchanged ceiling. This is not a new adoption gate.
 
 ## Implementation
 
