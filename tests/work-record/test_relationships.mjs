@@ -44,7 +44,10 @@ for (const item of fixtures.config_cases) {
   const result = decodeConfig(bytes(item.text));
   assert.equal(result.status, item.status, item.name);
   if (item.reason) assert.equal(result.reason, item.reason, item.name);
-  if (item.status === "ok") assert.equal(result.task_path, item.task_path, item.name);
+  if (item.status === "ok") {
+    assert.equal(result.task_path, item.task_path, item.name);
+    if (item.record_path) assert.equal(decodeRecord(bytes(recordFor(null)), { task_path: result.task_path, record_path: item.record_path }).status, "legacy", item.name);
+  }
 }
 
 for (const vector of fixtures.invalid_utf8_hex) {

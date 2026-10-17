@@ -47,7 +47,7 @@ hooks/reinforce-workflow.sh	565
 hooks/seed-workflow.sh	1591
 opencode/agent-workflow.mjs	3853
 operating-mode.md	10820
-scripts/agent-workflow-check.py	248938
+scripts/agent-workflow-check.py	250271
 scripts/agent-workflow-runtime.ps1	3147
 scripts/agent-workflow-runtime.py	15951
 scripts/agent-workflow-runtime.sh	2276
@@ -56,7 +56,7 @@ scripts/format-verdict-comment.py	38255
 scripts/vendor/LICENSE.js-yaml	1084
 scripts/vendor/NOTICE.js-yaml	270
 scripts/vendor/js-yaml.mjs	130603
-scripts/work-record-relationships.mjs	14378
+scripts/work-record-relationships.mjs	15527
 templates/.github/workflows/agent-workflow.yml.template	17650
 templates/agent-workflow-consumer.gitattributes	671
 templates/agent-workflow.yaml.template	2285
@@ -73,4 +73,4 @@ templates/checkpoints/review-result.md	4092
 templates/checkpoints/verify.md	3124
 templates/skill-feedback.md	4288
 templates/work-record-expanded.md	2937
-templates/work-record-routine.md	1744
+templates/work-record-routine.md	1666

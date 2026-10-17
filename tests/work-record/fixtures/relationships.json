@@ -286,6 +286,92 @@
       "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://github.com:/rore/agent-workflow/pull/1\"]}",
       "status": "unsupported",
       "reason": "unsupported_pr_url"
+    },
+    {
+      "name": "json-surrounding-whitespace",
+      "raw": " \t\r\n{\"schema_version\":1,\"sources\":[],\"pull_requests\":[]}\r\n\t ",
+      "status": "declared"
+    },
+    {
+      "name": "json-prefix-bom",
+      "raw": "\uFEFF{\"schema_version\":1,\"sources\":[],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_json"
+    },
+    {
+      "name": "json-suffix-bom",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[]}\uFEFF",
+      "status": "invalid",
+      "reason": "invalid_json"
+    },
+    {
+      "name": "json-prefix-nel",
+      "raw": "\u0085{\"schema_version\":1,\"sources\":[],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_json"
+    },
+    {
+      "name": "json-suffix-nel",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[]}\u0085",
+      "status": "invalid",
+      "reason": "invalid_json"
+    },
+    {
+      "name": "source-authority-repaired-slashes",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https:////example.com/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "source-authority-empty-user",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://@example.com/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "source-authority-percent-host",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://exa%mple.com/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "source-authority-invalid-ipv6",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://[v1.foo]/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "source-authority-nonnormalized-ipv4",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://256.256.256.256/item\"}],\"pull_requests\":[]}",
+      "status": "invalid",
+      "reason": "invalid_relationships"
+    },
+    {
+      "name": "source-authority-canonical-ipv4",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://192.0.2.1/item\"}],\"pull_requests\":[]}",
+      "status": "declared"
+    },
+    {
+      "name": "source-authority-ipv6",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://[2001:db8::1]/item\"}],\"pull_requests\":[]}",
+      "status": "declared"
+    },
+    {
+      "name": "source-authority-idn",
+      "raw": "{\"schema_version\":1,\"sources\":[{\"provider\":\"p\",\"scope_ref\":\"s\",\"local_ref\":\"i\",\"url\":\"https://éxample.com/item\"}],\"pull_requests\":[]}",
+      "status": "declared"
+    },
+    {
+      "name": "pr-unicode-host-case-fold",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://gıthub.com/rore/agent-workflow/pull/1\"]}",
+      "status": "unsupported",
+      "reason": "unsupported_pr_url"
+    },
+    {
+      "name": "pr-unicode-owner-case-fold",
+      "raw": "{\"schema_version\":1,\"sources\":[],\"pull_requests\":[\"https://github.com/Kore/agent-workflow/pull/1\"]}",
+      "status": "unsupported",
+      "reason": "unsupported_pr_url"
     }
   ],
   "config_cases": [
@@ -300,6 +386,13 @@
       "text": "version: 1\nworkRecord: {backend: local, local: {taskPath: \"work records/{slug}.md\"}}\n",
       "status": "ok",
       "task_path": "work records/{slug}.md"
+    },
+    {
+      "name": "canonicalizes-empty-path-components",
+      "text": "version: 1\nworkRecord: {backend: local, local: {taskPath: \"work records//nested/{slug}.md/\"}}\n",
+      "status": "ok",
+      "task_path": "work records/nested/{slug}.md",
+      "record_path": "work records/nested/fixture.md"
     },
     {
       "name": "alias-merge-override",

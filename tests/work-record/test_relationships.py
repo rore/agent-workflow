@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from tempfile import TemporaryDirectory
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 import yaml
@@ -121,7 +121,10 @@ def test_config_layout_profiles_use_current_pyyaml_and_path_validator() -> None:
             assert isinstance(work_record, dict) and work_record.get("backend") == "local"
             local = work_record.get("local")
             assert isinstance(local, dict) and isinstance(local.get("taskPath"), str)
-            assert validate_task_path_template(local["taskPath"]) == case["task_path"]
+            assert PurePosixPath(validate_task_path_template(local["taskPath"])).as_posix() == case["task_path"]
+            if "record_path" in case:
+                backend = LocalBackend(ROOT, local["taskPath"])
+                assert backend.resolve_location("fixture") == case["record_path"]
         elif case["name"] == "yaml11-bool-not-path":
             assert isinstance(work_record["local"]["taskPath"], bool)
             with pytest.raises(InvalidTaskPathError):

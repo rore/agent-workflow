@@ -31,7 +31,7 @@
 <!-- Simple | Moderate | Large. Simple is required for this compact shape; anything else demands the expanded shape. -->
 
 **Reason:**
-<!-- One-line justification of the (Risk, Complexity) decision. Required when Risk or Complexity is not the default (Routine, Simple) — but you would not be using this template then. Optional for (Routine, Simple); use "—" or omit content. -->
+<!-- Keep this label. Its value is optional for (Routine, Simple): use "—" or leave it empty. Other classifications require the expanded shape and a justification. -->
 
 **Approach:**
 <!-- one or two lines on how -->

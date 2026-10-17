@@ -292,7 +292,7 @@ _LABELS_BY_KEY = {key: label for label, key in _FIELD_SCHEMA}
 # every line. The captured group is the label text; trailing content on
 # that line and subsequent lines (up to the next match or end-of-block)
 # is the field value.
-_FIELD_HEADER_RE = re.compile(r"^\*\*([^*]+?):\*\*\s*", re.MULTILINE)
+_FIELD_HEADER_RE = re.compile(r"^\*\*([^*]+?):\*\*[ \t]*", re.MULTILINE)
 
 
 # ---------------------------------------------------------------------------

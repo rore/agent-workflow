@@ -25,31 +25,65 @@ def _control(value: str) -> bool:
 def _url_parts(value: str):
     if _control(value) or _has_surrogate(value) or "\\" in value or " " in value:
         return None
+    authority_match = re.match(r"^https://([^/?#]+)(?:[/?#]|$)", value, re.IGNORECASE)
+    if not authority_match:
+        return None
+    authority = authority_match.group(1)
+    if "@" in authority or "%" in authority:
+        return None
+    is_ipv6 = authority.startswith("[")
+    if is_ipv6:
+        closing = authority.find("]")
+        if closing < 0:
+            return None
+        raw_host = authority[1:closing]
+        try:
+            from ipaddress import IPv6Address
+
+            IPv6Address(raw_host)
+        except ValueError:
+            return None
+    else:
+        raw_host = authority.rsplit(":", 1)[0] if ":" in authority else authority
     try:
         parts = urlsplit(value)
         host = parts.hostname
         _ = parts.port
+        ascii_host = host.encode("idna").decode("ascii") if host and not is_ipv6 else ""
     except ValueError:
         return None
     if parts.scheme.lower() != "https" or not host or parts.username is not None or parts.password is not None:
         return None
     if any(char.isspace() for char in parts.netloc):
         return None
+    if not is_ipv6:
+        labels = ascii_host.split(".")
+        if labels[-1] == "":
+            labels.pop()
+        if not labels or any(not re.fullmatch(r"[A-Za-z0-9_-]+", label) for label in labels):
+            return None
+        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9A-Fa-f]*)", labels[-1]):
+            octets = raw_host.split(".")
+            if len(octets) != 4 or any(
+                not re.fullmatch(r"(?:0|[1-9][0-9]*)", octet) or int(octet) > 255
+                for octet in octets
+            ):
+                return None
     return parts
 
 
 def _strip_surrounding_hints(raw: str) -> str:
-    raw = raw.strip()
+    raw = raw.strip(" \t\r\n")
     while raw.startswith("<!--"):
         end = raw.find("-->", 4)
         if end < 0:
             break
-        raw = raw[end + 3:].strip()
+        raw = raw[end + 3:].strip(" \t\r\n")
     while raw.endswith("-->"):
         start = raw.rfind("<!--", 0, len(raw) - 3)
         if start < 0:
             break
-        raw = raw[:start].strip()
+        raw = raw[:start].strip(" \t\r\n")
     return raw
 
 
@@ -121,7 +155,7 @@ def decode_relationships(raw: str | None) -> dict[str, object]:
             r"https://github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)/"
             r"([A-Za-z0-9_.-]+)/pull/([1-9][0-9]*)",
             url,
-            re.IGNORECASE,
+            re.IGNORECASE | re.ASCII,
         )
         if not match:
             if re.match(r"https://[^/]+:[0-9]+(?:/|$)", url, re.IGNORECASE) or (

@@ -46,6 +46,11 @@
           "blocking": true
         },
         {
+          "name": "workrecord.relationships_valid",
+          "passed": true,
+          "blocking": true
+        },
+        {
           "name": "risk.redline_findings_available",
           "passed": false,
           "blocking": false
@@ -185,6 +190,11 @@
           "name": "workrecord.state_valid",
           "passed": false,
           "blocking": true
+        },
+        {
+          "name": "workrecord.relationships_valid",
+          "passed": true,
+          "blocking": false
         },
         {
           "name": "risk.redline_findings_available",

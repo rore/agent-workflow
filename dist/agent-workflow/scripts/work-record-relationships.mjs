@@ -28,7 +28,7 @@ function normalizeTaskPath(template) {
   if (typeof template !== "string" || !wellFormed(template) || !template || byteLength(template) > 4096 || /\p{Cc}/u.test(template) || (template.match(/\{slug\}/g) ?? []).length !== 1) return null;
   const path = template.replaceAll("\\", "/");
   if (path.startsWith("/") || /^[A-Za-z]:/.test(path) || path.split("/").some((part) => part === "." || part === "..")) return null;
-  return path;
+  return path.split("/").filter(Boolean).join("/");
 }
 
 function isPlainMapping(value) {
@@ -149,16 +149,16 @@ function scanJsonKeys(source) {
 }
 
 function stripSurroundingHints(value) {
-  let text = value.trim();
+  let text = value.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
   while (text.startsWith("<!--")) {
     const end = text.indexOf("-->");
     if (end < 0) throw new Error("unterminated hint");
-    text = text.slice(end + 3).trim();
+    text = text.slice(end + 3).replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
   }
   while (text.endsWith("-->")) {
     const start = text.lastIndexOf("<!--");
     if (start < 0) throw new Error("unmatched hint");
-    text = text.slice(0, start).trim();
+    text = text.slice(0, start).replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
   }
   return text;
 }
@@ -220,9 +220,30 @@ function validateRelationships(raw) {
 
 function isSafeHttpsUrl(value) {
   if (typeof value !== "string" || !/^https:\/\//i.test(value) || !wellFormed(value) || /[\\\p{Cc}\u0020]/u.test(value)) return false;
+  const authorityMatch = /^https:\/\/([^/?#]+)(?:[/?#]|$)/i.exec(value);
+  if (!authorityMatch || /[@%]/u.test(authorityMatch[1])) return false;
+  const authority = authorityMatch[1];
+  let rawHost;
+  if (authority.startsWith("[")) {
+    const closing = authority.indexOf("]");
+    if (closing < 0) return false;
+    rawHost = authority.slice(1, closing);
+  } else {
+    rawHost = authority.includes(":") ? authority.slice(0, authority.lastIndexOf(":")) : authority;
+  }
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
+    if (url.protocol !== "https:" || !url.hostname || url.username || url.password) return false;
+    if (authority.startsWith("[")) return true;
+    const asciiHost = new URL(`https://${rawHost}/`).hostname;
+    const labels = asciiHost.split(".");
+    if (labels.at(-1) === "") labels.pop();
+    if (!labels.length || labels.some((label) => !/^[A-Za-z0-9_-]+$/u.test(label))) return false;
+    if (/^(?:[0-9]+|0x[0-9a-f]*)$/i.test(labels.at(-1))) {
+      const octets = rawHost.split(".");
+      if (octets.length !== 4 || octets.some((octet) => !/^(?:0|[1-9][0-9]*)$/u.test(octet) || Number(octet) > 255)) return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -280,7 +301,7 @@ export function decodeRecord(recordBytes, { task_path, record_path } = {}) {
   for (let i = 0; i < headers.length; i++) {
     const label = headers[i][1].trim();
     if (Object.hasOwn(fields, label)) return INVALID("invalid_record");
-    const raw = block.slice(headers[i].index + headers[i][0].length, headers[i + 1]?.index ?? block.length).trim();
+    const raw = block.slice(headers[i].index + headers[i][0].length, headers[i + 1]?.index ?? block.length);
     fields[label] = label === "Relationships" ? raw : raw.replace(/<!--[\s\S]*?-->/g, "").trim();
   }
   const risk = fields.Risk;
