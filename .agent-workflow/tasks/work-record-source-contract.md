@@ -1,6 +1,6 @@
 # Work Record source relationships — reviewed implementation plan
 
-Current recovery: human approval for the narrower optional source-navigation hostname profile is independently verified below. State Ready to implement; resume the same bounded correction, shared regressions, regenerated artifact and focused independent recheck. Product candidate `dea308d` already passes the full nine-layer suite; new affected behavior must be verified. The original four approved implementation changes remain active, baseline unchanged. No live installation/service changes are authorized.
+Current recovery: final product revision `31bebd7614411f128c5f8b6fce4d7d4436911d68` passes the full nine-layer suite and independent smart technical review with no blocking findings. State Ready for review; open the PR and verify actual CI/review threads, then resolve the separate High-risk human result/architecture checkpoint under the recorded conditional merge authorization. Baseline and exact genuine source tuple are unchanged. Workflow manager owns coordinated consumer refresh after green merge; this worker makes no independent live installation/service changes.
 
 Source feature: https://github.com/rore/agent-workflow/blob/main/roadmap/features/add-work-record-source-relationships.md
 
@@ -54,7 +54,7 @@ Assignment: `relay-msg-02b8bdaef9044184b7955123fe0dc2b4` from workflow manager. 
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -114,6 +114,8 @@ Dependency check (read-only, 2026-10-17): official npm metadata identifies nodec
 The shared root remains on `feat/requirement-baseline-history` at `98353e8b51f2cc51a7d21c73cdfb3b2a2adcaaf2`, only original `.codex/hooks.json` dirty, SHA256 `6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E`. The existing roadmap-only temp checkout/branch is not reused or changed. No everyday or consumer installation/configuration changes are authorized or made.
 
 ## Evidence
+
+Final required local run completed naturally: `bash tests/run-all.sh --verbose` at product revision `31bebd7614411f128c5f8b6fce4d7d4436911d68`, with record-only `dd04fa7` during the run, child and suite exit 0, `all layers ok`. Log `.local/full-suite-31bebd7.log`. All nine layers pass: budget22, schema51, Python work-record93 and Node93 relationship/13 config/generated bounds, checker261, Redline unit170 plus schema/goldens/Node2/CI8, tuner23 plus five calibration cases, hooks, links201 and package/dist/install/bootstrap. Independent technical review and all requested source-reference journeys are clear as recorded below; PR CI/threads and human result/architecture gate still remain. Earlier b3 cancellation is not a completed suite and is not this evidence.
 
 Pending initial genuine state check. No product files inspected or changed before this baseline. Manager acceptance send `relay-msg-dab79a57abba466197e969f2b1af807d` was saved/pending; this is not confirmed recipient receipt. No manual receive/ACK or resend of the queued assignment.
 
@@ -193,8 +195,8 @@ Last good proposal revision: `3ff4f525a51282a599d3ae63c1822e552b36ac9c` on `feat
 
 ## Result review
 
-Agent technical review: native:/root/relationships_corrected_result_review, independent non-implementer Sol/high; prior unchanged-code review plus focused correction rechecks.
-Reviewed revision: 31bebd7614411f128c5f8b6fce4d7d4436911d68.
+Agent technical review: native:/root/relationships_corrected_result_review
+Reviewed revision: 31bebd7614411f128c5f8b6fce4d7d4436911d68
 Verification adequacy: Shared lexical checks and regression reach are adequate; reviewer independently asserted both former PR failures against Python, source Node and actual packaged Node, and verified source/dist/Claude SHA256 equality `E0337BB90DCAA8D1EAA4F64F929B0EE90F479D03AB56803DBD858297E295B77E`. No blocking findings remain. Supplied-reference lifecycle, genuine producer capture and the actual named-source/unavailable/no-source journeys provide behavioral evidence beyond JSON fixture agreement. Final acceptance remains conditional on the running final nine-layer suite, PR CI/review threads and separate High-risk human result/architecture review. Risk remains High / Moderate complexity; no unrelated scope or live installations changed. Unchanged product review may be reused across record-only evidence/state updates, not new behavior.
 
 The following proposal-phase entries are retained historical audit, not the current product verdict:
