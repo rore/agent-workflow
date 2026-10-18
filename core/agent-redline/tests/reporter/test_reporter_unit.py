@@ -17,8 +17,9 @@ and Diff objects in-memory and assert against the Verdict.
 
 from __future__ import annotations
 
-import sys
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -97,6 +98,81 @@ class TestChangedPathInput:
 
 
 class TestUnifiedDiffEvidence:
+
+    def test_legacy_quoted_path_matches_unified_diff(self, tmp_path: Path, base_policy) -> None:
+        path = "src/line\nname.py"
+        changed = tmp_path / "changed-files.txt"
+        numstat = tmp_path / "numstat.txt"
+        patch = tmp_path / "diff.patch"
+
+        if os.name == "nt":
+            # Windows filesystems and Git reject newline-bearing paths. Keep
+            # exercising the loader with Git's C-quoted representation there.
+            changed.write_bytes(b'"src/line\\nname.py"\n')
+            numstat.write_bytes(b'1\t0\t"src/line\\nname.py"\n')
+            patch.write_bytes(
+                b'diff --git "a/src/line\\nname.py" "b/src/line\\nname.py"\n'
+                b'--- "a/src/line\\nname.py"\n'
+                b'+++ "b/src/line\\nname.py"\n'
+                b'@@ -1 +1,2 @@\n before = 1\n+# noqa\n'
+            )
+        else:
+            def git(*args: str) -> bytes:
+                result = subprocess.run(
+                    ["git", *args], cwd=tmp_path, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                assert result.returncode == 0, result.stderr.decode("utf-8", "replace")
+                return result.stdout
+
+            git("init", "-q")
+            git("config", "user.email", "unit@example.invalid")
+            git("config", "user.name", "Reporter unit")
+            git("config", "core.quotePath", "true")
+            target = tmp_path / path
+            target.parent.mkdir()
+            target.write_bytes(b"before = 1\n")
+            git("add", "--", path)
+            git("commit", "-qm", "base")
+            target.write_bytes(b"before = 1\n# noqa\n")
+
+            legacy = git("diff", "--name-only", "--no-renames", "HEAD")
+            legacy_numstat = git("diff", "--numstat", "--no-renames", "HEAD")
+            lossless = git("diff", "--name-only", "-z", "--no-renames", "HEAD")
+            assert legacy == b'"src/line\\nname.py"\n'
+            assert legacy_numstat == b'1\t0\t"src/line\\nname.py"\n'
+            assert lossless == path.encode("utf-8") + b"\0"
+            changed.write_bytes(legacy)
+            numstat.write_bytes(legacy_numstat)
+            patch.write_bytes(git("diff", "--unified=0", "--no-renames", "HEAD"))
+
+        diff = load_diff_from_files(changed, lines_per_file_path=numstat, diff_unified_path=patch)
+        assert diff.changed_files == [path]
+        assert diff.lines_by_file == {path: 1}
+        assert classify(base_policy, diff).pr_size["lines"] == 1
+        assert diff.added_by_file == {path: [(2, "# noqa")]}
+        classification = {"red": [], "blue": [path], "gray": []}
+        matches = scan_suppressions(
+            diff.added_by_file, SuppressionsConfig(inline_comments=["# noqa"]), classification,
+        )
+        assert [(match.file, match.line, match.marker) for match in matches] == [(path, 2, "# noqa")]
+
+    def test_unified_diff_path_mismatch_remains_strict_for_legacy_and_nul(self, tmp_path: Path) -> None:
+        patch = tmp_path / "diff.patch"
+        patch.write_text(
+            "diff --git a/actual.py b/actual.py\n"
+            "--- a/actual.py\n+++ b/actual.py\n@@ -0,0 +1 @@\n+value = 1\n",
+            encoding="utf-8",
+        )
+        changed = tmp_path / "changed-files.txt"
+        changed.write_text("expected.py\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="unified diff paths do not match"):
+            load_diff_from_files(changed, diff_unified_path=patch)
+
+        changed.write_bytes(b"expected.py\0")
+        with pytest.raises(ValueError, match="unified diff paths do not match"):
+            load_diff_from_files(changed, diff_unified_path=patch, nul_delimited=True)
 
     def test_non_utf8_patch_content_loads_and_ascii_marker_still_fires(self, tmp_path: Path) -> None:
         def git(*args: str) -> bytes:
