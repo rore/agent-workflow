@@ -2146,6 +2146,7 @@ def load_diff_from_files(
             for line in changed_files_path.read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
+        _validate_git_paths(files)
 
     lines_by_file: dict[str, int] | None = None
     if lines_per_file_z_path is not None:

@@ -73,6 +73,13 @@ class TestChangedPathInput:
         with pytest.raises(ValueError, match="incomplete"):
             load_diff_from_files(changed, nul_delimited=True)
 
+    @pytest.mark.parametrize("raw", [b"../outside.py\n", b"same.py\nsame.py\n"])
+    def test_legacy_paths_reject_invalid_or_duplicate_paths(self, tmp_path: Path, raw: bytes) -> None:
+        changed = tmp_path / "changed-files.txt"
+        changed.write_bytes(raw)
+        with pytest.raises(ValueError, match="invalid repository path|duplicate paths"):
+            load_diff_from_files(changed)
+
     def test_nul_numstat_is_lossless_and_requires_exact_path_set(self, tmp_path: Path) -> None:
         paths = ["space name.md", "tab\tname.md", "line\nname.md", "用户.md"]
         changed = tmp_path / "changed.z"
