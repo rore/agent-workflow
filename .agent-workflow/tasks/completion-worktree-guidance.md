@@ -11,7 +11,7 @@ Source: workflow manager chat `01a0d7cd-696b-76a0-8f2f-48a80a201905`, forwarding
 **Requirement baseline:**
 {"source":"work-record-initial","outcome":"Agents distinguish handoff from completed delivery and safely dispose of task-created worktrees or report why retained.","scope":"Existing completion guidance in core/skill/operating-mode.md and its generated package/native copies; this Work Record.","constraints":"Instructions only: remove no existing worktrees. No new artifact, gate, helper, tracker, budget increase or collection-skill duplication. Preserve canonical checkout and all unrelated work. Consumer sync requires current owner/hold coordination.","completion_criteria":"Completion guidance covers authorized verified delivery, task ownership and dependencies, preservation, host/native cleanup, no-force/shared-checkout protection and retained reasons; package parity, budgets, required suite and independent reviews pass; merge is verified and exact artifacts handed to sync owner."}
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/56"]}
 **Risk:** Elevated
 **Complexity:** Simple
 **Reason:** Watch-zone agent instructions and generated installs; operational completion hygiene, no new workflow state, gate, schema or normative concept. Independent review must confirm scope and safeguards.
@@ -46,6 +46,8 @@ Blocked at required verification: full suite at 0108c73dc0b18f38c75c5002e03e3320
 Targeted diagnosis found the exact-text assertion at tests/package/check-e2e-bootstrap.sh:196 still requires "forward a received approval immediately". Retained that phrase in equivalent compact Step 8 wording instead of changing the test. Regenerated isolated mirrors; all 22 budgets pass, operating-mode now 1894/1900. Corrected package-only rerun pending; prior eight passing layers remain relevant. Final artifact identities supersede the first candidate above: operating-mode.md 10976 bytes, SHA256 FDBF456AA52F37B98825D6517DEFF5E67650A3E1F728700DE9037C415C713651; manifest.txt 3512 bytes, SHA256 D408F7D764891C57091B79310788491188BACB98DE82C8C8334FD9716DF3B3DF, 76 entries. Trigger 3 dropped: Bash/Python selection was local environment invocation; the literal-text failure was our wording change, not an upstream defect. No public report needed.
 
 Verification resolved: package-only rerun at fe946291baa2346ee949900ffb7ebad311b5eb68 passed, actual suite/child exits 0. Log .local/package-fe94629.log includes package parity/install-sync/committed-skill/references/install-probe/autocrlf and e2e bootstrap success. Combined with the unchanged eight passing layers from the full run and corrected-candidate budget check, all nine required layers are covered; no single all-green full-run claim. State advanced to Ready for review. Next: push, create/link owning PR, verify current-head CI and review threads, merge normally, hand final artifacts to sync owner. No worktrees removed; current task checkout remains needed for PR and coordinated delivery evidence.
+
+Owning PR created and read back: https://github.com/rore/agent-workflow/pull/56, head feat/completion-worktree-guidance. Exact owning-tool URL appended to Relationships in the PR-creation edit; original requirement baseline preserved. Current-head CI, review threads, merge and consumer sync are still pending, not implied by Ready for review.
 
 ## Plan review
 
