@@ -26,7 +26,7 @@ Source: workflow manager chat `01a0d7cd-696b-76a0-8f2f-48a80a201905`, forwarding
 **Plan review:** Agent technical review: /root/relationships_corrected_result_review at 9a8a1e28a7627d3f90e32c123a5237e2ac07fd6f, recorded under Plan review below. No blocking findings; Elevated/Simple and existing Step 8 seam confirmed.
 **Approvals:** Not required at this risk level. Manager-directed instructions-only implementation and normal PR delivery authorized; no environment or cleanup authority inferred.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -45,6 +45,8 @@ Blocked at required verification: full suite at 0108c73dc0b18f38c75c5002e03e3320
 
 Targeted diagnosis found the exact-text assertion at tests/package/check-e2e-bootstrap.sh:196 still requires "forward a received approval immediately". Retained that phrase in equivalent compact Step 8 wording instead of changing the test. Regenerated isolated mirrors; all 22 budgets pass, operating-mode now 1894/1900. Corrected package-only rerun pending; prior eight passing layers remain relevant. Final artifact identities supersede the first candidate above: operating-mode.md 10976 bytes, SHA256 FDBF456AA52F37B98825D6517DEFF5E67650A3E1F728700DE9037C415C713651; manifest.txt 3512 bytes, SHA256 D408F7D764891C57091B79310788491188BACB98DE82C8C8334FD9716DF3B3DF, 76 entries. Trigger 3 dropped: Bash/Python selection was local environment invocation; the literal-text failure was our wording change, not an upstream defect. No public report needed.
 
+Verification resolved: package-only rerun at fe946291baa2346ee949900ffb7ebad311b5eb68 passed, actual suite/child exits 0. Log .local/package-fe94629.log includes package parity/install-sync/committed-skill/references/install-probe/autocrlf and e2e bootstrap success. Combined with the unchanged eight passing layers from the full run and corrected-candidate budget check, all nine required layers are covered; no single all-green full-run claim. State advanced to Ready for review. Next: push, create/link owning PR, verify current-head CI and review threads, merge normally, hand final artifacts to sync owner. No worktrees removed; current task checkout remains needed for PR and coordinated delivery evidence.
+
 ## Plan review
 
 Independent non-implementer /root/relationships_corrected_result_review inspected the record at 9a8a1e28a7627d3f90e32c123a5237e2ac07fd6f, source Step 8, SPEC section 6 and authoring rules. Plan adequate, no blocking findings; operational completion hygiene requires no new SPEC concept/state/gate. Safeguards cover active dependencies, preservation, ownership and authority. Host archiving must preserve needed material first; otherwise retain/report. Actual wording, budget and mirror parity remain result-review checks. No cleanup or consumer writes were reviewed or authorized.
@@ -56,3 +58,5 @@ Agent technical review: /root/relationships_corrected_result_review, independent
 Reviewed revision: 0108c73dc0b18f38c75c5002e03e332079d16a94.
 
 Verification adequacy: Focused scenario review, unchanged budgets, exact source/package/native parity and required suite/CI are proportionate for this prose-only change. The reviewer inspected the actual Step 8 diff and confirmed recovery obligations plus completion, preservation, ownership, dependency and authority safeguards. No new SPEC concept, gate, automation or permission. Required full-suite and current-head PR evidence remain pending; cleanup execution and consumer sync were not tested or authorized. Skill Creator quick_validate.py independently reports "Skill is valid!" for the built package.
+
+Corrected result review: /root/relationships_corrected_result_review inspected fe946291baa2346ee949900ffb7ebad311b5eb68 and its delta from 0108c73; no blockers. The single equivalent wording change restores the tested phrase without changing safeguards. Source/dist/Claude/Agents parity matches final artifact hash above. Prior independent review and eight passing layers remain applicable; budget plus package-only rerun are adequate, contingent on actual package success and current-head CI before merge.
