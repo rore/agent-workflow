@@ -141,7 +141,7 @@ The repo SHOULD enable GitHub's `required_conversation_resolution` branch-protec
 
 ## Step 8 — Stop, handoff and completion
 
-Forward received handoff approvals immediately; don't leave a task `Blocked` solely awaiting them.
+At handoff, forward a received approval immediately; don't leave a task `Blocked` solely awaiting it.
 
 Before ending any session:
 
