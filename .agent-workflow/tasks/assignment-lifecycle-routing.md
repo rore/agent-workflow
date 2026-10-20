@@ -26,7 +26,7 @@ Source: Pallium Relay relay-msg-1dda9a7718504695ade1aefa1e5b6cd9 from Workflow m
 **Plan review:** Agent technical review: /root/relationships_corrected_result_review at 619eff44857c6507dbac145cf4ff31b8105cd9fa, recorded below. Ownership/routing approach adequate; add acceptance explicitly to the proposed trigger label (incorporated). Canonical owner entrypoint/revision remains a pre-edit dependency; actual-flow evidence and instruction exercise remain verification dependencies. Source untouched.
 **Approvals:** Not required at Elevated risk for this plan/change. Direct user coordination/skill-sync instruction verified above. Merge authority for the new PR must be established separately; no live installation window is inferred.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -60,6 +60,14 @@ Owner clarification relay-msg-ff95e4a6aced4c9ca2bbe2080f74471d: no shared provid
 ## Result review
 
 Pending implementation and verification.
+
+## Canonical dependency and recovery
+
+Current restriction adopted from relay-msg-77c9f8d1d6c146949de4c664095a199b: no Pallium canonical or stable installed-file writes, regardless of earlier generic sync approval, until the current direct-human/owner restriction is resolved. Astra's isolated participation_lifecycle work owns canonical source guidance and bounded validation; do not duplicate it. Other consumers require expressly approved scope and current windows. No live association cleanup or structural/other-session link changes.
+
+Manager continuation relay-msg-2d7c24a62ba44dd1975cdc1c5926f67f supplies canonical source e10bb59ebb20edfb3cb3faea2dc7ce4099d7e9ee. Read SKILL.md and references/work-associations.md through immutable Git objects, without writing Pallium. These two blobs are identical across integrations/codex, integrations/claude-code and integrations/opencode. The skill explicitly routes to canonical work participation lifecycle; its contract matches the reviewed acceptance/resume/assignment-end routing, own-session explicit-origin reconciliation and separation from structural refs. Custom/resumed WR discovery remains unresolved. Canonical pre-edit dependency is satisfied; actual protocol evidence/instruction exercise remains pending and no release/E2E success is claimed.
+
+Original checkout was absent/unregistered. Manager created C:/Users/I347041/.codex/worktrees/assignment-lifecycle-recovery/agent-workflow from retained 50cfb35feec3480fdd2666084605f0f55ad3213a. Verified correct top-level and clean state; reused feat/assignment-lifecycle-routing and trusted resolver found the existing record identity/path. Original app artifact metadata was preserved. Original ignored .local/lifecycle-evidence and .agents files were not recovered, and unknown uncommitted state is not claimed restored. Current execution uses the recovered path above; no competing task/record created. State advanced to Ready to implement; source edit and package generation are confined to this isolated checkout, not live installed copies.
 
 ## Consolidated rollout disposition
 
