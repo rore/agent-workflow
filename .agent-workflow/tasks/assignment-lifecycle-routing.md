@@ -39,6 +39,8 @@ Current dependency: Workflow manager to provide Pallium canonical entrypoint/rev
 
 Pre-edit budget: all 22 files pass; operating-mode 1894/1900. Root remains at c6a3b3d with only original .codex/hooks.json dirty, SHA256 6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E. Whole-repo targeted search finds the old Optional Pallium association wording only in the intended source row; no matching test expectation needs changing. Real exercise/protocol, reviews, suite and publication pending; nothing claimed passed yet.
 
+At record revision 4ba3036, freshly generated real record-only Redline verdict exits 0; this does not reclassify the intended watch-zone source edit. Local checker with that verdict exits 2 only for deliberately pending Elevated agent plan review. Evidence under .local/lifecycle-evidence/{changed-files.z,numstat.z,diff.patch,redline.json,checker.json}. Dependency sent to Workflow manager as relay-msg-9bc81fb391054fbe82cf6e19341d85c9; saved/pending is not confirmation or delivery. No active test/implementation/monitor remains; resume this same task on the canonical owner entrypoint/evidence, then perform review before editing. Worktree retained for the accepted unfinished assignment, not cleaned.
+
 ## Result review
 
 Pending implementation and verification.
