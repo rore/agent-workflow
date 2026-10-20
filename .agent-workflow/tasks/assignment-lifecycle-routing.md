@@ -60,3 +60,7 @@ Owner clarification relay-msg-ff95e4a6aced4c9ca2bbe2080f74471d: no shared provid
 ## Result review
 
 Pending implementation and verification.
+
+## Consolidated rollout disposition
+
+Owner update relay-msg-37f46d54ff244f708f5d8d52616c0183: combine Minimap's deferred c6 sync and reviewed lifecycle routing into ONE coherent package update, never serial installs. Provide exact final reviewed revision and target-relative path manifest/diff before requesting its owner window; revalidate actual target/base and do not force the earlier seven paths. No write window exists. Owner reports Minimap PR 69 merged470ea1050b32b54e485d8185010b6a6a36c4745c with independent review/CI passed and primary clean/aligned. Owner-owned UI evidence C:/Dev/rore/minimap/.local/participation-evidence/ shows 0 -> 1 -> 1 attach/exact-ref reread/reopen, not fresh-agent adoption; final detach remains pending assignment completion. Installed Pallium wording remains old per owner; canonical dependency remains. Workflow has no installed Minimap skill copies for reciprocal sync. No duplicate review/suite, association, consumer write or cleanup is triggered.
