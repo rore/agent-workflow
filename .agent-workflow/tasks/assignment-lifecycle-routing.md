@@ -23,7 +23,7 @@ Source: Pallium Relay relay-msg-1dda9a7718504695ade1aefa1e5b6cd9 from Workflow m
 - Real protocol behavior not inferred -> tie exercise cases to Pallium owner's actual attach/resume/detach test result and revision; Minimap owner supplies visuals, not Workflow.
 - Minimal compatible package -> unchanged token ceiling, skill validation, required bash tests/run-all.sh, real local reporter/checker and exact source/dist/native parity.
 - Authorized delivery only -> owning PR identity/current-head checks and reviews; explicit current merge authority and owner-coordinated backed-up sync before those actions.
-**Plan review:** Pending canonical dependency and independent review; source untouched.
+**Plan review:** Agent technical review: /root/relationships_corrected_result_review at 619eff44857c6507dbac145cf4ff31b8105cd9fa, recorded below. Ownership/routing approach adequate; add acceptance explicitly to the proposed trigger label (incorporated). Canonical owner entrypoint/revision remains a pre-edit dependency; actual-flow evidence and instruction exercise remain verification dependencies. Source untouched.
 **Approvals:** Not required at Elevated risk for this plan/change. Direct user coordination/skill-sync instruction verified above. Merge authority for the new PR must be established separately; no live installation window is inferred.
 **Exceptions:** —
 **State:** Blocked
@@ -41,9 +41,13 @@ Manager follow-up relay-reply-14c489b217b85cce9f310ca5a68690ccff339a654fd243722d
 
 Replace only the existing association row with:
 
-`|Assignment pickup/resume/end/handoff|Follow installed pallium-memory lifecycle guidance when available, separately from permanent Relationships; never duplicate/remove hook-owned refs.|`
+`|Assignment acceptance/pickup/resume/end/handoff|Follow installed pallium-memory lifecycle guidance when available, separately from permanent Relationships; never duplicate/remove hook-owned refs.|`
 
 In source, retain the existing backticks around pallium-memory. The discoverable installed skill owns the lifecycle entrypoint; do not manufacture a cross-package Markdown path. Other table rows and existing missing-tools/identity fallback remain unchanged. No attach/detach algorithm is copied. Independent review may approve the routing approach while canonical owner validation remains an explicit pre-edit prerequisite, not a falsely satisfied gate.
+
+## Plan review
+
+Independent non-implementer /root/relationships_corrected_result_review inspected revision 619eff44857c6507dbac145cf4ff31b8105cd9fa. Elevated/Simple and generic installed-skill routing are appropriate; no new Workflow concept, schema or mandatory integration. Finding: acceptance can precede pickup during an owned wait, so the trigger label must explicitly include acceptance. Incorporated that single label correction in the proposed row above; no mechanic added. Existing missing-tools/identity fallback, permanent Relationships separation and hook-owned guards are preserved. Canonical owner entrypoint/revision must be validated before source edit; actual attach/resume/detach evidence and clean-context exercise are not yet satisfied. No tests, associations, installations or source edits were performed by the reviewer.
 
 ## Evidence
 
