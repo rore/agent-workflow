@@ -35,7 +35,7 @@ Keep exact source IDs/links in prose; maintain Relationships per [capture rules]
 
 |When|Action|
 |---|---|
-|Pickup/resume/leaving|Optional Pallium association: follow installed `pallium-memory` attach/detach guidance; never duplicate/remove hook-owned branch/Work Record refs.|
+|Assignment acceptance/pickup/resume/end/handoff|Follow installed `pallium-memory` work participation lifecycle when available, separately from permanent Relationships; never duplicate/remove hook-owned refs.|
 |PR creation|Link PR from source item under tracker rules.|
 |Verified merge|Record delivered contribution/remaining scope; don't infer whole-feature completion from one PR.|
 |Owner-managed tracker/checkout|Hand owner item/PR/contribution/remaining scope; keep update pending in Work Record until confirmed.|
