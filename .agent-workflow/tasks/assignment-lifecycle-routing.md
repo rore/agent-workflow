@@ -35,6 +35,16 @@ Source: Pallium Relay relay-msg-1dda9a7718504695ade1aefa1e5b6cd9 from Workflow m
 
 Current dependency: Workflow manager to provide Pallium canonical entrypoint/revision and actual protocol-test evidence. Independent planning/review may use the agreed contract, but implementation waits for that canonical wording to avoid duplicate procedure or broken routing. Source refs absent, not reconstructed from cwd/history/titles. The earlier c6 source sync is verified complete; previous Minimap installation record remains pending owner window until current coordination resolves it, not silently cancelled.
 
+Manager follow-up relay-reply-14c489b217b85cce9f310ca5a68690ccff339a654fd243722d6ffcdbfc41176b confirms the bounded approach and has requested direct canonical-owner coordination/evidence and exact existing item refs. Minimal routing preparation and independent review continue; final canonical-link validation still awaits its owner. No association refs, write window or new merge approval supplied.
+
+## Proposed routing (not implemented)
+
+Replace only the existing association row with:
+
+`|Assignment pickup/resume/end/handoff|Follow installed pallium-memory lifecycle guidance when available, separately from permanent Relationships; never duplicate/remove hook-owned refs.|`
+
+In source, retain the existing backticks around pallium-memory. The discoverable installed skill owns the lifecycle entrypoint; do not manufacture a cross-package Markdown path. Other table rows and existing missing-tools/identity fallback remain unchanged. No attach/detach algorithm is copied. Independent review may approve the routing approach while canonical owner validation remains an explicit pre-edit prerequisite, not a falsely satisfied gate.
+
 ## Evidence
 
 Pre-edit budget: all 22 files pass; operating-mode 1894/1900. Root remains at c6a3b3d with only original .codex/hooks.json dirty, SHA256 6B9A5ED80441142646E3E634B4F768E0C2D930F71AEBDB4B055B066165C5CC1E. Whole-repo targeted search finds the old Optional Pallium association wording only in the intended source row; no matching test expectation needs changing. Real exercise/protocol, reviews, suite and publication pending; nothing claimed passed yet.
