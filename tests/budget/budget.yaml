@@ -76,7 +76,7 @@ ceilings:
     why: loaded when starting a task. Five-field reference with examples and the baseline handoff.
   - path: core/templates/checkpoints/behavioral-integrity.md
     max_tokens: 850
-    why: loaded only when Task Context changes or behaviorContracts is configured; carries baseline/change JSON, authority separation, contract handling, and checkpoint actions without burdening routine unchanged tasks.
+    why: loaded for material behavioral departures, Task Context changes or configured contracts; carries source comparison, exact approval, baseline/change JSON and authority separation without burdening routine preserving tasks.
   - path: core/templates/checkpoints/discover.md
     max_tokens: 800
     why: loaded during Discover. Carries the authoritative-source table + three resolution paths + the gate. SPEC-restated rationale moved to docs.

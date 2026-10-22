@@ -339,6 +339,8 @@ The initial context **MUST** be sufficient to begin focused discovery.
 
 #### Requirement baseline and behavior changes
 
+Agents **MUST** preserve authoritative user requirements and established core product behavior. Before implementing or accepting a material departure, the agent **MUST** present its exact before/after behavior, impact and alternatives for explicit human review and approval by the applicable authority, even if the Work Record, baseline or configured contracts are unchanged. General task approval, agent review and passing tests **MUST NOT** substitute for that approval. Existing approval **MUST** be reused only for the exact departure it covers. Unaffected work **SHOULD** continue; routine behavior-preserving work requires no additional approval under this rule.
+
 Before discovery or planning, the Work Record **MUST** capture an immutable Requirement baseline containing the authoritative source reference when one exists and the exact initial Outcome, Scope, Constraints, and Completion criteria. Target is structural identity and is not part of the baseline. New records capture this without human interaction. A legacy record remains parseable but **MUST NOT** advance until its owner establishes a baseline from an authoritative source; the agent **MUST NOT** guess one.
 
 Later refinements update current Task Context and **MUST NOT** rewrite the baseline. On a PR, a branch-created Work Record **MUST** contain a valid baseline in its first committed version. A legacy record already present on the PR base without a baseline **MAY** establish one from an authoritative source; a malformed historical baseline is not absence. Once committed, the parsed baseline, including its source, **MUST** remain unchanged; JSON formatting alone is immaterial. Each behavioral difference from the baseline or a prior approved change **MUST** appear in an ordered Behavior changes record with exact before and after values. Entries use one of:
@@ -423,7 +425,7 @@ For routine work, the plan **MAY** be a short description of:
 - affected surfaces
 - required verification
 
-The plan **MUST** identify any durable product, architecture, contract, decision, or operational documentation that requires updating. No documentation update is required when the existing authoritative artifacts remain accurate.
+The plan **MUST** compare proposed behavior directly with authoritative user requirements and established core behavior under §9.1, not only its Work Record or tests. It **MUST** identify any durable product, architecture, contract, decision, or operational documentation that requires updating. No documentation update is required when the existing authoritative artifacts remain accurate.
 
 For elevated, high-risk, or complex work, the plan **MUST** also include:
 
@@ -552,6 +554,7 @@ The reviewer **MUST** evaluate:
 
 The review **MUST** check:
 
+- whether delivered behavior matches authoritative user requirements and established core behavior, or the exact departures approved under §9.1, rather than only records, implementation or tests
 - whether completion criteria are satisfied
 - whether the recorded verification methods are adequate to the criterion they cover (the harness cannot judge this; it falls to the reviewer)
 - whether tests would detect the relevant failure, exercise its triggering path, and use fakes that reflect the real interface rather than repeat implementation assumptions

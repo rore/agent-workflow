@@ -6,6 +6,14 @@ Newest entries on top. Each entry: date, decision, alternatives considered, rati
 
 Routine session work doesn't go here — only decisions a future maintainer would want the reasoning behind.
 
+## 2026-10-22 — Behavioral integrity is not limited to edited records
+
+**Decision:** Preserve authoritative user requirements and established core product behavior even when Work Record, baseline and configured-contract text remain unchanged. Material departures need explicit human review and approval of their exact before/after behavior, impact and alternatives. Planning and result review compare proposed/delivered behavior directly with those sources. Reuse exact existing approval and continue unaffected work; routine behavior-preserving work gains no approval gate. Existing structured change records still apply only to their existing targets; no new schema or semantic-enforcement claim.
+
+**Alternatives considered:** Treat internally consistent records and green tests as sufficient; add a new checklist, behavior registry or checker; require renewed approval for ordinary preserving work.
+
+**Rationale:** An implementation can silently narrow behavior while its record and tests validate the same narrowed interpretation. Existing judgment and approval checkpoints must catch that departure rather than imply semantic correctness from structural consistency. Load the detailed rule for material departures or configured contracts, not on every routine turn.
+
 ## 2026-10-17 — Navigation hostnames use a shared lexical profile
 
 **Decision:** Optional source navigation supports literal ASCII hostname syntax (including punycode), canonical IPv4 and bracketed IPv6, with explicit hostname/port bounds. Literal Unicode hostnames are unsupported, not silently normalized. Punycode labels do not promise IDNA validity or DNS resolution. Exact source tuples, Unicode titles/content and the canonical GitHub PR profile are unchanged. The human explicitly approved this narrowing of the initial DNS/IDN promise.

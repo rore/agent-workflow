@@ -1,5 +1,9 @@
 # Behavioral requirement integrity
 
+## Preserve behavior
+
+Preserve authoritative user requirements and established core product behavior. Before implementing or accepting a material departure, present exact before/after behavior, impact and alternatives for explicit review and approval by the required human authority—even if the Work Record, baseline or contracts are unchanged. General task approval, agent review and green tests do not authorize the departure. Reuse approval already covering the exact departure; pause affected work and continue unaffected work. Routine behavior-preserving work needs no additional approval. Compare proposed/delivered behavior directly with authoritative requirements and established behavior, not just records or tests.
+
 ## Establish
 
 After writing Task Context and before discovery, copy its exact Outcome, Scope, Constraints, and Completion criteria into Requirement baseline as JSON:
