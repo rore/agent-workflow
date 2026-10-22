@@ -25,7 +25,7 @@ Source: direct user item 01a16368-f7d7-72c0-b3c7-619bbd210bbc ("ok, so drive thi
 **Plan review:** Agent technical review: behavior_preservation_plan_review accepted corrected proposal SHA256 A39779A253682B956373D7AE0BF3DC118C5F0700BCAFC164109C2BEBD406F087 after focused re-review; initial revision 0a2970b51097b19b6430dbd7f63235e8ff649d94. See Plan review below. No source implementation.
 **Approvals:** Approved by user 2026-10-22: "ok, so drive this". Exact source item and presented three-point rule are linked above; scope mapping is recorded below for technical/manager review, not permission for a wider departure. Separate High-risk human result review and architecture checkpoint remain required before final acceptance.
 **Exceptions:** —
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -34,7 +34,7 @@ Source: direct user item 01a16368-f7d7-72c0-b3c7-619bbd210bbc ("ok, so drive thi
 
 ## Recovery
 
-Planning gates satisfied; retained isolated checkout is ready for SPEC-first implementation. Exact canonical provider work tuple not supplied; sources remains null, no guessed participation or roadmap mutation. Keep source/consumer live-install holds intact.
+Implementation and aggregate validation complete; independent technical result accepted. Retain the isolated checkout and ignored evidence for normal PR delivery, separate High human result review and architecture checkpoint. Exact canonical provider work tuple not supplied; sources remains null, no guessed participation or roadmap mutation. Keep source/consumer live-install holds intact; no current owner sync windows are assumed.
 
 ## Proposed change and authority mapping
 
@@ -101,6 +101,6 @@ Preserved ignored logs: .local/behavior-full-suite.log SHA256 BA1837BAA5A777FFD5
 
 ## Result review
 
-Agent technical review: behavior_preservation_plan_review. Reviewed revision: 7613f58c91f8314210aed754eb112d06afc802af. Source review accepted with no actionable findings; inspected actual source/callers, seven-file proposal equality, source/package/native parity, manifest sizes, Redline and ten-case exercise. High/Simple unchanged. Verification adequacy: initial review left full-suite evidence pending; narrow supplement on final layered evidence and the three public mirrors is now requested. State remains Ready to implement until that supplement is accepted. Separate High human result review and architecture checkpoint still outstanding; no PR/merge or live sync yet.
+Agent technical review: behavior_preservation_plan_review. Reviewed revision: eb77093210be71949cb220ec376abdbf972532ff, including public propagation 9d481d78889c197b30dcf896cc40be52de973bc2 and unchanged source implementation 7613f58c91f8314210aed754eb112d06afc802af. Final technical result accepted with no actionable findings. Inspected actual source/callers, seven-file proposal equality, public/package/native parity, manifest sizes, Redline, ten-case exercise, suite runner and preserved logs/hashes. High/Simple unchanged. Verification adequacy: sufficient through aggregate passing coverage of all nine layers; first-six reuse is sound after public-copy-only propagation. Neither failed full-suite invocation is called a successful full-suite run. Separate High human result review and architecture checkpoint still outstanding; no PR/merge or live sync yet. Technical acceptance establishes neither human authority nor future autonomous compliance.
 
 Skill feedback triggers dropped: wrapper exports, missing isolated runtime link, lost test-session metadata and incomplete public-mirror discovery were task execution/setup mistakes addressed here, not a new upstream defect requiring a public issue. The requested general guidance defect is already owned by this task; no duplicate report or new harness.
