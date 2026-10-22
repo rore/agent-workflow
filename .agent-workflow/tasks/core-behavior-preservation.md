@@ -101,7 +101,7 @@ Preserved ignored logs: .local/behavior-full-suite.log SHA256 BA1837BAA5A777FFD5
 
 ## Result review
 
-Agent technical review: behavior_preservation_plan_review
+Agent technical review: native agent /root/behavior_preservation_plan_review, final technical result-acceptance response for eb77093210be71949cb220ec376abdbf972532ff (separate from its initial plan-review and corrected-proposal acceptance responses).
 
 Reviewed revision: eb77093210be71949cb220ec376abdbf972532ff
 
@@ -124,3 +124,11 @@ Installed-skill sync is not yet performed. Proposed later scope is the merged pa
 2026-10-22: Independently read workflow-manager chat 01a0d7cd-696b-76a0-8f2f-48a80a201905. Human source item 01a163b4-35f6-7110-a77c-d68ac4aaa394 says "approved" in response to the explicit completed-result question "Do you approve this completed policy/SPEC change for merge?" in the preceding manager turn. The question links PR 58, explains the delivered general rule, CI/technical review and separate High human result gate, and excludes live installations. Reviewed PR head a549153707e6820dea11ddc5040313c6f341f509 still matched live PR and isolated HEAD before this approval-only record edit. This satisfies the separate human result review and SPEC architecture approval for the unchanged delivered policy, not a new scope or live-install grant.
 
 Manager relay-msg-785e10cd70f247c9a0f5fddd9993ae7e was read through next_offset null and independently corroborated by the direct human item. Authorized app-message idle fallback requested continuation, not a new assignment. Apply the existing architecture-reviewed checkpoint label, recheck current-head CI and all reviews, and perform normal merge without admin bypass once green. CodeRabbit was pending at pickup and is not treated as passed. Existing consumer/source installation holds remain.
+
+## Bot-review disposition
+
+CodeRabbit review 5614653862 completed on reviewed source head a549153707e6820dea11ddc5040313c6f341f509. Comment 4348668174 asks for a distinct result-review source: clarified the phase and exact final-acceptance response/revision above. The same non-implementer performed separate plan and result-review turns; no different reviewer identity is invented and no new review is claimed.
+
+Comment 4348668191 asks to add SPEC 9.4's durable-documentation obligation to the checkpoint. Declined in this bounded change: the normative obligation predates the PR and is retained, while the base checkpoint also lacks that sentence (verified against 9e05090). This PR did not delete it. Adding another obligation to loaded prose would expand the exact approved source diff and require a budget/readability trade-off outside the requested guard correction. No further compression, ceiling increase or unrelated cleanup. This records a pre-existing instruction-coverage gap, not a fixed regression. The unverified grammar nit on historical prose is not a functional defect and is left unchanged.
+
+Only review-evidence bookkeeping changed after the human-approved result; all policy, source, public and packaged guidance remains identical to the independently reviewed implementation. Recheck CI and resolve both threads with these dispositions before normal merge.
