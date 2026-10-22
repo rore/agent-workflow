@@ -101,6 +101,14 @@ Preserved ignored logs: .local/behavior-full-suite.log SHA256 BA1837BAA5A777FFD5
 
 ## Result review
 
-Agent technical review: behavior_preservation_plan_review. Reviewed revision: eb77093210be71949cb220ec376abdbf972532ff, including public propagation 9d481d78889c197b30dcf896cc40be52de973bc2 and unchanged source implementation 7613f58c91f8314210aed754eb112d06afc802af. Final technical result accepted with no actionable findings. Inspected actual source/callers, seven-file proposal equality, public/package/native parity, manifest sizes, Redline, ten-case exercise, suite runner and preserved logs/hashes. High/Simple unchanged. Verification adequacy: sufficient through aggregate passing coverage of all nine layers; first-six reuse is sound after public-copy-only propagation. Neither failed full-suite invocation is called a successful full-suite run. Separate High human result review and architecture checkpoint still outstanding; no PR/merge or live sync yet. Technical acceptance establishes neither human authority nor future autonomous compliance.
+Agent technical review: behavior_preservation_plan_review
+
+Reviewed revision: eb77093210be71949cb220ec376abdbf972532ff
+
+Verification adequacy: sufficient through aggregate passing coverage of all nine layers; first-six reuse is sound after public-copy-only propagation. Neither failed full-suite invocation is called a successful full-suite run.
+
+Final technical result accepted with no actionable findings, including public propagation 9d481d78889c197b30dcf896cc40be52de973bc2 and unchanged source implementation 7613f58c91f8314210aed754eb112d06afc802af. Inspected actual source/callers, seven-file proposal equality, public/package/native parity, manifest sizes, Redline, ten-case exercise, suite runner and preserved logs/hashes. High/Simple unchanged. Separate High human result review and architecture checkpoint still outstanding; no PR/merge or live sync yet. Technical acceptance establishes neither human authority nor future autonomous compliance.
+
+The first readiness checker rejected these three attestations when combined on one prose line; separated them into the existing required line grammar without changing the review or validation rule.
 
 Skill feedback triggers dropped: wrapper exports, missing isolated runtime link, lost test-session metadata and incomplete public-mirror discovery were task execution/setup mistakes addressed here, not a new upstream defect requiring a public issue. The requested general guidance defect is already owned by this task; no duplicate report or new harness.
