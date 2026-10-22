@@ -25,7 +25,7 @@ Source: direct user item 01a16368-f7d7-72c0-b3c7-619bbd210bbc ("ok, so drive thi
 **Plan review:** Agent technical review: behavior_preservation_plan_review accepted corrected proposal SHA256 A39779A253682B956373D7AE0BF3DC118C5F0700BCAFC164109C2BEBD406F087 after focused re-review; initial revision 0a2970b51097b19b6430dbd7f63235e8ff649d94. See Plan review below. No source implementation.
 **Approvals:** Approved by user 2026-10-22: "ok, so drive this". Exact source item and presented three-point rule are linked above; scope mapping is recorded below for technical/manager review, not permission for a wider departure. Separate High-risk human result review and architecture checkpoint remain required before final acceptance.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -34,7 +34,7 @@ Source: direct user item 01a16368-f7d7-72c0-b3c7-619bbd210bbc ("ok, so drive thi
 
 ## Recovery
 
-State Blocked pending independent plan review and manager/Astra proposal acceptance, not a generic permission request. Retain this new task checkout; no source implementation or installed write has begun. Exact canonical provider work tuple not supplied; sources remains null, no guessed participation or roadmap mutation.
+Planning gates satisfied; retained isolated checkout is ready for SPEC-first implementation. Exact canonical provider work tuple not supplied; sources remains null, no guessed participation or roadmap mutation. Keep source/consumer live-install holds intact.
 
 ## Proposed change and authority mapping
 
@@ -74,3 +74,9 @@ Clean-context behavior_decision_exercise (gpt-6-luna, medium) read the exact pro
 | User explicitly requires safety mechanism; visible outputs match without it | Preserve required mechanism or seek exact removal approval; matching success outputs is insufficient. |
 
 Evidence is a bounded forward reasoning exercise against inert written instructions, not executed application behavior, installed/native agent qualification or observed real-use adoption. Actual applied package/budget/full-suite and final independent result review remain pending proposal acceptance and implementation. Latest checker at record revision 193464c exited 1: all blocking structural predicates passed, architecture-review remains shadow advisory and is not claimed satisfied. Current product paths remain unchanged from 9e05090.
+
+## Implementation authorization and target files
+
+2026-10-22: Astra reviewed the complete seven-file proposal and accepted scope in relay-msg-9b4fc4ee0e4d451898d3771e6dfc2a73 (delivery relay-delivery-86fe36d114c345a9b7c7cb907e8c3ce3, body read through next_offset null). Manager independently concurred and requested resume via authorized idle fallback in this chat. Current inert proposal still hashes A39779A253682B956373D7AE0BF3DC118C5F0700BCAFC164109C2BEBD406F087 and isolated tree is clean at b04c40b5085c285fb14ce474f917f57d003a5a6f. Existing exact human policy approval is reused; coordinator acceptance is not substituted for a human gate. No further compression or unrelated cleanup.
+
+Apply docs/SPEC.md first, then docs/DECISIONS.md, core/skill/operating-mode.md, core/templates/checkpoints/behavioral-integrity.md, core/templates/checkpoints/plan-and-review.md, core/templates/checkpoints/review-result.md, and the rationale-only tests/budget/budget.yaml edit. Regenerate four changed instruction files plus manifest under dist/agent-workflow and .claude/skills/agent-workflow; refresh ignored .agents mirror only in this isolated checkout. Existing Work Record is the only task artifact to update. No source checkout, consumer, runtime, hooks, configuration or service changes.
