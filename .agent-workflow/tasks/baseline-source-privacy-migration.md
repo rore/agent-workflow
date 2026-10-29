@@ -25,7 +25,7 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 **Plan review:** Agent technical review: independent non-implementer plan review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the source-only plan with explicit history, retention and compatibility boundaries; see Plan review below.
 **Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
 **Exceptions:** —
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -34,7 +34,7 @@ Initialized before source edits from public main df8639da94916bc8f8a879f71f8eba5
 
 Implemented strict receipt parsing/rendering/exports, passive-reader optional-label compatibility and bounded source-only history verification. Ordinary records retain their baseline-only behavior; migration history is inspected only after receipt evidence is found. Missing refs deny migrated records. Existing runtime callers that omit refs cannot verify them; use the history-aware CLI/CI surface. No native runtime qualification or live installation is claimed.
 
-Independent result review of 6c1e14823566dff8dab84bd17ef31bb6eb18b8fc found two blockers: the standalone packaged checker lacked a required import, and deletion/rename followed by record restoration before migration escaped identity checks. Both findings were accepted and corrected in the existing predicate and regression-test files. The corrected package and final required verification/review are still pending; the reviewed revision is not accepted.
+Independent result review of 6c1e14823566dff8dab84bd17ef31bb6eb18b8fc found two blockers: the standalone packaged checker lacked a required import, and deletion/rename followed by record restoration before migration escaped identity checks. Review of the correction also found temporary missing/altered baseline restoration before migration. All three findings were accepted and corrected in the existing predicate and regression-test files. Final source/package/native artifacts were regenerated and independently accepted at 73d1ff0b71d71ee133ccc8fe6d75b4b5a093af7a; earlier reviewed revisions are not accepted.
 
 Receipts already on an authoritative base retain their original anchor; Git cannot reconstruct which external PR refs were supplied for the earlier approval. This is a trusted-base boundary, not authenticated historical approval. Migration traversal fails closed beyond 2048 relevant path snapshots or 10000 ancestry commits. These limits do not apply to ordinary records without migration evidence.
 
@@ -44,13 +44,25 @@ Existing adoption owner supplied PR 78 head c1f43dc2bdfa77a1f2d5cc03512e6202cf8b
 
 The owner must verify this anchor against the actual checker-selected trusted history; supplied evidence alone does not establish the binding. An already committed redaction cannot gain retroactive validity by appending a receipt. Prepare a fresh reviewed source-and-receipt transition from a trusted pre-redaction PR base, carrying functional work separately, or report that no supported route is available. Never republish private originals or rewrite shared history. If an unmerged PR base advances, rerun the exact selector/approval-binding checks; do not silently rebind an immutable receipt. Actual consumer adoption remains with its existing owner.
 
-## Verification in progress
+## Verification
 
-Focused source validation passed 132 Python cases, then 28 new/changed cases; passive-reader validation passed 95 relationship and 13 configuration fixtures. Six correction regressions passed, including pre-migration deletion/rename rejection, deletion before the authoritative anchor acceptance, parallel pre-migration ancestry and later-base retention. The first required checker layer passed 285 cases but failed both standalone migration positives because of the missing import; it is not successful validation. Required corrected layers and independent finished-result review remain ahead. Test logs and synthetic review fixtures stay ignored/local.
+Focused source validation passed 132 Python cases, then 28 new/changed cases; passive-reader validation passed 95 relationship and 13 configuration fixtures. Six identity-correction cases and six final baseline-correction cases passed. The final source/standalone consumer-shaped positives and restored-baseline regressions passed five cases. Independent review separately reproduced all three final negative cases in both source and standalone checkers and confirmed native mirror parity.
+
+All nine required repository layers completed successfully across explicit layer runs: budget (23 files), schema (51 cases), work-record (113 cases plus passive-reader fixtures), checker (290 cases at 60314430b81f59a4643e3506becc97e5d60b80b2, followed by the focused final correction/package checks), Redline (including 174 reporter unit cases and eight actual CI evidence scenarios), tuner (23 cases), hooks, links (205 Markdown files), and package (drift, native parity, references, install/checkout portability and bootstrap simulation in two layouts). Unchanged-layer results are reused; final-revision PR CI remains required. Temporary hook-test setup was removed, and private logs/synthetic fixtures remain ignored/local.
+
+The initial required checker run failed two standalone positives due to the missing import; it is not successful validation. A later run stopped at Redline because a relative test scratch directory resolved under that layer's changed working directory; rerunning only that layer with an absolute isolated scratch directory passed. Trigger 3 dropped for this setup error: it was process-local test configuration, not an upstream product defect. The source privacy blocker is already owned by this task, so no duplicate feedback report is needed.
+
+## Result review
+
+Agent technical review: independent Astra result and architecture review accepted 73d1ff0b71d71ee133ccc8fe6d75b4b5a093af7a after all three findings were corrected; no remaining actionable findings. The reviewer inspected the connected parser/checker/readers, normative contract, guidance, history probes and source/package/native parity.
+
+Reviewed revision: 73d1ff0b71d71ee133ccc8fe6d75b4b5a093af7a.
+
+Verification adequacy: accepted unchanged-layer reuse plus final negative/preservation and executable packaged-consumer tests; completed local results satisfy the previously outstanding technical conditions. The final PR must still pass CI and separate High human finished-result/architecture review before merge. Shape/history validation does not authenticate approval, prove semantic/privacy equivalence or qualify live runtimes. The explicit trusted-base, advancing-base, already-redacted-history and retained-receipt limits remain.
 
 ## Recovery
 
-Technical and explicit human source-only plan gates are satisfied. Implement the bounded receipt with SPEC first; no broader functional-text capability. Keep private evidence and the separate partial-cleanup branch intact. Finished-result review, required verification and current-head PR checks remain ahead. No consumer receipt, live change or history rewrite is authorized by an agent attestation. Public source tuples were not supplied, so Relationships sources remains unresolved rather than guessed.
+Technical and explicit human source-only plan gates, implementation, local verification and independent technical result review are satisfied. Current-head PR checks, separate High human finished-result/architecture review, normal merge and one immutable adoption handoff remain. Keep private evidence and the separate partial-cleanup branch intact; broader protected-text cleanup remains unresolved. No consumer receipt, live change or history rewrite is authorized by an agent attestation. Public source tuples were not supplied, so Relationships sources remains unresolved rather than guessed. No roadmap item was supplied for this bounded correction; the owning consumer work remains with its existing owner.
 
 ## Plan review
 
