@@ -25,7 +25,7 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 **Plan review:** Agent technical review: independent non-implementer plan review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the source-only plan with explicit history, retention and compatibility boundaries; see Plan review below.
 **Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
 **Exceptions:** —
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -36,7 +36,7 @@ Implemented strict receipt parsing/rendering/exports, passive-reader optional-la
 
 Independent result review of 6c1e14823566dff8dab84bd17ef31bb6eb18b8fc found two blockers: the standalone packaged checker lacked a required import, and deletion/rename followed by record restoration before migration escaped identity checks. Review of the correction also found temporary missing/altered baseline restoration before migration. All three findings were accepted and corrected in the existing predicate and regression-test files. Final source/package/native artifacts were regenerated and independently accepted at 73d1ff0b71d71ee133ccc8fe6d75b4b5a093af7a; earlier reviewed revisions are not accepted.
 
-Receipts already on an authoritative base retain their original anchor; Git cannot reconstruct which external PR refs were supplied for the earlier approval. This is a trusted-base boundary, not authenticated historical approval. Migration traversal fails closed beyond 2048 relevant path snapshots or 10000 ancestry commits. These limits do not apply to ordinary records without migration evidence.
+Receipts already on an authoritative base retain their original anchor; Git cannot reconstruct which external PR refs were supplied for the earlier approval. This is a trusted-base boundary, not authenticated historical approval. Receipt discovery fails closed beyond 2048 matching candidate commits when absence cannot be established. Once a receipt field is found, migration traversal fails closed beyond 2048 relevant path snapshots or 10000 ancestry commits. Prose-only mentions do not activate full historical integrity parsing; ordinary valid local no-ref behavior is unchanged.
 
 ## Consumer acceptance
 
@@ -53,6 +53,8 @@ All nine required repository layers completed successfully across explicit layer
 The initial required checker run failed two standalone positives due to the missing import; it is not successful validation. A later run stopped at Redline because a relative test scratch directory resolved under that layer's changed working directory; rerunning only that layer with an absolute isolated scratch directory passed. Trigger 3 dropped for this setup error: it was process-local test configuration, not an upstream product defect. The source privacy blocker is already owned by this task, so no duplicate feedback report is needed.
 
 ## Result review
+
+Technical acceptance reopened before human result review: a final isolated probe found that tab/Unicode outer whitespace in a parser-valid receipt label was missed by the Git discovery expression. Receipt removal followed by baseline restoration could then pass. Correct discovery through coarse candidates and parser-aligned, marker-bounded field detection; add whitespace/removal and prose-only legacy compatibility regressions. The earlier accepted revision is not ready for delivery until this finding, executable package checks and independent review are clear.
 
 Agent technical review: independent Astra result and architecture review accepted 73d1ff0b71d71ee133ccc8fe6d75b4b5a093af7a after all three findings were corrected; no remaining actionable findings. The reviewer inspected the connected parser/checker/readers, normative contract, guidance, history probes and source/package/native parity.
 

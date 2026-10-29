@@ -638,3 +638,64 @@ def test_privacy_migration_cannot_repair_restored_pre_migration_baseline(
     predicate = _baseline_result(payload)
     assert not predicate["passed"]
     assert "pre-redaction baseline" in predicate["detail"]
+
+
+@pytest.mark.parametrize("whitespace", ["\t", "\u2003", "\n"], ids=["tab", "em-space", "newline"])
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_privacy_receipt_label_whitespace_history(tmp_path: Path, whitespace: str, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    migrated = _privacy_record(_receipt(base)).replace("**Baseline privacy migration:**",
+        f"**{whitespace}Baseline privacy migration{whitespace}:**")
+    target.write_text(migrated, encoding="utf-8")
+    head = _commit(repo, "approved migration with parser-supported label whitespace")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "remove receipt and restore original baseline")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+def test_receipt_prose_candidate_does_not_parse_old_behavior_schema(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    text = _record(OLD).replace("**State:**", "**Behavior changes:** legacy-not-json\n**State:**")
+    target.write_text(text + "\nMention Baseline privacy migration in ordinary prose.\n", encoding="utf-8")
+    _commit(repo, "prose mention with unrelated legacy behavior schema")
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "current ordinary record")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert _baseline_result(payload)["passed"]
+
+
+def test_malformed_receipt_label_requires_history_without_refs(tmp_path: Path) -> None:
+    repo, _ = _repo(tmp_path, {RECORD: OLD})
+    text = _record(OLD).replace("**State:**", "**\u2003Baseline privacy migration\u2003:** not-json\n**State:**")
+    (repo / RECORD).write_text(text, encoding="utf-8")
+    result = subprocess.run([sys.executable, "-m", "core.checker", "--repo-root", str(repo), "--slug", "example"],
+                            cwd=ROOT, env=dict(os.environ, PYTHONPATH=str(ROOT)), capture_output=True, text=True)
+    assert result.returncode == 2
+    predicate = _baseline_result(json.loads(result.stdout))
+    assert not predicate["passed"]
+    assert "requires valid PR base/head history" in predicate["detail"]
+
+
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_unambiguous_merge_can_introduce_privacy_receipt(tmp_path: Path, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    main = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-qb", "side")
+    (repo / "side.txt").write_text("side\n", encoding="utf-8")
+    _commit(repo, "side change preserving record identity")
+    _git(repo, "checkout", main)
+    (repo / "main.txt").write_text("main\n", encoding="utf-8")
+    _commit(repo, "main change preserving record identity")
+    _git(repo, "merge", "--no-commit", "--no-ff", "side")
+    (repo / RECORD).write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    head = _commit(repo, "unambiguous merge migration")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]

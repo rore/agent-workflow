@@ -858,6 +858,12 @@ def extract_requirement_baseline(text: str) -> RequirementBaseline | None:
     return None if baseline is None else parse_requirement_baseline(baseline)
 
 
+def has_baseline_privacy_migration(text: str) -> bool:
+    """Recognize the marker-bounded label without parsing historical JSON."""
+    return any(match.group(1).strip() == "Baseline privacy migration"
+               for match in _FIELD_HEADER_RE.finditer(_extract_block(text)))
+
+
 def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     """Validate the receipt's strict shape; approval authorship needs review."""
     label = "Baseline privacy migration"
@@ -3669,9 +3675,13 @@ def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
     base_ref = ctx.base_ref or os.environ.get("BASE_SHA")
     head_ref = ctx.head_ref or os.environ.get("HEAD_SHA")
     if base_ref is None and head_ref is None:
-        if ((ctx.record is not None and ctx.record.get("baseline_privacy_migration") is not None)
-                or (ctx.parse_error is not None and re.search(
-                    r"^\*\*\s*Baseline privacy migration\s*:\*\*", ctx.raw_text or "", re.M))):
+        receipt_present = ctx.record is not None and ctx.record.get("baseline_privacy_migration") is not None
+        if ctx.parse_error is not None:
+            try:
+                receipt_present = has_baseline_privacy_migration(ctx.raw_text or "")
+            except WorkRecordParseError:
+                return PredicateResult(name, False, "Work Record receipt presence could not be established.", True)
+        if receipt_present:
             return PredicateResult(name, False, "privacy migration requires valid PR base/head history.", True)
         return PredicateResult(name, True, "skipped — no PR history supplied.", True)
     if not base_ref or not head_ref or ctx.repo_root is None:
@@ -3747,14 +3757,32 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
                       anchor: object, anchor_sha: str) -> object:
     """Verify a single immutable source transition across committed path history."""
     current = None if ctx.record is None else ctx.record.get("baseline_privacy_migration")
-    evidence = _history_git(ctx, "log", "--full-history", "--format=%H", "--max-count=1",
-                            "-G", r"^\*\*[ \t]*Baseline privacy migration[ \t]*:\*\*",
-                            head, base, "--", path).stdout
+    candidates = _history_git(ctx, "log", "--full-history", "-m", "--format=%H", "--max-count=2049",
+                              "-G", "Baseline privacy migration", head, base, "--", path)
+    candidates = list(dict.fromkeys(candidates.stdout.decode("ascii").splitlines()))
+    if len(candidates) > 2048:
+        raise ValueError("privacy receipt candidate history exceeds the verification limit")
+    blobs: dict[str, str | None] = {}
+
+    def blob_at(sha: str) -> str | None:
+        if sha not in blobs:
+            blobs[sha] = _history_blob(ctx, sha, path)
+        return blobs[sha]
+
+    evidence = False
+    for sha in candidates:
+        blob = blob_at(sha)
+        try:
+            if blob is not None and has_baseline_privacy_migration(blob):
+                evidence = True
+                break
+        except WorkRecordParseError:
+            raise ValueError("historical Work Record receipt presence could not be established") from None
     if not evidence:
         if current is not None:
             raise ValueError("privacy receipt and replacement must be committed together")
         return anchor
-    log = _history_git(ctx, "log", "--full-history", "--topo-order", "--reverse",
+    log = _history_git(ctx, "log", "--full-history", "-m", "--topo-order", "--reverse",
                        "--format=%H", "--max-count=2049", head, base, "--", path)
     commits = list(dict.fromkeys(log.stdout.decode("ascii").splitlines()))
     if len(commits) > 2048:
@@ -3763,7 +3791,7 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
 
     def snapshot(sha: str) -> dict[str, object] | None:
         if sha not in snapshots:
-            blob = _history_blob(ctx, sha, path)
+            blob = blob_at(sha)
             try:
                 snapshots[sha] = None if blob is None else extract_requirement_history(blob)
             except WorkRecordParseError:

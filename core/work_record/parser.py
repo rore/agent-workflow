@@ -646,6 +646,12 @@ def extract_requirement_baseline(text: str) -> RequirementBaseline | None:
     return None if baseline is None else parse_requirement_baseline(baseline)
 
 
+def has_baseline_privacy_migration(text: str) -> bool:
+    """Recognize the marker-bounded label without parsing historical JSON."""
+    return any(match.group(1).strip() == "Baseline privacy migration"
+               for match in _FIELD_HEADER_RE.finditer(_extract_block(text)))
+
+
 def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     """Validate the receipt's strict shape; approval authorship needs review."""
     label = "Baseline privacy migration"

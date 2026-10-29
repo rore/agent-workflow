@@ -29,6 +29,7 @@ from core.work_record import (
     WorkRecord,
     WorkRecordParseError,
     extract_requirement_baseline,
+    has_baseline_privacy_migration,
     parse,
     parse_behavior_changes,
     parse_record,
@@ -742,3 +743,18 @@ def test_privacy_receipt_round_trips_both_shapes() -> None:
     expanded.record["baseline_privacy_migration"] = receipt
     assert parse(render(routine)) == routine
     assert parse_record(render_expanded(expanded.record)) == expanded
+
+
+@pytest.mark.parametrize("whitespace", ["\t", "\u2003", "\n"])
+def test_receipt_presence_matches_parser_label_whitespace(whitespace: str) -> None:
+    text = ROUTINE_PASS.read_text(encoding="utf-8").replace("**State:**",
+        f"**{whitespace}Baseline privacy migration{whitespace}:** {json.dumps(_privacy_receipt())}\n**State:**")
+    assert has_baseline_privacy_migration(text)
+    assert "baseline_privacy_migration" in parse(text)
+
+
+def test_receipt_presence_does_not_parse_prose_or_unrelated_json() -> None:
+    text = ROUTINE_PASS.read_text(encoding="utf-8").replace("**State:**",
+        "Mention Baseline privacy migration as ordinary prose.\n**Behavior changes:** legacy-not-json\n**State:**")
+    text += "\n**Baseline privacy migration:** outside the marker block\n"
+    assert not has_baseline_privacy_migration(text)
