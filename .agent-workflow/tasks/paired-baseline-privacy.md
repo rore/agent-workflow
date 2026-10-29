@@ -23,7 +23,7 @@ Source: the maintainer-authorized privacy cleanup, bounded here to plan preparat
 - Correct record binding -> existing history checker with actual base/head, plus revalidation after base movement.
 - Bounded reviewable package -> inspect the exact three-key schema, validation matrix and semantic limitations; independent architecture/technical plan review.
 - Safe preparation and handoff -> scan public plan and added history, verify only this planning record differs from main, and retain manager delivery evidence without claiming receipt or approval.
-**Plan review:** Agent technical review: pending independent architecture/technical plan review.
+**Plan review:** Agent technical review: independent non-implementer architecture/technical PLAN accepted at 4cbcc4a245b6e36cc79330a3709142631e8c5b9e, with no blocking findings; see Plan review below. This does not authorize implementation or replace human semantic and exact-transformation approval.
 **Approvals:** Human approval of the proposed governance change and exact transformation is pending. Existing authority covers preparation only.
 **Exceptions:** —
 **State:** Blocked
@@ -31,7 +31,7 @@ Source: the maintainer-authorized privacy cleanup, bounded here to plan preparat
 
 ## Recovery
 
-Current branch: `feat/paired-baseline-privacy`. Context initialized before discovery and detailed planning. Next: prepare the exact decision package and independent plan review; the manager presents one concrete human decision. No implementation or protected mutation is authorized by this record.
+Current branch: `feat/paired-baseline-privacy`. Last clean candidate before review recording: `4cbcc4a245b6e36cc79330a3709142631e8c5b9e`. Context preceded discovery and detailed planning. Independent architecture/technical plan review is complete. Next: hand the package to the manager, who presents one concrete human decision. No implementation or protected mutation is authorized by this record. Retain the isolated checkout and ignored original/comparison evidence for the pending decision.
 
 ## Proposed exact transformation
 
@@ -98,4 +98,16 @@ Why: source-only migration and ordinary equivalent chains both retain private te
 Affected contract: SPEC baseline immutability, strict receipt parser, history-aware checker and shipped checker/guidance.
 Compatibility risk: High governance judgment; older consumers fail closed on v2. No behavior or authority transfer is intended.
 Verification: the matrix above, independent architecture/technical plan review, one explicit human plan/exact-transformation decision, and separate final-result review.
+
+## Plan review
+
+Agent technical review: independent non-implementer architecture/technical PLAN accepted at `4cbcc4a245b6e36cc79330a3709142631e8c5b9e`; no blocking findings. Reusing the receipt with exactly three replacement keys is necessary for the known cleanup, proportionate and technically feasible. The reviewer verified unchanged protected fields across the base update, baseline/current pair equality, no existing receipt and no chain entries targeting either migrated functional field.
+
+Semantic limit: the generic labels bind the same historical owner, reviewer and hold, preserving dynamic current-owner windows and the original acceptance wording. Human review must still establish equivalence, historical referents, truthful provenance and the exact transformation. A moved anchor requires revalidation and a refreshed decision before mutation. The promised raw-field/chain equality requires stricter version-2 comparison than the existing history extractor or parsed dataclass equality alone; version 1 remains unchanged.
+
+## Preparation evidence
+
+PR 60 merged at `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`; its merged tree equals tested head `9510db9743dee27e6f15f0751248dc9fec0309b2`. All three required CI jobs passed, including the full suite. Its three actionable automated review threads were corrected, replied to and resolved; the final automated review status was neutral/rate-limited, so no fresh substantive bot review is claimed. Independent partial-result acceptance carried forward to that tested head.
+
+The existing history checker selects `d664f6fc` for the exact target record with valid base/head refs; the baseline predicate passes. The only subject-check diagnostic is the existing-record commit-order advisory, not a protected-content failure or waiver. Exact original/current protected comparisons and the private unchanged-obligation assertions pass. The plan's public-content scan passes, and only this planning record differs from merged main. No capability tests were run because no version-2 implementation exists. The everyday checkout and its original hook configuration remain unchanged. Full cleanup and the governance/exact-transformation human decision remain pending.
 
