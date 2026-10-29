@@ -26,6 +26,8 @@ from core.work_record import (
     WorkRecord,
     WorkRecordBackend,
     WorkRecordParseError,
+    BaselinePrivacyMigration,
+    BehaviorChangeApproval,
     parse_record,
 )
 
@@ -332,3 +334,16 @@ def test_write_rejects_symlink_escape(tmp_path: Path) -> None:
     backend = _symlinked_backend(tmp_path)
     with pytest.raises(UnsafeWorkRecordPathError):
         backend.write("task", _sample_routine())
+
+
+@pytest.mark.parametrize("sample", [_sample_routine, _sample_expanded])
+def test_privacy_receipt_backend_round_trip(tmp_path: Path, sample) -> None:
+    backend = LocalBackend(tmp_path, ROUTINE_TEMPLATE)
+    record = sample()
+    record.record["baseline_privacy_migration"] = BaselinePrivacyMigration(
+        1, ".agent-workflow/tasks/example.md", "a" * 40,
+        {"source": "Public source"}, "Remove private provenance.",
+        BehaviorChangeApproval("user", "Maintainer approval", "Yes, approve this source redaction."),
+    )
+    backend.write("example", record)
+    assert backend.read("example") == record

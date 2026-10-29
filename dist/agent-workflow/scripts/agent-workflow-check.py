@@ -242,6 +242,7 @@ use the compact shape; everything else must use the expanded shape.
 """
 
 
+from types import MappingProxyType
 
 # ---------------------------------------------------------------------------
 # Public types
@@ -283,6 +284,21 @@ class BehaviorChangeApproval:
     by: str
     reference: str
     verbatim: str
+
+
+@dataclass(frozen=True)
+class BaselinePrivacyMigration:
+    """Immutable source-only receipt; Git history establishes its bindings."""
+
+    schema_version: int
+    record_path: str
+    anchor_commit: str
+    replacements: Mapping[str, str]
+    reason: str
+    approval: BehaviorChangeApproval
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "replacements", MappingProxyType(dict(self.replacements)))
 
 
 @dataclass(frozen=True)
@@ -328,6 +344,7 @@ class WorkRecord(TypedDict):
     verification: str
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
+    baseline_privacy_migration: NotRequired[BaselinePrivacyMigration]
     behavior_changes: NotRequired[list[BehaviorChange]]
     relationships: NotRequired[str]
 
@@ -371,6 +388,7 @@ class ExpandedWorkRecord(TypedDict):
     exceptions: str
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
+    baseline_privacy_migration: NotRequired[BaselinePrivacyMigration]
     behavior_changes: NotRequired[list[BehaviorChange]]
     relationships: NotRequired[str]
 
@@ -458,6 +476,7 @@ _EXPANDED_FIELD_SCHEMA: tuple[tuple[str, str], ...] = (
 # parseable and routine records do not migrate merely to carry integrity data.
 _OPTIONAL_JSON_FIELDS: dict[str, str] = {
     "Requirement baseline": "requirement_baseline",
+    "Baseline privacy migration": "baseline_privacy_migration",
     "Behavior changes": "behavior_changes",
 }
 _OPTIONAL_RAW_FIELDS: dict[str, str] = {"Relationships": "relationships"}
@@ -839,6 +858,52 @@ def extract_requirement_baseline(text: str) -> RequirementBaseline | None:
     return None if baseline is None else parse_requirement_baseline(baseline)
 
 
+def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
+    """Validate the receipt's strict shape; approval authorship needs review."""
+    label = "Baseline privacy migration"
+    value = _exact_keys(_load_integrity_json(text, label), frozenset({
+        "schema_version", "record_path", "anchor_commit", "replacements", "reason", "approval",
+    }), label)
+    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
+        raise WorkRecordParseError(f"{label}.schema_version must be integer 1")
+    path = _required_json_string(value["record_path"], f"{label}.record_path")
+    if (path.startswith("/") or "\\" in path or ":" in path
+            or any(part in {"", ".", ".."} for part in path.split("/"))
+            or any(ord(char) < 32 for char in path)):
+        raise WorkRecordParseError(f"{label}.record_path must be repository-relative")
+    anchor = _required_json_string(value["anchor_commit"], f"{label}.anchor_commit")
+    if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", anchor):
+        raise WorkRecordParseError(f"{label}.anchor_commit must be a full canonical Git commit")
+    replacements = _exact_keys(value["replacements"], frozenset({"source"}), f"{label}.replacements")
+    source = _required_json_string(replacements["source"], f"{label}.replacements.source")
+    approval_value = _exact_keys(value["approval"], _APPROVAL_KEYS, f"{label}.approval")
+    approval = BehaviorChangeApproval(**{
+        key: _required_json_string(approval_value[key], f"{label}.approval.{key}")
+        for key in _APPROVAL_KEYS
+    })
+    placeholders = _NONE_SENTINELS | {"no", "..."}
+    if (approval.by != "user" or any(
+            text.strip().lower() in placeholders
+            or re.fullmatch(r"\s*(?:<.*>|\[.*\])\s*", text)
+            or re.search(r"\b(?:todo|tbd|placeholder|pending|unapproved|not approved|denied|rejected|declined)\b", text, re.I)
+            for text in (approval.reference, approval.verbatim))):
+        raise WorkRecordParseError(f"{label}.approval requires recorded user approval, not a placeholder")
+    return BaselinePrivacyMigration(1, path, anchor, {"source": source},
+        _required_json_string(value["reason"], f"{label}.reason"), approval)
+
+
+def extract_requirement_history(text: str) -> dict[str, object]:
+    """Select integrity data without imposing unrelated modern record fields."""
+    fields = _extract_fields(_extract_block(text))
+    result: dict[str, object] = {}
+    _parse_optional_integrity_fields(fields, result)
+    result.pop("relationships", None)
+    for label, key in _FIELD_SCHEMA[:5]:
+        if key != "target":
+            result[key] = fields.get(label)
+    return result
+
+
 def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:
     label = f"Behavior changes entry #{index}"
     if not isinstance(value, dict):
@@ -950,6 +1015,8 @@ def parse_behavior_changes(text: str) -> list[BehaviorChange]:
 def _parse_optional_integrity_fields(
     found: dict[str, str], record: dict[str, object]
 ) -> None:
+    if "Baseline privacy migration" in found:
+        record["baseline_privacy_migration"] = parse_baseline_privacy_migration(found["Baseline privacy migration"])
     if "Requirement baseline" in found:
         record["requirement_baseline"] = parse_requirement_baseline(
             found["Requirement baseline"]
@@ -1199,7 +1266,14 @@ def render_record(parsed: ParsedRecord) -> str:
 
 
 def _integrity_json_value(key: str, value: object) -> str:
-    if key == "requirement_baseline":
+    if key == "baseline_privacy_migration":
+        if not isinstance(value, BaselinePrivacyMigration):
+            raise WorkRecordParseError("baseline_privacy_migration must be a BaselinePrivacyMigration")
+        data = {"schema_version": value.schema_version, "record_path": value.record_path,
+                "anchor_commit": value.anchor_commit, "replacements": dict(value.replacements),
+                "reason": value.reason, "approval": asdict(value.approval)}
+        parse_baseline_privacy_migration(json.dumps(data))
+    elif key == "requirement_baseline":
         if not isinstance(value, RequirementBaseline):
             raise WorkRecordParseError("requirement_baseline must be a RequirementBaseline")
         data: object = {
@@ -3594,6 +3668,10 @@ def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
     base_ref = ctx.base_ref or os.environ.get("BASE_SHA")
     head_ref = ctx.head_ref or os.environ.get("HEAD_SHA")
     if base_ref is None and head_ref is None:
+        if ((ctx.record is not None and ctx.record.get("baseline_privacy_migration") is not None)
+                or (ctx.parse_error is not None and re.search(
+                    r"^\*\*\s*Baseline privacy migration\s*:\*\*", ctx.raw_text or "", re.M))):
+            return PredicateResult(name, False, "privacy migration requires valid PR base/head history.", True)
         return PredicateResult(name, True, "skipped — no PR history supplied.", True)
     if not base_ref or not head_ref or ctx.repo_root is None:
         return PredicateResult(
@@ -3643,6 +3721,7 @@ def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
                 break
         if anchor is None:
             raise ValueError("no committed Requirement baseline could be established")
+        anchor = _privacy_baseline(ctx, base, head, path, anchor, anchor_sha)
         head_blob = _history_blob(ctx, head, path)
         if head_blob is not None and extract_requirement_baseline(head_blob) != anchor:
             raise ValueError(
@@ -3661,6 +3740,111 @@ def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
     return PredicateResult(
         name, True, f"Requirement baseline matches committed {anchor_sha[:8]}.", True
     )
+
+
+def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
+                      anchor: object, anchor_sha: str) -> object:
+    """Verify a single immutable source transition across committed path history."""
+    current = None if ctx.record is None else ctx.record.get("baseline_privacy_migration")
+    evidence = _history_git(ctx, "log", "--full-history", "--format=%H", "--max-count=1",
+                            "-G", r"^\*\*[ \t]*Baseline privacy migration[ \t]*:\*\*",
+                            head, base, "--", path).stdout
+    if not evidence:
+        if current is not None:
+            raise ValueError("privacy receipt and replacement must be committed together")
+        return anchor
+    log = _history_git(ctx, "log", "--full-history", "--topo-order", "--reverse",
+                       "--format=%H", "--max-count=2049", head, base, "--", path)
+    commits = list(dict.fromkeys(log.stdout.decode("ascii").splitlines()))
+    if len(commits) > 2048:
+        raise ValueError("Work Record history exceeds the bounded privacy verification limit")
+    snapshots: dict[str, dict[str, object] | None] = {}
+
+    def snapshot(sha: str) -> dict[str, object] | None:
+        if sha not in snapshots:
+            blob = _history_blob(ctx, sha, path)
+            try:
+                snapshots[sha] = None if blob is None else extract_requirement_history(blob)
+            except WorkRecordParseError:
+                # Historical data may contain the private original source.
+                raise ValueError("historical Work Record integrity data is malformed") from None
+        return snapshots[sha]
+
+    versions = [snapshot(sha) for sha in commits]
+    receipts = [version["baseline_privacy_migration"] for version in versions
+                if version is not None and "baseline_privacy_migration" in version]
+    if not receipts:
+        if current is not None:
+            raise ValueError("privacy receipt and replacement must be committed together")
+        return anchor
+    receipt = receipts[0]
+    if any(item != receipt for item in receipts) or current != receipt:
+        raise ValueError("privacy receipt was changed or removed")
+    if receipt.record_path != path:
+        raise ValueError("privacy receipt does not bind this Work Record path")
+    introductions: list[tuple[str, list[dict[str, object] | None]]] = []
+    for sha, version in zip(commits, versions):
+        if version is None or version.get("baseline_privacy_migration") != receipt:
+            continue
+        parents = _history_git(ctx, "rev-list", "--parents", "-n", "1", sha).stdout.decode("ascii").split()[1:]
+        parent_versions = [snapshot(parent) for parent in parents]
+        if not any(parent is not None and parent.get("baseline_privacy_migration") == receipt
+                   for parent in parent_versions):
+            introductions.append((sha, parent_versions))
+    if len(introductions) != 1:
+        raise ValueError("privacy migration must have one unambiguous introduction")
+    introduction, parents = introductions[0]
+    before = parents[0] if parents else None
+    if before is None or any(parent != before for parent in parents):
+        raise ValueError("privacy migration has missing or ambiguous pre-redaction identity")
+    old_baseline = before.get("requirement_baseline")
+    if old_baseline is None or old_baseline.source is None:
+        raise ValueError("privacy migration requires an existing non-null source")
+    approved_source = receipt.replacements["source"]
+    if approved_source == old_baseline.source:
+        raise ValueError("privacy migration replacement must change the source")
+    original_sha = _history_commit(ctx, receipt.anchor_commit)
+    if _history_git(ctx, "merge-base", "--is-ancestor", original_sha, introduction,
+                    allow_failure=True).returncode:
+        raise ValueError("privacy anchor is not an ancestor of the migration")
+    original = snapshot(original_sha)
+    if original is None or original.get("requirement_baseline") != old_baseline:
+        raise ValueError("privacy anchor does not match the pre-redaction baseline")
+    base_version = snapshot(base)
+    retained = base_version is not None and base_version.get("baseline_privacy_migration") == receipt
+    if not retained and receipt.anchor_commit != anchor_sha:
+        raise ValueError("privacy receipt anchor differs from the selected authoritative commit")
+    migrated = replace(old_baseline, source=approved_source)
+    introduced = snapshot(introduction)
+    assert introduced is not None
+    if introduced.get("requirement_baseline") != migrated:
+        raise ValueError("privacy transition changed protected baseline fields")
+    for key in (*_TASK_CONTEXT_FIELDS.values(), "behavior_changes"):
+        default = [] if key == "behavior_changes" else None
+        if before.get(key, default) != introduced.get(key, default):
+            raise ValueError("privacy transition changed Task Context or the existing change chain")
+    def descendants_to(tip: str) -> set[str]:
+        commits = _history_git(ctx, "rev-list", "--ancestry-path", "--max-count=10001",
+                               f"{introduction}..{tip}").stdout.decode("ascii").splitlines()
+        if len(commits) > 10000:
+            raise ValueError("privacy migration ancestry exceeds the verification limit")
+        return set(commits)
+
+    descendants = descendants_to(head)
+    descendants.add(introduction)
+    # The base may be ahead of head, but it must retain the same validated migration.
+    descendants.update(descendants_to(base))
+    for sha in {*commits, head, base} & descendants:
+        version = snapshot(sha)
+        if (version is None or version.get("baseline_privacy_migration") != receipt
+                or version.get("requirement_baseline") != migrated):
+            raise ValueError("committed privacy migration was removed, altered or replaced")
+    head_version = snapshot(head)
+    if head_version is None or head_version.get("baseline_privacy_migration") != receipt:
+        raise ValueError("branch head must retain the committed privacy receipt")
+    if retained and anchor != migrated:
+        raise ValueError("trusted base no longer matches the retained privacy migration")
+    return migrated
 
 
 def behavior_changes_well_formed(ctx: CheckerContext) -> PredicateResult:

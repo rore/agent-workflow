@@ -30,6 +30,11 @@ for (const item of fixtures.cases) {
 
 const expandedRecord = `# Expanded Record\n\n<!-- agent-workflow:start -->\n**Outcome:** Outcome\n**Target:** Target\n**Scope:** Scope\n**Constraints:** Constraints\n**Completion criteria:** Criteria\n**Risk:** Elevated\n**Complexity:** Moderate\n**Reason:** Required reason\n**Discovery:** Discovery\n**Material assumptions:** Assumptions\n**Plan:** Plan\n**Verification plan:** Verification\n**Plan review:** Review\n**Approvals:**\n**Exceptions:** —\n**State:** Blocked\n<!-- agent-workflow:end -->\n`;
 const expandedResult = decodeRecord(bytes(expandedRecord), recordOptions);
+// The metadata reader recognizes the optional label; history verification belongs to the checker.
+for (const text of [recordFor(null), expandedRecord]) {
+  const withReceipt = text.replace("**State:**", "**Baseline privacy migration:** arbitrary unverified receipt\n**State:**");
+  assert.deepEqual(decodeRecord(bytes(withReceipt), recordOptions), decodeRecord(bytes(text), recordOptions));
+}
 assert.equal(expandedResult.status, "legacy");
 assert.equal(expandedResult.title, "Expanded Record");
 assert.equal(expandedResult.recorded_state, "Blocked");
