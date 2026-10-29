@@ -25,7 +25,7 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 **Plan review:** Agent technical review: independent non-implementer plan review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the source-only plan with explicit history, retention and compatibility boundaries; see Plan review below.
 **Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
 **Exceptions:** —
-**State:** Ready for review
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -33,6 +33,8 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 Initialized before source edits from public main df8639da94916bc8f8a879f71f8eba59fc2b43e2. Workflows apply to the normative/checker change; no ordinary-documentation exemption. The prior partial cleanup is preserved separately and is not part of this implementation. No Stage B functional-text capability is authorized.
 
 Implemented strict receipt parsing/rendering/exports, passive-reader optional-label compatibility and bounded source-only history verification. Ordinary records retain their baseline-only behavior; migration history is inspected only after receipt evidence is found. Missing refs deny migrated records. Existing runtime callers that omit refs cannot verify them; use the history-aware CLI/CI surface. No native runtime qualification or live installation is claimed.
+
+Bounded verification scope addition: tests/run-all.sh must expose a failed quiet layer's stdout while preserving its exact exit status and stderr behavior. Final-head Linux CI stopped in checker tests but the original quiet runner discarded the failure details. Independent technical review accepted this diagnostic-only addition as nonmaterial to the approved migration design; no CI workflow, authority gate, installed tool or live environment is changed. The actual Linux failure remains unresolved until its revealed cause is corrected. Two minor CodeRabbit findings also required a retained standalone Mapping import and a history-aware local reproduction example; generated annotation resolution passed after regeneration.
 
 Independent result review found a missing standalone-checker import, pre-migration record identity loss, restored baseline tampering and incomplete historical receipt discovery. All findings were corrected within the planned parser/predicate/test surfaces. Final discovery uses a raw literal-phrase hint followed by every bounded path-changing snapshot and parser-aligned field detection. Historical newlines match backend reads; configured paths are literal. Final source/package/native artifacts were regenerated and independently accepted at 55b39f84511b61e37ecc023aff4bafc76c432c61; earlier reviewed revisions are superseded.
 

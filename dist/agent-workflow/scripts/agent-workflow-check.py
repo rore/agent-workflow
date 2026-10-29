@@ -242,6 +242,7 @@ use the compact shape; everything else must use the expanded shape.
 """
 
 
+from collections.abc import Mapping
 from types import MappingProxyType
 
 # ---------------------------------------------------------------------------

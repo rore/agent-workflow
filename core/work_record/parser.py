@@ -27,9 +27,10 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from types import MappingProxyType
-from typing import Literal, Mapping, NotRequired, TypedDict
+from typing import Literal, NotRequired, TypedDict
 from .relationships import _strip_surrounding_hints
 
 # ---------------------------------------------------------------------------

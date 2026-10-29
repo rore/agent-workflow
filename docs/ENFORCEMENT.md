@@ -20,7 +20,7 @@ It runs every predicate against every Work Record the PR touched. With no record
 | `1` | Advisory failures only. | Job green. Sticky surfaces the warning. |
 | `2` | At least one blocking predicate failed. | Job red. Merge blocks if the check is required. |
 
-The checker reads files and is reproducible offline by default: `python scripts/agent-workflow-check.py --repo-root . --slug <slug>` produces the same JSON as CI. The optional `--check-default-branch-protection` gate is the exception: it calls GitHub through `gh repo view` and `gh api`; failed or ambiguous queries return unavailable.
+The checker reads files and is reproducible offline by default: `python scripts/agent-workflow-check.py --repo-root . --slug <slug> --base-ref <base> --head-ref <head>` checks supplied Git history, including migration receipts. Reproducing CI also requires its exact changed paths, classifier verdict and review inputs. Ordinary local checks without a receipt may omit both refs and skip history validation. The optional `--check-default-branch-protection` gate is the exception: it calls GitHub through `gh repo view` and `gh api`; failed or ambiguous queries return unavailable.
 
 For pickup and handoff, --resolve-work-record [--work-record-ref agent-workflow:<slug>] performs lookup only and returns the configured repository-relative path plus parsed state. A supplied identity wins over branch derivation. Invoke the copy from a trusted harness installation, not a repository under inspection; see [SPEC §13.1](SPEC.md#131-canonical-work-record) for its bounded JSON contract and absence/error semantics.
 
