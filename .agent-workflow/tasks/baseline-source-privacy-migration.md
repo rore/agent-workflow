@@ -22,10 +22,10 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 - Approved source-only acceptance -> actual Git-history fixture matching the consumer record/anchor/replacement shape with synthetic private-source placeholder and unchanged functional fields.
 - Fail-closed invariants -> negative cases for missing/malformed/unapproved receipts, wrong path/selected anchor/replacement, altered functional/current-context/chain values, missing/unrelated refs, malformed historical baseline, deletion/rename, receipt removal/tampering/replay and second source replacement.
 - Portable complete delivery -> targeted parser/checker tests, existing passive-reader/package and two-layout probes, required repository suite, publication-privacy scan and independent plan/result review; exact immutable adoption handoff to the existing owner.
-**Plan review:** Pending independent technical review of this exact source-only plan and authority mapping.
+**Plan review:** Agent technical review: independent non-implementer plan review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the source-only plan with explicit history, retention and compatibility boundaries; see Plan review below.
 **Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -38,4 +38,14 @@ Existing adoption owner supplied PR 78 head c1f43dc2bdfa77a1f2d5cc03512e6202cf8b
 
 ## Recovery
 
-Blocked on independent technical plan review only; explicit human source-only scope approval is recorded. Keep the isolated implementation and private evidence separate from the partial cleanup and consumer work. Do not ask for generic duplicate plan approval. No normative/checker edits, receipt fabricated for a consumer, live changes or history rewriting have occurred. Public source tuples were not supplied, so Relationships sources remains unresolved rather than guessed.
+Technical and explicit human source-only plan gates are satisfied. Implement the bounded receipt with SPEC first; no broader functional-text capability. Keep private evidence and the separate partial-cleanup branch intact. Finished-result review, required verification and current-head PR checks remain ahead. No consumer receipt, live change or history rewrite is authorized by an agent attestation. Public source tuples were not supplied, so Relationships sources remains unresolved rather than guessed.
+
+## Plan review
+
+Agent technical review: independent non-implementer review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the recorded human authority and source-only implementation. Receipt shape: schema_version 1, record_path, anchor_commit, replacements containing only source, reason, and approval with by/user, reference and verbatim evidence. Reject unsupported/duplicate keys, null/no-op replacement and functional-field migration.
+
+First receipt anchor must equal the existing trusted baseline selector; compare unchanged current context/change chain with the pre-redaction version, not an older initial snapshot. Track first receipt introduction; fail closed on ambiguous merge identity, intermediate removal/tampering/restoration or a second source replacement. A receipt already committed on trusted base remains unchanged without rebinding its original anchor to each later base. Receipt verification always requires complete valid supplied history; ordinary no-receipt local behavior stays unchanged. Preserve non-waivable gates and disclose that approval shape is not authenticated human authority.
+
+Exact implementation targets: docs/SPEC.md, docs/DECISIONS.md, docs/ENFORCEMENT.md; core/work_record/parser.py and exports, core/checker/predicates.py, passive relationships.mjs optional-label compatibility; existing integrity/context guides, one conditional receipt guide and both Work Record templates; parser/backend/reader/history tests; public guide mirrors, budget entry and generated package/native mirrors. No runtime hook/configuration/service implementation or live install is included. The conditional guide has one concrete responsibility: source-only receipt format and history/approval procedure; it is not loaded for ordinary work.
+
+Baseline guidance budget measurement passed all 22 existing files before edits. Existing file ceilings stay in force; any conditional new-guide entry must explain its load point. Keep privacy-safe synthetic fixtures and do not repeat existing consumer UI tests. The independent reviewer requires positive branch/base/chain/later-PR/custom-path and source/vendored coverage, plus the listed adversarial historical cases. Separate technical/human result review and architecture checkpoint remain required against the finished artifact.
