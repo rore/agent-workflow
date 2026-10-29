@@ -3821,8 +3821,12 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
     ).stdout.decode("ascii").splitlines()
     if len(identity_history) > 2048:
         raise ValueError("pre-redaction identity history exceeds the verification limit")
-    if any(snapshot(sha) is None for sha in identity_history):
-        raise ValueError("privacy migration cannot repair a deleted or renamed Work Record")
+    for sha in identity_history:
+        version = snapshot(sha)
+        if version is None:
+            raise ValueError("privacy migration cannot repair a deleted or renamed Work Record")
+        if sha != introduction and version.get("requirement_baseline") != old_baseline:
+            raise ValueError("privacy migration cannot repair a missing or changed pre-redaction baseline")
     migrated = dataclasses.replace(old_baseline, source=approved_source)
     introduced = snapshot(introduction)
     assert introduced is not None

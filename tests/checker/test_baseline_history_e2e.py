@@ -615,3 +615,26 @@ def test_privacy_migration_identity_check_starts_at_authoritative_anchor(tmp_pat
     code, payload = _check(repo, anchor, head, [RECORD])
     assert code in (0, 1), json.dumps(payload, indent=2)
     assert _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("intermediate", [
+    None,
+    {**OLD, "source": "Temporary synthetic source"},
+    {**OLD, "scope": "Temporary baseline scope"},
+], ids=["missing-baseline", "changed-source", "changed-functional-baseline"])
+def test_privacy_migration_cannot_repair_restored_pre_migration_baseline(
+    tmp_path: Path, intermediate: dict | None,
+) -> None:
+    repo, anchor = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.write_text(_record(intermediate, context=OLD), encoding="utf-8")
+    _commit(repo, "temporarily remove or change baseline")
+    target.write_text(_record(OLD), encoding="utf-8")
+    _commit(repo, "restore exact old baseline")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "attempt source migration after baseline restoration")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code == 2
+    predicate = _baseline_result(payload)
+    assert not predicate["passed"]
+    assert "pre-redaction baseline" in predicate["detail"]
