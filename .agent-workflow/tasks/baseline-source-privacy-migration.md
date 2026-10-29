@@ -1,0 +1,41 @@
+# Approved source-only baseline privacy migration
+
+Source: explicit maintainer approval of a narrow checker correction after the source-provenance privacy blocker was explained. [Minimap PR 78](https://github.com/rore/minimap/pull/78) is the concrete acceptance case. Private approval provenance and originals remain ignored/local, not in this public record.
+
+<!-- agent-workflow:start -->
+**Outcome:** An explicitly approved source-only privacy migration succeeds without changing functional requirements or weakening history/change-chain enforcement.
+**Target:** agent-workflow
+**Scope:** One strict baseline-privacy receipt and source-only verifier in existing Work Record parsing/checking, normative SPEC and shipped guidance/package propagation, focused adversarial/history tests, and exact reviewed consumer adoption handoff.
+**Constraints:** Preserve all four functional baseline and current-context values and the existing change chain across migration. No functional-text migration, generic exception framework, arbitrary source rewrite, record deletion, fabricated approval, omitted history checks, shared-history rewrite, force-push, consumer improvisation or live installation/configuration change. Never add private original values, hashes of those values or internal pointers to public artifacts.
+**Completion criteria:** The exact approved record/selected Git anchor/safe source replacement is accepted only with a valid immutable approval-bound receipt; ordinary equality and non-waivable enforcement remain the default; adversarial/history cases fail closed; required source/package/reader and independent review gates pass; an immutable reviewed revision and precise adoption/verification instructions reach the existing consumer owner with broader protected-text cleanup explicitly unresolved.
+**Requirement baseline:**
+{"source":"maintainer-approved source-only privacy repair","outcome":"An explicitly approved source-only privacy migration succeeds without changing functional requirements or weakening history/change-chain enforcement.","scope":"One strict baseline-privacy receipt and source-only verifier in existing Work Record parsing/checking, normative SPEC and shipped guidance/package propagation, focused adversarial/history tests, and exact reviewed consumer adoption handoff.","constraints":"Preserve all four functional baseline and current-context values and the existing change chain across migration. No functional-text migration, generic exception framework, arbitrary source rewrite, record deletion, fabricated approval, omitted history checks, shared-history rewrite, force-push, consumer improvisation or live installation/configuration change. Never add private original values, hashes of those values or internal pointers to public artifacts.","completion_criteria":"The exact approved record/selected Git anchor/safe source replacement is accepted only with a valid immutable approval-bound receipt; ordinary equality and non-waivable enforcement remain the default; adversarial/history cases fail closed; required source/package/reader and independent review gates pass; an immutable reviewed revision and precise adoption/verification instructions reach the existing consumer owner with broader protected-text cleanup explicitly unresolved."}
+**Relationships:**
+{"schema_version":1,"sources":null,"pull_requests":[]}
+**Risk:** High
+**Complexity:** Moderate
+**Reason:** SPEC and baseline-history enforcement are normative governance contracts. One narrow migration crosses parser, history verification, guidance and packaged compatibility; strict authority/history validation warrants independent review.
+**Discovery:** Existing whole-baseline comparison includes source and is non-waivable; neither task exceptions nor Behavior changes offers a supported provenance-redaction route. Reuse that verified investigation. Source-only consumer cases leave all four functional values unchanged; broader protected-text cleanup is a separate unresolved problem.
+**Material assumptions:** One immutable receipt can bind the trusted history anchor, exact record and replacement with explicit approval without exposing the old value. If preserving the functional/current-context/change-chain invariants requires a broader mechanism, stop and return the specific decision; do not add functional-text capability.
+**Plan:** SPEC first; add one optional Baseline privacy migration receipt using a strict replacements map accepting source only. Reuse existing JSON/history/approval validation and exact record identity. Validate receipt against the already selected trusted Git anchor; preserve default equality and non-waivable status. Require immutable retained receipt, exact approved binding, functional/current-context/change-chain preservation and complete history. Reject unsupported fields, malformed approvals, missing/wrong anchors and repeated replacement. Propagate only necessary existing guides/templates/readers/package artifacts; validate synthetic privacy-safe fixtures and exact consumer-shaped acceptance. Independent technical plan review precedes implementation; separate technical and human result reviews precede normal reviewed/green source delivery. No broader cleanup or live change.
+**Verification plan:**
+- Approved source-only acceptance -> actual Git-history fixture matching the consumer record/anchor/replacement shape with synthetic private-source placeholder and unchanged functional fields.
+- Fail-closed invariants -> negative cases for missing/malformed/unapproved receipts, wrong path/selected anchor/replacement, altered functional/current-context/chain values, missing/unrelated refs, malformed historical baseline, deletion/rename, receipt removal/tampering/replay and second source replacement.
+- Portable complete delivery -> targeted parser/checker tests, existing passive-reader/package and two-layout probes, required repository suite, publication-privacy scan and independent plan/result review; exact immutable adoption handoff to the existing owner.
+**Plan review:** Pending independent technical review of this exact source-only plan and authority mapping.
+**Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
+**Exceptions:** —
+**State:** Blocked
+<!-- agent-workflow:end -->
+
+## Implementation
+
+Initialized before source edits from public main df8639da94916bc8f8a879f71f8eba59fc2b43e2. Workflows apply to the normative/checker change; no ordinary-documentation exemption. The prior partial cleanup is preserved separately and is not part of this implementation. No Stage B functional-text capability is authorized.
+
+## Consumer acceptance
+
+Existing adoption owner supplied PR 78 head c1f43dc2bdfa77a1f2d5cc03512e6202cf8b689a, exact record .agent-workflow/tasks/board-appearance.md, trusted authoritative anchor 07a64fb7ad4f011fe72f3b5c379be3ba2bb82db4, and safe replacement source "User-approved appearance design (privacy-redacted source)". All four baseline/current-context fields remain unchanged; existing functional/review evidence belongs to that owner and must not be repeated or expanded. No private before-value or its hash is included here.
+
+## Recovery
+
+Blocked on independent technical plan review only; explicit human source-only scope approval is recorded. Keep the isolated implementation and private evidence separate from the partial cleanup and consumer work. Do not ask for generic duplicate plan approval. No normative/checker edits, receipt fabricated for a consumer, live changes or history rewriting have occurred. Public source tuples were not supplied, so Relationships sources remains unresolved rather than guessed.
