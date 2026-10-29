@@ -798,7 +798,7 @@ def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
             try:
                 receipt_present = has_baseline_privacy_migration(ctx.raw_text or "")
             except WorkRecordParseError:
-                return PredicateResult(name, False, "Work Record receipt presence could not be established.", True)
+                receipt_present = False  # Structural predicates already block an invalid marker block.
         if receipt_present:
             return PredicateResult(name, False, "privacy migration requires valid PR base/head history.", True)
         return PredicateResult(name, True, "skipped — no PR history supplied.", True)

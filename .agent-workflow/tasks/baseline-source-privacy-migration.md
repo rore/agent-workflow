@@ -25,7 +25,7 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 **Plan review:** Agent technical review: independent non-implementer plan review of 761291c785ca0a1a8245488325d4b0002f641ad9 accepted the source-only plan with explicit history, retention and compatibility boundaries; see Plan review below.
 **Approvals:** Approved by user 2026-10-29: "yes". The reviewed question explicitly asked to allow an approved privacy redaction tied to the exact record and Git revision while keeping functional requirements and history checks protected. This source-only approval supersedes generic unblock consent; private provenance is retained locally. Separate High human result review remains required against the finished artifact.
 **Exceptions:** —
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -34,7 +34,7 @@ Initialized before source edits from public main df8639da94916bc8f8a879f71f8eba5
 
 Implemented strict receipt parsing/rendering/exports, passive-reader optional-label compatibility and bounded source-only history verification. Ordinary records retain their baseline-only behavior; migration history is inspected only after receipt evidence is found. Missing refs deny migrated records. Existing runtime callers that omit refs cannot verify them; use the history-aware CLI/CI surface. No native runtime qualification or live installation is claimed.
 
-Bounded verification scope addition: tests/run-all.sh must expose a failed quiet layer's stdout while preserving its exact exit status and stderr behavior. Final-head Linux CI stopped in checker tests but the original quiet runner discarded the failure details. Independent technical review accepted this diagnostic-only addition as nonmaterial to the approved migration design; no CI workflow, authority gate, installed tool or live environment is changed. The actual Linux failure remains unresolved until its revealed cause is corrected. Two minor CodeRabbit findings also required a retained standalone Mapping import and a history-aware local reproduction example; generated annotation resolution passed after regeneration.
+Bounded verification scope addition: tests/run-all.sh now exposes a failed quiet layer's stdout while preserving its exact exit status and stderr behavior. Linux CI stopped in checker tests but the original quiet runner discarded the details. Independent review accepted this diagnostic-only addition as nonmaterial; no CI workflow, authority gate, installed tool or live environment is changed. The diagnostic rerun revealed one legacy malformed-marker golden mismatch, with 310 other checker cases passing. Restoring the ordinary local no-ref skip for an invalid marker block fixes that compatibility issue; structural predicates still block the record, and a receipt in a valid block still requires history. Both targeted cases passed. Two minor CodeRabbit findings also required a retained standalone Mapping import and a history-aware reproduction example; generated annotation resolution passed. Final-head full CI remains required.
 
 Independent result review found a missing standalone-checker import, pre-migration record identity loss, restored baseline tampering and incomplete historical receipt discovery. All findings were corrected within the planned parser/predicate/test surfaces. Final discovery uses a raw literal-phrase hint followed by every bounded path-changing snapshot and parser-aligned field detection. Historical newlines match backend reads; configured paths are literal. Final source/package/native artifacts were regenerated and independently accepted at 55b39f84511b61e37ecc023aff4bafc76c432c61; earlier reviewed revisions are superseded.
 
@@ -56,11 +56,15 @@ All nine required repository layers completed successfully across explicit layer
 
 The initial required checker run failed two standalone positives due to the missing import; it is not successful validation. A later run stopped at Redline because a relative test scratch directory resolved under that layer's changed working directory; rerunning only that layer with an absolute isolated scratch directory passed. Trigger 3 dropped for this setup error: it was process-local test configuration, not an upstream product defect. The source privacy blocker is already owned by this task, so no duplicate feedback report is needed.
 
+The diagnostic runner's isolated behavioral check passed: exact exit 7 and failure stdout retained, no false layer-success line, and successful-layer stdout stays quiet. The two CodeRabbit findings were fixed and replied to; the inline thread is resolved. CodeRabbit's later neutral rate-limited status is not a new substantive review.
+
 ## Result review
 
 Technical acceptance was reopened before human result review when receipt-discovery probes exposed whitespace, boundary/delimiter activation and binary-content gaps. The complete raw-history snapshot correction and its executable regressions close that class; no line-pattern blacklist or broader migration mechanism was added.
 
 Agent technical review: independent Astra result and architecture review accepted 55b39f84511b61e37ecc023aff4bafc76c432c61 after all identified findings were corrected; no remaining findings within the reviewed controls. The reviewer inspected the connected parser/checker/readers, normative contract, guidance, history probes and source/package/native parity.
+
+Unchanged-application reuse: independent review accepted the subsequent equivalent Mapping import/documentation fixes, exact-status diagnostic runner and ordinary no-ref compatibility restoration as nonmaterial. Actual receipt-history enforcement and the approved architecture are unchanged. The generated annotation-resolution assertion and both compatibility tests passed; regenerated parity and final-head CI remain delivery conditions.
 
 Reviewed revision: 55b39f84511b61e37ecc023aff4bafc76c432c61.
 
