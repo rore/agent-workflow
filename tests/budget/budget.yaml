@@ -77,6 +77,9 @@ ceilings:
   - path: core/templates/checkpoints/behavioral-integrity.md
     max_tokens: 850
     why: loaded for material behavioral departures, Task Context changes or configured contracts; carries source comparison, exact approval, baseline/change JSON and authority separation without burdening routine preserving tasks.
+  - path: core/templates/checkpoints/baseline-privacy-migration.md
+    max_tokens: 650
+    why: loaded only for an approved source-provenance privacy redaction; carries the receipt and history-bound procedure without increasing ordinary operating-mode context.
   - path: core/templates/checkpoints/discover.md
     max_tokens: 800
     why: loaded during Discover. Carries the authoritative-source table + three resolution paths + the gate. SPEC-restated rationale moved to docs.
