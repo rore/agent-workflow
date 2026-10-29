@@ -47,7 +47,14 @@ run_layer() {
   if [[ "$VERBOSE" == "1" ]]; then
     bash "$script"
   else
-    bash "$script" >/dev/null
+    local output status
+    if output="$(bash "$script")"; then
+      :
+    else
+      status=$?
+      printf '%s\n' "$output"
+      return "$status"
+    fi
   fi
   echo "  $name — ok"
 }

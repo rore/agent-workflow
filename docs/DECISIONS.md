@@ -6,6 +6,14 @@ Newest entries on top. Each entry: date, decision, alternatives considered, rati
 
 Routine session work doesn't go here — only decisions a future maintainer would want the reasoning behind.
 
+## 2026-10-29 — Approval-bound source-provenance privacy migration
+
+**Decision:** Add one optional, immutable Baseline privacy migration receipt. Its strict replacements map currently permits only source, bound to the exact record, existing checker-selected Git anchor and explicit human approval. Read the old source from Git internally; do not publish it or its hash. Preserve functional baseline values, current context and the existing change chain across the migration. Keep default whole-baseline equality and non-waivable gates, including receipt retention and complete-history checks.
+
+**Alternatives considered:** A task exception cannot waive the baseline rule; ignoring every source edit would discard provenance integrity. Reusing Behavior changes would misclassify metadata and require publishing a private before-value. Shared-history rewriting is not authorized. A broader functional-text migration is not part of this source-only release.
+
+**Rationale:** Approved privacy redactions can otherwise be rejected even though requirements are unchanged. One narrowly verified receipt provides an auditable transition without turning source provenance into freely mutable text. The map is one mechanism with a source-only supported subset, not a generic patch or exception framework. Approval shape and Git bindings are deterministic checks; human authorship, privacy and semantic judgment are not. Existing base receipts retain their original anchor rather than being rebound on every PR.
+
 ## 2026-10-22 — Behavioral integrity is not limited to edited records
 
 **Decision:** Preserve authoritative user requirements and established core product behavior even when Work Record, baseline and configured-contract text remain unchanged. Material departures need explicit human review and approval of their exact before/after behavior, impact and alternatives. Planning and result review compare proposed/delivered behavior directly with those sources. Reuse exact existing approval and continue unaffected work; routine behavior-preserving work gains no approval gate. Existing structured change records still apply only to their existing targets; no new schema or semantic-enforcement claim.

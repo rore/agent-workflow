@@ -355,3 +355,397 @@ def test_nested_project_root_resolves_git_blob_relative_to_cwd(tmp_path: Path) -
     code, payload = _check(nested, base, head, [RECORD])
     assert code == 2
     assert _baseline_result(payload)["passed"] is False
+
+
+SAFE_SOURCE = "User-approved source (privacy-redacted provenance)"
+
+
+def _receipt(anchor: str, path: str = RECORD) -> dict:
+    return {"schema_version": 1, "record_path": path, "anchor_commit": anchor,
+            "replacements": {"source": SAFE_SOURCE}, "reason": "Remove private provenance.",
+            "approval": {"by": "user", "reference": "Maintainer approval of exact migration",
+                         "verbatim": "Yes, approve the exact record, anchor and source replacement."}}
+
+
+def _privacy_record(receipt: dict | None, *, baseline: dict | str | None = None,
+                    context: dict | None = None, chain: list | None = None) -> str:
+    text = _record({**OLD, "source": SAFE_SOURCE} if baseline is None else baseline,
+                   context=context or OLD)
+    extra = "" if receipt is None else f"**Baseline privacy migration:** {json.dumps(receipt)}\n"
+    if chain is not None:
+        extra += f"**Behavior changes:** {json.dumps(chain)}\n"
+    return text.replace("**State:**", extra + "**State:**")
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_approved_source_only_migration_and_later_retention(tmp_path: Path, existing: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD} if existing else None)
+    target = repo / RECORD
+    if existing:
+        anchor = base
+    else:
+        target.parent.mkdir(parents=True)
+        target.write_text(_record(OLD), encoding="utf-8")
+        anchor = _commit(repo, "first baseline")
+    # A valid pre-existing chain must survive intact; compare with the immediate parent.
+    chain = [{"target": "task-context.scope", "classification": "equivalent",
+              "before": "S", "after": "Refined S", "reason": "Clarify scope."}]
+    context = {**OLD, "scope": "Refined S"}
+    target.write_text(_record(OLD, context=context).replace("**State:**",
+                      f"**Behavior changes:** {json.dumps(chain)}\n**State:**"), encoding="utf-8")
+    _commit(repo, "refine before migration")
+    receipt = _receipt(anchor)
+    target.write_text(_privacy_record(receipt, context=context, chain=chain), encoding="utf-8")
+    migrated = _commit(repo, "approved source redaction")
+    code, payload = _check(repo, base, migrated, [RECORD])
+    assert _baseline_result(payload)["passed"], json.dumps(payload, indent=2)
+    assert code in (0, 1)
+    # The original anchor stays fixed when a future PR uses a newer authoritative base.
+    later_chain = [*chain, {"target": "task-context.constraints", "classification": "equivalent",
+                           "before": "C", "after": "Clarified C", "reason": "Clarify constraints."}]
+    target.write_text(_privacy_record(receipt, context={**context, "constraints": "Clarified C"},
+                                      chain=later_chain), encoding="utf-8")
+    later = _commit(repo, "ordinary later refinement")
+    code, payload = _check(repo, migrated, later, [RECORD])
+    assert _baseline_result(payload)["passed"], json.dumps(payload, indent=2)
+    assert code in (0, 1)
+
+
+@pytest.mark.parametrize("attack", ["path", "anchor", "replacement", "noop", "null-source",
+    "functional", "context", "chain", "malformed-before", "arbitrary-ancestor"])
+def test_privacy_migration_rejects_invalid_transition(tmp_path: Path, attack: str) -> None:
+    old = {**OLD, "source": None} if attack == "null-source" else OLD
+    repo, initial = _repo(tmp_path, {RECORD: old})
+    (repo / "notes.txt").write_text("new base\n", encoding="utf-8")
+    base = _commit(repo, "authoritative PR base")
+    receipt = _receipt(base)
+    if attack == "path":
+        receipt["record_path"] = ".agent-workflow/tasks/other.md"
+    if attack == "anchor":
+        receipt["anchor_commit"] = "a" * 40
+    if attack == "arbitrary-ancestor":
+        receipt["anchor_commit"] = initial
+    if attack == "replacement":
+        receipt["replacements"]["source"] = "Different public source"
+    target = repo / RECORD
+    if attack == "malformed-before":
+        target.write_text(_record("not-json"), encoding="utf-8")
+        _commit(repo, "malformed historical baseline")
+    baseline = {**OLD, "source": SAFE_SOURCE}
+    if attack == "noop":
+        receipt["replacements"]["source"] = OLD["source"]
+        baseline = OLD
+    if attack == "functional":
+        baseline["constraints"] = "changed"
+    context = {**OLD, "scope": "changed"} if attack == "context" else OLD
+    chain = [{"target": "task-context.scope", "classification": "equivalent", "before": "S",
+              "after": "changed", "reason": "Inserted during redaction."}] if attack == "chain" else None
+    target.write_text(_privacy_record(receipt, baseline=baseline, context=context, chain=chain), encoding="utf-8")
+    head = _commit(repo, "invalid migration")
+    code, payload = _check(repo, base, head, [RECORD])
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+    assert "request:1" not in _baseline_result(payload)["detail"]
+
+
+@pytest.mark.parametrize("attack", ["remove", "tamper", "second-source", "delete", "rename"])
+def test_privacy_receipt_history_cannot_be_repaired_by_restoration(tmp_path: Path, attack: str) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    receipt = _receipt(base)
+    good = _privacy_record(receipt)
+    target.write_text(good, encoding="utf-8")
+    _commit(repo, "approved migration")
+    if attack == "remove":
+        target.write_text(_privacy_record(None), encoding="utf-8")
+    elif attack == "tamper":
+        target.write_text(_privacy_record({**receipt, "reason": "Changed receipt"}), encoding="utf-8")
+    elif attack == "second-source":
+        target.write_text(_privacy_record(receipt, baseline={**OLD, "source": "Another source"}), encoding="utf-8")
+    elif attack == "delete":
+        target.unlink()
+    else:
+        _git(repo, "mv", RECORD, ".agent-workflow/tasks/renamed.md")
+    _commit(repo, "intermediate invalid change")
+    if attack == "rename":
+        _git(repo, "mv", ".agent-workflow/tasks/renamed.md", RECORD)
+    target.write_text(good, encoding="utf-8")
+    head = _commit(repo, "restore migration")
+    code, payload = _check(repo, base, head, [RECORD])
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+def test_removed_historical_receipt_is_detected_without_current_receipt(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    _commit(repo, "approved migration")
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "remove all migration evidence from current record")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert not _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_privacy_migration_custom_path_and_nested_root(tmp_path: Path, nested: bool) -> None:
+    template = ".work/items/{slug}.record.md"
+    path = ".work/items/alpha.record.md"
+    repo, base = _repo(tmp_path, None if nested else {path: OLD}, task_path=template)
+    root = repo
+    if nested:
+        root = repo / "project"
+        root.mkdir()
+        shutil.copyfile(repo / "agent-workflow.yaml", root / "agent-workflow.yaml")
+        (root / path).parent.mkdir(parents=True)
+        (root / path).write_text(_record(OLD), encoding="utf-8")
+        base = _commit(repo, "nested baseline")
+    (root / path).write_text(_privacy_record(_receipt(base, path)), encoding="utf-8")
+    head = _commit(repo, "approved migration")
+    code, payload = _check(root, base, head, [path])
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload, "alpha")["passed"]
+
+
+def test_privacy_migration_requires_supplied_history_even_locally(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    (repo / RECORD).write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    _commit(repo, "approved migration")
+    result = subprocess.run([sys.executable, "-m", "core.checker", "--repo-root", str(repo), "--slug", "example"],
+                            cwd=ROOT, env=dict(os.environ, PYTHONPATH=str(ROOT)), capture_output=True, text=True)
+    assert result.returncode == 2
+    assert not _baseline_result(json.loads(result.stdout))["passed"]
+
+
+def test_ordinary_history_does_not_parse_unrelated_old_behavior_schema(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.write_text(_record(OLD).replace("**State:**", "**Behavior changes:** legacy-not-json\n**State:**"), encoding="utf-8")
+    _commit(repo, "legacy unrelated behavior field")
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "current record")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert _baseline_result(payload)["passed"]
+
+
+def test_ambiguous_merge_cannot_introduce_privacy_migration(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    main = _git(repo, "branch", "--show-current")
+    target = repo / RECORD
+    _git(repo, "checkout", "-qb", "side")
+    target.write_text(_record(OLD, context={**OLD, "scope": "Different parent scope"}), encoding="utf-8")
+    _commit(repo, "different pre-redaction context")
+    _git(repo, "checkout", main)
+    (repo / "main.txt").write_text("main\n", encoding="utf-8")
+    _commit(repo, "main change")
+    _git(repo, "merge", "--no-commit", "--no-ff", "-s", "ours", "side")
+    target.write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    head = _commit(repo, "ambiguous merge migration")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert not _baseline_result(payload)["passed"]
+
+
+def test_parallel_pre_migration_branch_is_not_receipt_removal(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    main = _git(repo, "branch", "--show-current")
+    target = repo / RECORD
+    _git(repo, "checkout", "-qb", "side")
+    target.write_text(_record(OLD).replace("**Approach:** example", "**Approach:** clarified"), encoding="utf-8")
+    _commit(repo, "parallel pre-migration record")
+    _git(repo, "checkout", main)
+    good = _privacy_record(_receipt(base))
+    target.write_text(good, encoding="utf-8")
+    _commit(repo, "approved migration")
+    _git(repo, "merge", "--no-commit", "--no-ff", "-s", "ours", "side")
+    head = _commit(repo, "merge parallel history")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert _baseline_result(payload)["passed"], json.dumps(payload, indent=2)
+
+
+@pytest.mark.parametrize(("path", "source"), [
+    (RECORD, SAFE_SOURCE),
+    (".agent-workflow/tasks/board-appearance.md",
+     "User-approved appearance design (privacy-redacted source)"),
+])
+def test_vendored_checker_accepts_approved_source_migration(tmp_path: Path, path: str, source: str) -> None:
+    repo, base = _repo(tmp_path, {path: OLD})
+    receipt = _receipt(base, path)
+    receipt["replacements"]["source"] = source
+    (repo / path).write_text(_privacy_record(receipt, baseline={**OLD, "source": source}), encoding="utf-8")
+    head = _commit(repo, "approved migration")
+    for vendored in (False, True):
+        code, payload = _check(repo, base, head, [path], vendored=vendored)
+        assert code in (0, 1), json.dumps(payload, indent=2)
+        assert _baseline_result(payload, Path(path).stem)["passed"]
+
+
+@pytest.mark.parametrize("renamed", [False, True])
+def test_privacy_migration_cannot_repair_pre_migration_identity_loss(tmp_path: Path, renamed: bool) -> None:
+    repo, anchor = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    other_path = ".agent-workflow/tasks/temporary.md"
+    if renamed:
+        _git(repo, "mv", RECORD, other_path)
+    else:
+        target.unlink()
+    _commit(repo, "remove original record identity")
+    if renamed:
+        _git(repo, "mv", other_path, RECORD)
+    else:
+        target.write_text(_record(OLD), encoding="utf-8")
+    _commit(repo, "restore exact old baseline")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "attempt source migration after identity loss")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code == 2
+    predicate = _baseline_result(payload)
+    assert not predicate["passed"]
+    assert "deleted or renamed" in predicate["detail"]
+
+
+def test_privacy_migration_identity_check_starts_at_authoritative_anchor(tmp_path: Path) -> None:
+    repo, _ = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.unlink()
+    _commit(repo, "old deletion before authoritative baseline")
+    target.write_text(_record(OLD), encoding="utf-8")
+    anchor = _commit(repo, "new authoritative PR base")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "approved migration from current authority")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("intermediate", [
+    None,
+    {**OLD, "source": "Temporary synthetic source"},
+    {**OLD, "scope": "Temporary baseline scope"},
+], ids=["missing-baseline", "changed-source", "changed-functional-baseline"])
+def test_privacy_migration_cannot_repair_restored_pre_migration_baseline(
+    tmp_path: Path, intermediate: dict | None,
+) -> None:
+    repo, anchor = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.write_text(_record(intermediate, context=OLD), encoding="utf-8")
+    _commit(repo, "temporarily remove or change baseline")
+    target.write_text(_record(OLD), encoding="utf-8")
+    _commit(repo, "restore exact old baseline")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "attempt source migration after baseline restoration")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code == 2
+    predicate = _baseline_result(payload)
+    assert not predicate["passed"]
+    assert "pre-redaction baseline" in predicate["detail"]
+
+
+@pytest.mark.parametrize("whitespace", ["\t", "\u2003", "\n"], ids=["tab", "em-space", "newline"])
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_privacy_receipt_label_whitespace_history(tmp_path: Path, whitespace: str, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    migrated = _privacy_record(_receipt(base)).replace("**Baseline privacy migration:**",
+        f"**{whitespace}Baseline privacy migration{whitespace}:**")
+    target.write_text(migrated, encoding="utf-8")
+    head = _commit(repo, "approved migration with parser-supported label whitespace")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "remove receipt and restore original baseline")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+def test_receipt_prose_candidate_does_not_parse_old_behavior_schema(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    text = _record(OLD).replace("**State:**", "**Behavior changes:** legacy-not-json\n**State:**")
+    target.write_text(text + "\nMention Baseline privacy migration in ordinary prose.\n", encoding="utf-8")
+    _commit(repo, "prose mention with unrelated legacy behavior schema")
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "current ordinary record")
+    _, payload = _check(repo, base, head, [RECORD])
+    assert _baseline_result(payload)["passed"]
+
+
+def test_malformed_receipt_label_requires_history_without_refs(tmp_path: Path) -> None:
+    repo, _ = _repo(tmp_path, {RECORD: OLD})
+    text = _record(OLD).replace("**State:**", "**\u2003Baseline privacy migration\u2003:** not-json\n**State:**")
+    (repo / RECORD).write_text(text, encoding="utf-8")
+    result = subprocess.run([sys.executable, "-m", "core.checker", "--repo-root", str(repo), "--slug", "example"],
+                            cwd=ROOT, env=dict(os.environ, PYTHONPATH=str(ROOT)), capture_output=True, text=True)
+    assert result.returncode == 2
+    predicate = _baseline_result(json.loads(result.stdout))
+    assert not predicate["passed"]
+    assert "requires valid PR base/head history" in predicate["detail"]
+
+
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_unambiguous_merge_can_introduce_privacy_receipt(tmp_path: Path, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    main = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-qb", "side")
+    (repo / "side.txt").write_text("side\n", encoding="utf-8")
+    _commit(repo, "side change preserving record identity")
+    _git(repo, "checkout", main)
+    (repo / "main.txt").write_text("main\n", encoding="utf-8")
+    _commit(repo, "main change preserving record identity")
+    _git(repo, "merge", "--no-commit", "--no-ff", "side")
+    (repo / RECORD).write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    head = _commit(repo, "unambiguous merge migration")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("activation", ["markers", "delimiters", "nul-prose"])
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_receipt_activation_without_phrase_change(tmp_path: Path, activation: str, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    receipt_json = json.dumps(_receipt(base))
+    end = "<!-- agent-workflow:end -->"
+    outside_prose = "\nSynthetic outside prose with NUL: \x00\n" if activation == "nul-prose" else ""
+    if activation == "nul-prose":
+        before = _record(OLD) + outside_prose
+        activated = _privacy_record(_receipt(base)) + outside_prose
+    elif activation == "markers":
+        before = _record(OLD) + f"**Baseline privacy migration:** {receipt_json}\n"
+        activated = before.replace(end + "\n", "") + end + "\n"
+    else:
+        before = _record(OLD).replace("**State:**",
+            f"**\nBaseline privacy migration\n!! {receipt_json}\n**State:**")
+        activated = before.replace("\n!! ", "\n:** ")
+    target.write_text(before, encoding="utf-8")
+    _commit(repo, "prepare unchanged phrase outside a receipt field")
+    activated = activated.replace(json.dumps(OLD), json.dumps({**OLD, "source": SAFE_SOURCE}))
+    target.write_text(activated, encoding="utf-8")
+    head = _commit(repo, "activate receipt by marker or delimiter change")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD) + outside_prose, encoding="utf-8")
+    head = _commit(repo, "remove activated receipt and restore original baseline")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_privacy_history_uses_literal_configured_path(tmp_path: Path, vendored: bool) -> None:
+    path = ".work/[items]/example.md"
+    repo, base = _repo(tmp_path, {path: OLD}, task_path=".work/[items]/{slug}.md")
+    target = repo / path
+    target.write_text(_privacy_record(_receipt(base, path)), encoding="utf-8")
+    head = _commit(repo, "approved migration at literal bracket path")
+    code, payload = _check(repo, base, head, [path], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "remove receipt and restore literal-path baseline")
+    code, payload = _check(repo, base, head, [path], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]

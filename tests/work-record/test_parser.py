@@ -24,10 +24,12 @@ from core.work_record import (
     BehaviorChangeApproval,
     BehaviorChangeAuthority,
     BehaviorChange,
+    parse_baseline_privacy_migration,
     RequirementBaseline,
     WorkRecord,
     WorkRecordParseError,
     extract_requirement_baseline,
+    has_baseline_privacy_migration,
     parse,
     parse_behavior_changes,
     parse_record,
@@ -694,3 +696,65 @@ def test_historical_baseline_reader_ignores_old_shape_but_not_bad_json() -> None
         extract_requirement_baseline(
             prefix + '**Requirement baseline:** {"outcome":' + suffix
         )
+
+
+def _privacy_receipt() -> dict:
+    return {"schema_version": 1, "record_path": ".agent-workflow/tasks/example.md",
+            "anchor_commit": "a" * 40, "replacements": {"source": "Approved public source"},
+            "reason": "Remove private source provenance.",
+            "approval": {"by": "user", "reference": "Maintainer approval",
+                         "verbatim": "Yes, approve this exact source-only redaction."}}
+
+
+@pytest.mark.parametrize("change", [
+    {"schema_version": True}, {"schema_version": 2}, {"schema_version": None},
+    {"record_path": "../other.md"}, {"anchor_commit": "a" * 39},
+    {"anchor_commit": "A" * 40}, {"replacements": None},
+    {"replacements": {"source": None}}, {"replacements": {"source": " "}},
+    {"replacements": {"source": "public", "outcome": "changed"}},
+    {"reason": ""}, {"extra": True},
+    {"approval": {"by": "agent", "reference": "approval", "verbatim": "yes"}},
+    {"approval": {"by": "user", "reference": "TODO", "verbatim": "yes"}},
+    {"approval": {"by": "user", "reference": "approval", "verbatim": "not approved"}},
+    {"approval": {"by": "user", "reference": "approval"}},
+])
+def test_privacy_receipt_rejects_invalid_shapes(change: dict) -> None:
+    with pytest.raises(WorkRecordParseError):
+        parse_baseline_privacy_migration(json.dumps({**_privacy_receipt(), **change}))
+
+
+def test_privacy_receipt_requires_exact_keys_and_rejects_duplicates() -> None:
+    receipt = _privacy_receipt()
+    for key in receipt:
+        with pytest.raises(WorkRecordParseError):
+            parse_baseline_privacy_migration(json.dumps({k: v for k, v in receipt.items() if k != key}))
+    for text in (json.dumps(receipt).replace('"schema_version": 1', '"schema_version": 1, "schema_version": 1'),
+                 json.dumps(receipt).replace('"source": "Approved public source"', '"source":"public","source":"other"')):
+        with pytest.raises(WorkRecordParseError, match="duplicate"):
+            parse_baseline_privacy_migration(text)
+
+
+def test_privacy_receipt_round_trips_both_shapes() -> None:
+    routine = parse(ROUTINE_PASS.read_text(encoding="utf-8"))
+    expanded_path = REPO_ROOT / "tests/fixtures/work-record/expanded-pass/work-record.md"
+    expanded = parse_record(expanded_path.read_text(encoding="utf-8"))
+    receipt = parse_baseline_privacy_migration(json.dumps(_privacy_receipt()))
+    routine["baseline_privacy_migration"] = receipt
+    expanded.record["baseline_privacy_migration"] = receipt
+    assert parse(render(routine)) == routine
+    assert parse_record(render_expanded(expanded.record)) == expanded
+
+
+@pytest.mark.parametrize("whitespace", ["\t", "\u2003", "\n"])
+def test_receipt_presence_matches_parser_label_whitespace(whitespace: str) -> None:
+    text = ROUTINE_PASS.read_text(encoding="utf-8").replace("**State:**",
+        f"**{whitespace}Baseline privacy migration{whitespace}:** {json.dumps(_privacy_receipt())}\n**State:**")
+    assert has_baseline_privacy_migration(text)
+    assert "baseline_privacy_migration" in parse(text)
+
+
+def test_receipt_presence_does_not_parse_prose_or_unrelated_json() -> None:
+    text = ROUTINE_PASS.read_text(encoding="utf-8").replace("**State:**",
+        "Mention Baseline privacy migration as ordinary prose.\n**Behavior changes:** legacy-not-json\n**State:**")
+    text += "\n**Baseline privacy migration:** outside the marker block\n"
+    assert not has_baseline_privacy_migration(text)

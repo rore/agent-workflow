@@ -27,7 +27,9 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass
+from types import MappingProxyType
 from typing import Literal, NotRequired, TypedDict
 from .relationships import _strip_surrounding_hints
 
@@ -74,6 +76,21 @@ class BehaviorChangeApproval:
 
 
 @dataclass(frozen=True)
+class BaselinePrivacyMigration:
+    """Immutable source-only receipt; Git history establishes its bindings."""
+
+    schema_version: int
+    record_path: str
+    anchor_commit: str
+    replacements: Mapping[str, str]
+    reason: str
+    approval: BehaviorChangeApproval
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "replacements", MappingProxyType(dict(self.replacements)))
+
+
+@dataclass(frozen=True)
 class BehaviorChange:
     """One structured Task Context or repository-contract change."""
 
@@ -116,6 +133,7 @@ class WorkRecord(TypedDict):
     verification: str
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
+    baseline_privacy_migration: NotRequired[BaselinePrivacyMigration]
     behavior_changes: NotRequired[list[BehaviorChange]]
     relationships: NotRequired[str]
 
@@ -159,6 +177,7 @@ class ExpandedWorkRecord(TypedDict):
     exceptions: str
     state: str
     requirement_baseline: NotRequired[RequirementBaseline]
+    baseline_privacy_migration: NotRequired[BaselinePrivacyMigration]
     behavior_changes: NotRequired[list[BehaviorChange]]
     relationships: NotRequired[str]
 
@@ -246,6 +265,7 @@ _EXPANDED_FIELD_SCHEMA: tuple[tuple[str, str], ...] = (
 # parseable and routine records do not migrate merely to carry integrity data.
 _OPTIONAL_JSON_FIELDS: dict[str, str] = {
     "Requirement baseline": "requirement_baseline",
+    "Baseline privacy migration": "baseline_privacy_migration",
     "Behavior changes": "behavior_changes",
 }
 _OPTIONAL_RAW_FIELDS: dict[str, str] = {"Relationships": "relationships"}
@@ -627,6 +647,58 @@ def extract_requirement_baseline(text: str) -> RequirementBaseline | None:
     return None if baseline is None else parse_requirement_baseline(baseline)
 
 
+def has_baseline_privacy_migration(text: str) -> bool:
+    """Recognize the marker-bounded label without parsing historical JSON."""
+    return any(match.group(1).strip() == "Baseline privacy migration"
+               for match in _FIELD_HEADER_RE.finditer(_extract_block(text)))
+
+
+def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
+    """Validate the receipt's strict shape; approval authorship needs review."""
+    label = "Baseline privacy migration"
+    value = _exact_keys(_load_integrity_json(text, label), frozenset({
+        "schema_version", "record_path", "anchor_commit", "replacements", "reason", "approval",
+    }), label)
+    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
+        raise WorkRecordParseError(f"{label}.schema_version must be integer 1")
+    path = _required_json_string(value["record_path"], f"{label}.record_path")
+    if (path.startswith("/") or "\\" in path or ":" in path
+            or any(part in {"", ".", ".."} for part in path.split("/"))
+            or any(ord(char) < 32 for char in path)):
+        raise WorkRecordParseError(f"{label}.record_path must be repository-relative")
+    anchor = _required_json_string(value["anchor_commit"], f"{label}.anchor_commit")
+    if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", anchor):
+        raise WorkRecordParseError(f"{label}.anchor_commit must be a full canonical Git commit")
+    replacements = _exact_keys(value["replacements"], frozenset({"source"}), f"{label}.replacements")
+    source = _required_json_string(replacements["source"], f"{label}.replacements.source")
+    approval_value = _exact_keys(value["approval"], _APPROVAL_KEYS, f"{label}.approval")
+    approval = BehaviorChangeApproval(**{
+        key: _required_json_string(approval_value[key], f"{label}.approval.{key}")
+        for key in _APPROVAL_KEYS
+    })
+    placeholders = _NONE_SENTINELS | {"no", "..."}
+    if (approval.by != "user" or any(
+            text.strip().lower() in placeholders
+            or re.fullmatch(r"\s*(?:<.*>|\[.*\])\s*", text)
+            or re.search(r"\b(?:todo|tbd|placeholder|pending|unapproved|not approved|denied|rejected|declined)\b", text, re.I)
+            for text in (approval.reference, approval.verbatim))):
+        raise WorkRecordParseError(f"{label}.approval requires recorded user approval, not a placeholder")
+    return BaselinePrivacyMigration(1, path, anchor, {"source": source},
+        _required_json_string(value["reason"], f"{label}.reason"), approval)
+
+
+def extract_requirement_history(text: str) -> dict[str, object]:
+    """Select integrity data without imposing unrelated modern record fields."""
+    fields = _extract_fields(_extract_block(text))
+    result: dict[str, object] = {}
+    _parse_optional_integrity_fields(fields, result)
+    result.pop("relationships", None)
+    for label, key in _FIELD_SCHEMA[:5]:
+        if key != "target":
+            result[key] = fields.get(label)
+    return result
+
+
 def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:
     label = f"Behavior changes entry #{index}"
     if not isinstance(value, dict):
@@ -738,6 +810,8 @@ def parse_behavior_changes(text: str) -> list[BehaviorChange]:
 def _parse_optional_integrity_fields(
     found: dict[str, str], record: dict[str, object]
 ) -> None:
+    if "Baseline privacy migration" in found:
+        record["baseline_privacy_migration"] = parse_baseline_privacy_migration(found["Baseline privacy migration"])
     if "Requirement baseline" in found:
         record["requirement_baseline"] = parse_requirement_baseline(
             found["Requirement baseline"]
@@ -987,7 +1061,14 @@ def render_record(parsed: ParsedRecord) -> str:
 
 
 def _integrity_json_value(key: str, value: object) -> str:
-    if key == "requirement_baseline":
+    if key == "baseline_privacy_migration":
+        if not isinstance(value, BaselinePrivacyMigration):
+            raise WorkRecordParseError("baseline_privacy_migration must be a BaselinePrivacyMigration")
+        data = {"schema_version": value.schema_version, "record_path": value.record_path,
+                "anchor_commit": value.anchor_commit, "replacements": dict(value.replacements),
+                "reason": value.reason, "approval": asdict(value.approval)}
+        parse_baseline_privacy_migration(json.dumps(data))
+    elif key == "requirement_baseline":
         if not isinstance(value, RequirementBaseline):
             raise WorkRecordParseError("requirement_baseline must be a RequirementBaseline")
         data: object = {
