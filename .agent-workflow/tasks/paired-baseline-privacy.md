@@ -31,7 +31,7 @@ Source: the maintainer-authorized privacy cleanup, bounded here to plan preparat
 
 ## Recovery
 
-Current branch: `feat/paired-baseline-privacy`. Last clean candidate before review recording: `4cbcc4a245b6e36cc79330a3709142631e8c5b9e`. Context preceded discovery and detailed planning. Independent architecture/technical plan review is complete. Next: hand the package to the manager, who presents one concrete human decision. No implementation or protected mutation is authorized by this record. Retain the isolated checkout and ignored original/comparison evidence for the pending decision.
+Current branch: `feat/paired-baseline-privacy`. Reviewed decision package: `8b74472a0b62a86d151fa935faa05326bd97f9c9`; technical-review candidate: `4cbcc4a245b6e36cc79330a3709142631e8c5b9e`. Context preceded discovery and detailed planning. Independent architecture/technical plan review is complete. The package handoff was submitted to the manager; transport acknowledgment is not yet verified. Next: the manager presents one concrete human decision. No implementation or protected mutation is authorized by this record. Retain the isolated checkout and ignored original/comparison evidence for the pending decision.
 
 ## Proposed exact transformation
 
