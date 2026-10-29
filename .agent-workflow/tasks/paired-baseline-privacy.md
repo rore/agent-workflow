@@ -18,7 +18,11 @@ Source: the maintainer-authorized privacy cleanup, bounded here to plan preparat
 **Discovery:** SPEC 9.1/13.3 and PR 59 provide one strict source-only receipt, parser/render/backend exports, history validation, standalone packaging and source/vendored tests. The known record also contains private ownership/hold/reviewer labels in both baseline and current Constraints/Completion criteria. Ordinary equivalent change entries retain the private baseline and exact before text, so they cannot complete this cleanup. Source-only version 1 deliberately rejects these functional keys.
 **Material assumptions:** Original designated roles and holds remain authoritative; stop if equivalence cannot be established privately. The selected trusted anchor must be revalidated after base movement.
 **Plan:** Prepare only. Propose a strict version 2 of the existing receipt for exactly source, constraints and completion_criteria, with both functional baseline/current pairs changed atomically and all unrelated fields/chains retained. Prove the actual trusted binding and historical-role equivalence privately, supply the exact safe after text below, and obtain independent architecture/technical plan review. The manager presents the concrete governance and transformation decision once. No implementation or protected edit before that decision.
-**Verification plan:** Private exact comparison, live selected-anchor proof, public privacy scan and independent smart plan review.
+**Verification plan:**
+- Exact wording and authority preservation -> private original/after comparison and independent semantic review, retaining historical referents and dynamic current owner windows.
+- Correct record binding -> existing history checker with actual base/head, plus revalidation after base movement.
+- Bounded reviewable package -> inspect the exact three-key schema, validation matrix and semantic limitations; independent architecture/technical plan review.
+- Safe preparation and handoff -> scan public plan and added history, verify only this planning record differs from main, and retain manager delivery evidence without claiming receipt or approval.
 **Plan review:** Agent technical review: pending independent architecture/technical plan review.
 **Approvals:** Human approval of the proposed governance change and exact transformation is pending. Existing authority covers preparation only.
 **Exceptions:** —
