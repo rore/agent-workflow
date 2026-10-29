@@ -32,6 +32,24 @@ Source: the maintainer's standing public-documentation privacy directive. The af
 
 Applicability requires the workflow: Work Records are never ordinary-documentation exemptions. Initialized a separate isolated task from public main df8639da94916bc8f8a879f71f8eba59fc2b43e2 and classified before implementation. The completed feature is not reopened. Only the known artifact and necessary publication surfaces are in scope.
 
+## Partial implementation and evidence
+
+Unprotected prose now uses generic authority attestations and public artifact references. Removed ignored-evidence locations, unrelated coordination context and proposal fingerprints. The entire original subject marker block is byte-identical, including Task Context, baseline, approvals and State. Exact original evidence remains private; no private before-values or their hashes were added to public evidence.
+
+Fresh publication history starts at public main a2a01cf682fc967f6cd9e91717a89a03fe15cb87. This task's valid immutable baseline was committed before the prose correction. The final two-file tree equals the independently accepted content, and scans cover both the current added diff and every new commit's added content. Earlier unpublished review drafts are excluded from this branch's ancestry. No shared history was rewritten.
+
+Actual two-path Redline exits 0. The actual base/head checker has no blocking failures; exit 1 is solely the commit-order advisory for the pre-existing completed subject record. That record predates this branch, and this correction's own planning record precedes the prose edit. No waiver or enforcement change is used.
+
+All nine local layers report success across the hooks and remaining-eight invocations against unchanged source/package code. The remaining-eight run captured exit 0. The hooks log reports successful assertions and layer completion, but its wrapper did not retain a separate raw exit code; it is not claimed as captured. Temporary test setup was removed. Final PR CI must independently pass the complete suite before merge.
+
+## Result review
+
+Agent technical review: independent non-implementer accepted the partial result and unchanged-plan reuse at 42f6d2a49a259746b8c3eaf9edea806e38ea1803 after correcting its privacy and stale-route findings. No new actionable findings. Authority boundaries, verification distinctions and protected content are preserved.
+
+Reviewed revision: 42f6d2a49a259746b8c3eaf9edea806e38ea1803.
+
+Verification adequacy: sufficient for partial publication, conditional on final PR CI. Exact protected-byte comparison, fresh added-history privacy scan and actual classifier/history-aware checker support the unchanged-application review. Full remediation remains Blocked: protected source and functional wording require a specifically approved supported route. Historical public exposure remains; this change does not erase it.
+
 ## Recovery
 
 Independent plan review is already complete for the unchanged unprotected-redaction plan. The ten-line redactions are ready for independent Result review, required checks and a normal PR. The source-only mechanism merged in [PR 59](https://github.com/rore/agent-workflow/pull/59) at `a2a01cf682fc967f6cd9e91717a89a03fe15cb87`, but does not automatically authorize migrating this record; the exact path and anchor must be covered and approval obtained first. Protected functional baseline/current-context wording also contains private operational details, so full remediation remains blocked and the original outcome/completion criteria remain unsatisfied. Make no product, enforcement or live-environment change. Keep private original evidence ignored/local; do not repeat removed values in public content, PR descriptions or review replies. Canonical provider tuples were not supplied, so Relationships sources stays unresolved rather than guessed.
