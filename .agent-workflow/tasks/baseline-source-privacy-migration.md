@@ -32,9 +32,21 @@ Source: explicit maintainer approval of a narrow checker correction after the so
 
 Initialized before source edits from public main df8639da94916bc8f8a879f71f8eba59fc2b43e2. Workflows apply to the normative/checker change; no ordinary-documentation exemption. The prior partial cleanup is preserved separately and is not part of this implementation. No Stage B functional-text capability is authorized.
 
+Implemented strict receipt parsing/rendering/exports, passive-reader optional-label compatibility and bounded source-only history verification. Ordinary records retain their baseline-only behavior; migration history is inspected only after receipt evidence is found. Missing refs deny migrated records. Existing runtime callers that omit refs cannot verify them; use the history-aware CLI/CI surface. No native runtime qualification or live installation is claimed.
+
+Independent result review of 6c1e14823566dff8dab84bd17ef31bb6eb18b8fc found two blockers: the standalone packaged checker lacked a required import, and deletion/rename followed by record restoration before migration escaped identity checks. Both findings were accepted and corrected in the existing predicate and regression-test files. The corrected package and final required verification/review are still pending; the reviewed revision is not accepted.
+
+Receipts already on an authoritative base retain their original anchor; Git cannot reconstruct which external PR refs were supplied for the earlier approval. This is a trusted-base boundary, not authenticated historical approval. Migration traversal fails closed beyond 2048 relevant path snapshots or 10000 ancestry commits. These limits do not apply to ordinary records without migration evidence.
+
 ## Consumer acceptance
 
 Existing adoption owner supplied PR 78 head c1f43dc2bdfa77a1f2d5cc03512e6202cf8b689a, exact record .agent-workflow/tasks/board-appearance.md, trusted authoritative anchor 07a64fb7ad4f011fe72f3b5c379be3ba2bb82db4, and safe replacement source "User-approved appearance design (privacy-redacted source)". All four baseline/current-context fields remain unchanged; existing functional/review evidence belongs to that owner and must not be repeated or expanded. No private before-value or its hash is included here.
+
+The owner must verify this anchor against the actual checker-selected trusted history; supplied evidence alone does not establish the binding. An already committed redaction cannot gain retroactive validity by appending a receipt. Prepare a fresh reviewed source-and-receipt transition from a trusted pre-redaction PR base, carrying functional work separately, or report that no supported route is available. Never republish private originals or rewrite shared history. If an unmerged PR base advances, rerun the exact selector/approval-binding checks; do not silently rebind an immutable receipt. Actual consumer adoption remains with its existing owner.
+
+## Verification in progress
+
+Focused source validation passed 132 Python cases, then 28 new/changed cases; passive-reader validation passed 95 relationship and 13 configuration fixtures. Six correction regressions passed, including pre-migration deletion/rename rejection, deletion before the authoritative anchor acceptance, parallel pre-migration ancestry and later-base retention. The first required checker layer passed 285 cases but failed both standalone migration positives because of the missing import; it is not successful validation. Required corrected layers and independent finished-result review remain ahead. Test logs and synthetic review fixtures stay ignored/local.
 
 ## Recovery
 

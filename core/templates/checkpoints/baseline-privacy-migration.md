@@ -15,6 +15,8 @@ Replace placeholders with approved evidence. Use exactly these keys; `replacemen
 
 Commit the source replacement and receipt together. Validate the committed result with both actual refs:
 
+An already committed redaction cannot be blessed by appending a receipt. Do not restore private text; coordinate a fresh reviewed branch from a trusted pre-redaction PR base, carrying functional changes separately, or report the unavailable route. If the unmerged PR base advances, recheck the selected anchor and exact approval binding; never rebind a committed receipt to make it pass.
+
 ```bash
 python scripts/agent-workflow-check.py --repo-root . --slug <slug> --base-ref <base> --head-ref <head>
 ```

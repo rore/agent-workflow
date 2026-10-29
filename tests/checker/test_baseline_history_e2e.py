@@ -577,3 +577,41 @@ def test_vendored_checker_accepts_approved_source_migration(tmp_path: Path, path
         code, payload = _check(repo, base, head, [path], vendored=vendored)
         assert code in (0, 1), json.dumps(payload, indent=2)
         assert _baseline_result(payload, Path(path).stem)["passed"]
+
+
+@pytest.mark.parametrize("renamed", [False, True])
+def test_privacy_migration_cannot_repair_pre_migration_identity_loss(tmp_path: Path, renamed: bool) -> None:
+    repo, anchor = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    other_path = ".agent-workflow/tasks/temporary.md"
+    if renamed:
+        _git(repo, "mv", RECORD, other_path)
+    else:
+        target.unlink()
+    _commit(repo, "remove original record identity")
+    if renamed:
+        _git(repo, "mv", other_path, RECORD)
+    else:
+        target.write_text(_record(OLD), encoding="utf-8")
+    _commit(repo, "restore exact old baseline")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "attempt source migration after identity loss")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code == 2
+    predicate = _baseline_result(payload)
+    assert not predicate["passed"]
+    assert "deleted or renamed" in predicate["detail"]
+
+
+def test_privacy_migration_identity_check_starts_at_authoritative_anchor(tmp_path: Path) -> None:
+    repo, _ = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.unlink()
+    _commit(repo, "old deletion before authoritative baseline")
+    target.write_text(_record(OLD), encoding="utf-8")
+    anchor = _commit(repo, "new authoritative PR base")
+    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    head = _commit(repo, "approved migration from current authority")
+    code, payload = _check(repo, anchor, head, [RECORD])
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]

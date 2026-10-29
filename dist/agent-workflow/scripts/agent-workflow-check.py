@@ -2938,6 +2938,7 @@ list, so adding new ones doesn't change the shape here.
 """
 
 
+import dataclasses
 import os
 import subprocess
 from datetime import date
@@ -3814,7 +3815,15 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
     retained = base_version is not None and base_version.get("baseline_privacy_migration") == receipt
     if not retained and receipt.anchor_commit != anchor_sha:
         raise ValueError("privacy receipt anchor differs from the selected authoritative commit")
-    migrated = replace(old_baseline, source=approved_source)
+    identity_history = _history_git(
+        ctx, "log", "--full-history", "--ancestry-path", "--format=%H", "--max-count=2049",
+        f"{original_sha}..{introduction}", "--", path,
+    ).stdout.decode("ascii").splitlines()
+    if len(identity_history) > 2048:
+        raise ValueError("pre-redaction identity history exceeds the verification limit")
+    if any(snapshot(sha) is None for sha in identity_history):
+        raise ValueError("privacy migration cannot repair a deleted or renamed Work Record")
+    migrated = dataclasses.replace(old_baseline, source=approved_source)
     introduced = snapshot(introduction)
     assert introduced is not None
     if introduced.get("requirement_baseline") != migrated:
