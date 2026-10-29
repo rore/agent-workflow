@@ -3639,7 +3639,7 @@ def _history_git(
 ) -> subprocess.CompletedProcess[bytes]:
     assert ctx.repo_root is not None
     result = subprocess.run(
-        ["git", *args],
+        ["git", "--literal-pathspecs", *args],
         cwd=str(ctx.repo_root),
         capture_output=True,
         timeout=_GIT_TIMEOUT_SEC,
@@ -3666,7 +3666,7 @@ def _history_blob(ctx: CheckerContext, sha: str, path: str) -> str | None:
         if path.encode("utf-8") in tree.stdout.split(b"\x00"):
             raise ValueError(f"committed Work Record {path!r} could not be read")
         return None
-    return blob.stdout.decode("utf-8")
+    return blob.stdout.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
 def requirements_baseline_unchanged(ctx: CheckerContext) -> PredicateResult:
@@ -3757,11 +3757,18 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
                       anchor: object, anchor_sha: str) -> object:
     """Verify a single immutable source transition across committed path history."""
     current = None if ctx.record is None else ctx.record.get("baseline_privacy_migration")
-    candidates = _history_git(ctx, "log", "--full-history", "-m", "--format=%H", "--max-count=2049",
-                              "-G", "Baseline privacy migration", head, base, "--", path)
-    candidates = list(dict.fromkeys(candidates.stdout.decode("ascii").splitlines()))
-    if len(candidates) > 2048:
-        raise ValueError("privacy receipt candidate history exceeds the verification limit")
+    hint = _history_git(ctx, "log", "--full-history", "-m", "--text", "--no-textconv", "--no-ext-diff",
+                        "--format=%H", "--max-count=1",
+                        "-G", "Baseline privacy migration", head, base, "--", path).stdout
+    if not hint:
+        if current is not None:
+            raise ValueError("privacy receipt and replacement must be committed together")
+        return anchor
+    log = _history_git(ctx, "log", "--full-history", "-m", "--topo-order", "--reverse",
+                       "--format=%H", "--max-count=2049", head, base, "--", path)
+    commits = list(dict.fromkeys(log.stdout.decode("ascii").splitlines()))
+    if len(commits) > 2048:
+        raise ValueError("Work Record history exceeds the bounded privacy verification limit")
     blobs: dict[str, str | None] = {}
 
     def blob_at(sha: str) -> str | None:
@@ -3770,7 +3777,7 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
         return blobs[sha]
 
     evidence = False
-    for sha in candidates:
+    for sha in commits:
         blob = blob_at(sha)
         try:
             if blob is not None and has_baseline_privacy_migration(blob):
@@ -3782,11 +3789,6 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
         if current is not None:
             raise ValueError("privacy receipt and replacement must be committed together")
         return anchor
-    log = _history_git(ctx, "log", "--full-history", "-m", "--topo-order", "--reverse",
-                       "--format=%H", "--max-count=2049", head, base, "--", path)
-    commits = list(dict.fromkeys(log.stdout.decode("ascii").splitlines()))
-    if len(commits) > 2048:
-        raise ValueError("Work Record history exceeds the bounded privacy verification limit")
     snapshots: dict[str, dict[str, object] | None] = {}
 
     def snapshot(sha: str) -> dict[str, object] | None:

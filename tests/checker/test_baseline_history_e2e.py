@@ -699,3 +699,53 @@ def test_unambiguous_merge_can_introduce_privacy_receipt(tmp_path: Path, vendore
     code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
     assert code in (0, 1), json.dumps(payload, indent=2)
     assert _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("activation", ["markers", "delimiters", "nul-prose"])
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_receipt_activation_without_phrase_change(tmp_path: Path, activation: str, vendored: bool) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    receipt_json = json.dumps(_receipt(base))
+    end = "<!-- agent-workflow:end -->"
+    outside_prose = "\nSynthetic outside prose with NUL: \x00\n" if activation == "nul-prose" else ""
+    if activation == "nul-prose":
+        before = _record(OLD) + outside_prose
+        activated = _privacy_record(_receipt(base)) + outside_prose
+    elif activation == "markers":
+        before = _record(OLD) + f"**Baseline privacy migration:** {receipt_json}\n"
+        activated = before.replace(end + "\n", "") + end + "\n"
+    else:
+        before = _record(OLD).replace("**State:**",
+            f"**\nBaseline privacy migration\n!! {receipt_json}\n**State:**")
+        activated = before.replace("\n!! ", "\n:** ")
+    target.write_text(before, encoding="utf-8")
+    _commit(repo, "prepare unchanged phrase outside a receipt field")
+    activated = activated.replace(json.dumps(OLD), json.dumps({**OLD, "source": SAFE_SOURCE}))
+    target.write_text(activated, encoding="utf-8")
+    head = _commit(repo, "activate receipt by marker or delimiter change")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD) + outside_prose, encoding="utf-8")
+    head = _commit(repo, "remove activated receipt and restore original baseline")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
+def test_privacy_history_uses_literal_configured_path(tmp_path: Path, vendored: bool) -> None:
+    path = ".work/[items]/example.md"
+    repo, base = _repo(tmp_path, {path: OLD}, task_path=".work/[items]/{slug}.md")
+    target = repo / path
+    target.write_text(_privacy_record(_receipt(base, path)), encoding="utf-8")
+    head = _commit(repo, "approved migration at literal bracket path")
+    code, payload = _check(repo, base, head, [path], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload)["passed"]
+    target.write_text(_record(OLD), encoding="utf-8")
+    head = _commit(repo, "remove receipt and restore literal-path baseline")
+    code, payload = _check(repo, base, head, [path], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
