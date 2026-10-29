@@ -31,7 +31,7 @@ Current branch: `feat/paired-baseline-privacy`. Context initialized before disco
 
 ## Proposed exact transformation
 
-This is a decision package, not an installed capability or a committed migration receipt. Target record: `.agent-workflow/tasks/core-behavior-preservation.md`. Existing checker selected trusted base `a2a01cf682fc967f6cd9e91717a89a03fe15cb87` for this record with valid base/head history. PR 60 can move that base before this proposal is presented; re-run the existing selector and private comparison, update this proposed binding, and review any material difference. Never silently rebind an approved or committed receipt.
+This is a decision package, not an installed capability or a committed migration receipt. Target record: `.agent-workflow/tasks/core-behavior-preservation.md`. After PR 60 merged, the existing checker selected trusted base `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4` for this record with valid base/head history. Its protected fields and existing chain remain unchanged from the initial proposal. If this base moves again, re-run the existing selector and private comparison, update this proposed binding, and review any material difference before mutation. Never silently rebind an approved or committed receipt.
 
 Only these replacements are proposed. The two functional strings replace their matching baseline and current-context values together. In every reference below, the original task is the target record above at the exact bound revision, not this planning task or today's holder of a global role.
 
@@ -78,7 +78,7 @@ Human and independent review must judge privacy, equivalence, historical identit
 
 | Obligation | Focused evidence |
 |---|---|
-| Strict bounded schema | Parser rejects missing/extra/subset/duplicate keys, null/blank/no-op replacements, unsupported versions, unsupported Outcome/Scope/Target and forged placeholder approval shapes; exact three-key v2 round-trips through source/backend and generated standalone code. |
+| Strict bounded schema | Parser rejects missing/extra/subset/duplicate keys, null/blank replacements, unsupported versions, unsupported Outcome/Scope/Target and placeholder approval shapes; the history verifier rejects no-op values. Exact three-key v2 round-trips through source/backend and generated standalone code. |
 | Atomic equivalent pairs | Synthetic known-case transition passes; baseline-only/current-only or mismatched pairs fail; existing entries targeting either replaced functional field fail. Unrelated pre-existing chain passes unchanged, and later legitimate changes chain from migrated baseline. |
 | Other fields preserved | Introduction altering any unrelated baseline/context/marker field, Target, approvals or chain fails. No tests publish real private originals. |
 | Trusted history and retention | Wrong path/anchor/after text, receipt before/after replacement, prior committed redaction, ambiguous merge, removal/tamper/restore, second migration, missing refs/history and deleted/renamed record fail; valid retained receipt passes a later base without rebinding. |
