@@ -11,7 +11,7 @@ Source: the maintainer's standing public-documentation privacy directive. The af
 **Requirement baseline:**
 {"source":"maintainer-privacy-directive","outcome":"The known public Work Record no longer discloses private provenance or operational details.","scope":"Current-content redaction of .agent-workflow/tasks/core-behavior-preservation.md, necessary publication surfaces, and this correction record; preserve original evidence in ignored local storage.","constraints":"Preserve product behavior, requirement meaning, review authority and existing enforcement. No broad audit, shared-history rewrite, force-push, record deletion, live installation or configuration change. Public evidence uses repository-relative references, public URLs and generic placeholders.","completion_criteria":"Remove known private references from current public content through a supported workflow route; preserve behavioral/audit meaning privately; pass targeted checker and publication-privacy validation, independent review and required repository checks; report the correction revision and historical exposure that remains."}
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/60"]}
 **Risk:** Elevated
 **Complexity:** Simple
 **Reason:** Intended Work Record paths are blue, with no boundary or runtime changes. Raised for publication privacy and immutable provenance/audit-integrity risk; no enforcement relaxation is assumed.
