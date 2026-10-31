@@ -6,6 +6,14 @@ Newest entries on top. Each entry: date, decision, alternatives considered, rati
 
 Routine session work doesn't go here — only decisions a future maintainer would want the reasoning behind.
 
+## 2026-10-31 — Work Record identity follows accountable task ownership
+
+**Decision:** One owner controls requirements, approvals, workflow state, integration, and acceptance for a task. Parallel contributors and checkouts may share its Work Record when the combined result is reviewed as one task. Independently progressing delivery tasks use distinct records, linked to the same existing feature or parent when available. Preserve supplied identity for assistance and handoffs; resolve conflicting identity with the assigner before independent work.
+
+**Alternatives considered:** One record per contributor or checkout; one manager-owned record for independently progressing deliveries; mandatory parent records or helper branches.
+
+**Rationale:** Task identity follows independent workflow and acceptance boundaries, not contributor count or Git layout. This keeps shared work coherent while giving independently reviewed deliveries clear ownership.
+
 ## 2026-10-31 — Narrow paired-text privacy migration reuses the receipt
 
 **Decision:** Keep source-only receipt version 1 unchanged. Version 2 supports exactly source, constraints and completion_criteria, with source plus both baseline/current functional pairs replaced in one approved transition. Require pre-current/baseline equality and no existing chain entries for either functional field. Preserve every other raw marker field and the exact raw chain at introduction, then retain the receipt and migrated baseline under the existing history guarantees.
