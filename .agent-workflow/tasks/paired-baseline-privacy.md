@@ -115,3 +115,11 @@ PR 60 merged at `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`; its merged tree equa
 
 The existing history checker selects `d664f6fc` for the exact target record with valid base/head refs; the baseline predicate passes. The only subject-check diagnostic is the existing-record commit-order advisory, not a protected-content failure or waiver. Exact original/current protected comparisons and the private unchanged-obligation assertions pass. The plan's public-content scan passes, and only this planning record differs from merged main. No capability tests were run because no version-2 implementation exists. The everyday checkout and its original hook configuration remain unchanged. Full cleanup and the governance/exact-transformation human decision remain pending.
 
+## Implementation
+
+2026-10-31: resumed the same task after exact bounded-extension/replacement approval. Original preparation baseline is retained with approved ordered Task Context changes. Fresh main and the existing selector still resolve the exact approved target anchor `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`; no refreshed binding decision is needed. Resume checker passes. Normative SPEC was updated before implementation.
+
+Target surfaces: existing parser and historical extraction in `core/work_record/parser.py`, history predicate in `core/checker/predicates.py`, parser/backend and real-history checker tests, conditional migration/behavior/context guides and template comments, public guide mirrors, ENFORCEMENT/DECISIONS, generated package/native mirrors, and the single approved target record. No runtime, config, policy, schema framework or consumer change. The delegated implementer owns parser/checker/focused tests; the lead owns governance prose, package generation, the exact atomic target migration and final review/delivery. Raw preservation is v2-only; v1 remains unchanged.
+
+Guidance propagation retains the conditional load point and existing token ceilings. Original historical authority/hold mapping stays private; public wording and approval evidence are the exact approved safe text. Separate final human result/architecture review remains required after the concrete implementation and verification are ready.
+

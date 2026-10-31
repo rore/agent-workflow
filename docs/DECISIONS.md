@@ -6,6 +6,14 @@ Newest entries on top. Each entry: date, decision, alternatives considered, rati
 
 Routine session work doesn't go here — only decisions a future maintainer would want the reasoning behind.
 
+## 2026-10-31 — Narrow paired-text privacy migration reuses the receipt
+
+**Decision:** Keep source-only receipt version 1 unchanged. Version 2 supports exactly source, constraints and completion_criteria, with source plus both baseline/current functional pairs replaced in one approved transition. Require pre-current/baseline equality and no existing chain entries for either functional field. Preserve every other raw marker field and the exact raw chain at introduction, then retain the receipt and migrated baseline under the existing history guarantees.
+
+**Alternatives considered:** Ordinary equivalent change entries retain private baseline and before text; source-only migration cannot sanitize functional labels. A generic patch, chain/approval rewriting or task waiver would grant unnecessary authority. Shared-history rewriting and live installation changes are excluded.
+
+**Rationale:** The known cleanup needs privacy-safe wording for historical ownership, reviewers and holds without assigning those obligations to current role holders. Exact record/anchor/after binding and human semantic review permit that narrow transformation; structural checks do not authenticate authorship or equivalence. Stricter raw preservation belongs only to v2, preserving v1 compatibility. Other field subsets, second migrations and receipt upgrades remain unsupported.
+
 ## 2026-10-29 — Approval-bound source-provenance privacy migration
 
 **Decision:** Add one optional, immutable Baseline privacy migration receipt. Its strict replacements map currently permits only source, bound to the exact record, existing checker-selected Git anchor and explicit human approval. Read the old source from Git internally; do not publish it or its hash. Preserve functional baseline values, current context and the existing change chain across the migration. Keep default whole-baseline equality and non-waivable gates, including receipt retention and complete-history checks.
