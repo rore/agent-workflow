@@ -60,6 +60,7 @@ from core.work_record import (
     WorkRecordParseError,
     extract_requirement_baseline,
     extract_requirement_history,
+    extract_raw_requirement_history_fields,
     has_baseline_privacy_migration,
     find_block_span,
     parse_exceptions,
@@ -949,9 +950,8 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
     old_baseline = before.get("requirement_baseline")
     if old_baseline is None or old_baseline.source is None:
         raise ValueError("privacy migration requires an existing non-null source")
-    approved_source = receipt.replacements["source"]
-    if approved_source == old_baseline.source:
-        raise ValueError("privacy migration replacement must change the source")
+    replacements = receipt.replacements
+    approved_source = replacements["source"]
     original_sha = _history_commit(ctx, receipt.anchor_commit)
     if _history_git(ctx, "merge-base", "--is-ancestor", original_sha, introduction,
                     allow_failure=True).returncode:
@@ -975,15 +975,68 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
             raise ValueError("privacy migration cannot repair a deleted or renamed Work Record")
         if sha != introduction and version.get("requirement_baseline") != old_baseline:
             raise ValueError("privacy migration cannot repair a missing or changed pre-redaction baseline")
-    migrated = dataclasses.replace(old_baseline, source=approved_source)
     introduced = snapshot(introduction)
     assert introduced is not None
-    if introduced.get("requirement_baseline") != migrated:
-        raise ValueError("privacy transition changed protected baseline fields")
-    for key in (*_TASK_CONTEXT_FIELDS.values(), "behavior_changes"):
-        default = [] if key == "behavior_changes" else None
-        if before.get(key, default) != introduced.get(key, default):
-            raise ValueError("privacy transition changed Task Context or the existing change chain")
+    if receipt.schema_version == 1:
+        if approved_source == old_baseline.source:
+            raise ValueError("privacy migration replacement must change the source")
+        migrated = dataclasses.replace(old_baseline, source=approved_source)
+        if introduced.get("requirement_baseline") != migrated:
+            raise ValueError("privacy transition changed protected baseline fields")
+        for key in (*_TASK_CONTEXT_FIELDS.values(), "behavior_changes"):
+            default = [] if key == "behavior_changes" else None
+            if before.get(key, default) != introduced.get(key, default):
+                raise ValueError("privacy transition changed Task Context or the existing change chain")
+    else:
+        functional_fields = ("constraints", "completion_criteria")
+        for field in functional_fields:
+            if getattr(old_baseline, field) != before.get(field):
+                raise ValueError("privacy migration requires the pre-transition functional values to match baseline")
+        if any(change.target in {f"task-context.{field}" for field in functional_fields}
+               for change in before.get("behavior_changes", [])):
+            raise ValueError("privacy migration cannot replace fields already targeted by the change chain")
+        for field in ("source", *functional_fields):
+            if replacements[field] == getattr(old_baseline, field):
+                raise ValueError("privacy migration replacements must change every approved field")
+        migrated = dataclasses.replace(old_baseline, **replacements)
+        if introduced.get("requirement_baseline") != migrated:
+            raise ValueError("privacy transition changed protected baseline fields")
+        if any(introduced.get(field) != replacements[field] for field in functional_fields):
+            raise ValueError("privacy transition did not atomically replace the functional fields")
+
+        parent_shas = _history_git(ctx, "rev-list", "--parents", "-n", "1", introduction).stdout.decode("ascii").split()[1:]
+        if len(parent_shas) != len(parents):
+            raise ValueError("privacy migration has missing or ambiguous pre-redaction identity")
+        parent_fields = []
+        for parent_sha in parent_shas:
+            parent_blob = blob_at(parent_sha)
+            if parent_blob is None:
+                raise ValueError("privacy migration has a missing pre-transition record")
+            try:
+                parent_fields.append(extract_raw_requirement_history_fields(parent_blob))
+            except WorkRecordParseError:
+                raise ValueError("historical Work Record fields are malformed") from None
+        if any(fields != parent_fields[0] for fields in parent_fields[1:]):
+            raise ValueError("privacy migration has missing or ambiguous pre-redaction identity")
+        try:
+            introduced_fields = extract_raw_requirement_history_fields(blob_at(introduction) or "")
+        except WorkRecordParseError:
+            raise ValueError("historical Work Record fields are malformed") from None
+        original_fields = parent_fields[0]
+        mutable_fields = {"Requirement baseline", "Constraints", "Completion criteria"}
+        if ("Baseline privacy migration" in original_fields
+                or "Baseline privacy migration" not in introduced_fields):
+            raise ValueError("privacy receipt must be introduced atomically with its replacements")
+        for label in mutable_fields:
+            if (label not in original_fields or label not in introduced_fields
+                    or original_fields[label][0] != introduced_fields[label][0]):
+                raise ValueError("privacy migration cannot add, remove or relabel a protected field")
+        original_other = {label: field for label, field in original_fields.items()
+                          if label not in mutable_fields}
+        introduced_other = {label: field for label, field in introduced_fields.items()
+                            if label not in mutable_fields | {"Baseline privacy migration"}}
+        if original_other != introduced_other:
+            raise ValueError("privacy transition changed an unrelated marker field")
     def descendants_to(tip: str) -> set[str]:
         commits = _history_git(ctx, "rev-list", "--ancestry-path", "--max-count=10001",
                                f"{introduction}..{tip}").stdout.decode("ascii").splitlines()

@@ -358,6 +358,8 @@ def test_nested_project_root_resolves_git_blob_relative_to_cwd(tmp_path: Path) -
 
 
 SAFE_SOURCE = "User-approved source (privacy-redacted provenance)"
+SAFE_CONSTRAINTS = "Approved public constraints"
+SAFE_COMPLETION = "Approved public completion criteria"
 
 
 def _receipt(anchor: str, path: str = RECORD) -> dict:
@@ -365,6 +367,15 @@ def _receipt(anchor: str, path: str = RECORD) -> dict:
             "replacements": {"source": SAFE_SOURCE}, "reason": "Remove private provenance.",
             "approval": {"by": "user", "reference": "Maintainer approval of exact migration",
                          "verbatim": "Yes, approve the exact record, anchor and source replacement."}}
+
+
+def _receipt_v2(anchor: str, path: str = RECORD) -> dict:
+    return {"schema_version": 2, "record_path": path, "anchor_commit": anchor,
+            "replacements": {"source": SAFE_SOURCE, "constraints": SAFE_CONSTRAINTS,
+                             "completion_criteria": SAFE_COMPLETION},
+            "reason": "Remove private provenance.",
+            "approval": {"by": "user", "reference": "Maintainer approval of exact migration",
+                         "verbatim": "Yes, approve the exact record, anchor and replacements."}}
 
 
 def _privacy_record(receipt: dict | None, *, baseline: dict | str | None = None,
@@ -375,6 +386,198 @@ def _privacy_record(receipt: dict | None, *, baseline: dict | str | None = None,
     if chain is not None:
         extra += f"**Behavior changes:** {json.dumps(chain)}\n"
     return text.replace("**State:**", extra + "**State:**")
+
+
+def _privacy_record_v2(receipt: dict | None, *, baseline: dict | str | None = None,
+                       context: dict | None = None, chain: list | None = None,
+                       extra_fields: str = "") -> str:
+    replacements = (receipt["replacements"] if receipt is not None else
+                    {"source": SAFE_SOURCE, "constraints": SAFE_CONSTRAINTS,
+                     "completion_criteria": SAFE_COMPLETION})
+    baseline = {**OLD, **replacements} if baseline is None else baseline
+    context = {**OLD, **{key: value for key, value in replacements.items() if key != "source"}} \
+        if context is None else context
+    text = _record(baseline, context=context)
+    extra = "" if receipt is None else f"**Baseline privacy migration:** {json.dumps(receipt)}\n"
+    if chain is not None:
+        extra += f"**Behavior changes:** {json.dumps(chain)}\n"
+    return text.replace("**State:**", extra + extra_fields + "**State:**")
+
+
+def _with_expanded_approval(text: str, approval: str) -> str:
+    text = text.replace("**Risk:** Routine", "**Risk:** High")
+    text = text.replace("**Complexity:** Simple", "**Complexity:** Moderate")
+    fields = (
+        "**Discovery:** Synthetic discovery\n"
+        "**Material assumptions:** Synthetic assumption\n"
+        "**Plan:** Synthetic plan\n"
+        "**Verification plan:** Synthetic verification\n"
+        "**Plan review:** Synthetic review\n"
+        f"**Approvals:** {approval}\n"
+        "**Exceptions:** —\n"
+    )
+    return text.replace("**State:**", fields + "**State:**")
+
+
+@pytest.mark.parametrize(("task_path", "path"), [
+    (".agent-workflow/tasks/{slug}.md", RECORD),
+    (".work/items/{slug}.md", ".work/items/example.md"),
+])
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "standalone"])
+def test_v2_atomic_migration_in_configured_task_path_layouts(
+    tmp_path: Path, task_path: str, path: str, vendored: bool,
+) -> None:
+    repo, base = _repo(tmp_path, {path: OLD}, task_path=task_path)
+    receipt = _receipt_v2(base, path)
+    target = repo / path
+    pre_context = {**OLD, "scope": "Pre-migration scope"}
+    pre_chain = [{"target": "task-context.scope", "classification": "equivalent",
+                  "before": OLD["scope"], "after": pre_context["scope"],
+                  "reason": "Clarify scope before migration."}]
+    target.write_text(_record(OLD, context=pre_context).replace("**State:**",
+        f"**Behavior changes:** {json.dumps(pre_chain)}\n**State:**"), encoding="utf-8")
+    _commit(repo, "pre-migration scope clarification")
+    target.write_text(_privacy_record_v2(
+        receipt, context={**pre_context, "constraints": SAFE_CONSTRAINTS,
+                          "completion_criteria": SAFE_COMPLETION}, chain=pre_chain,
+    ), encoding="utf-8")
+    migrated = _commit(repo, "approved paired baseline migration")
+    code, payload = _check(repo, base, migrated, [path], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload, Path(path).stem)["passed"]
+
+    # Once retained at the selected base, ordinary later changes use the normal chain.
+    later_chain = [*pre_chain, {"target": "task-context.constraints", "classification": "equivalent",
+                    "before": SAFE_CONSTRAINTS, "after": "Later approved clarification",
+                    "reason": "Clarify the current task."}]
+    target.write_text(_privacy_record_v2(
+        receipt, context={**pre_context, "constraints": "Later approved clarification",
+                          "completion_criteria": SAFE_COMPLETION}, chain=later_chain,
+    ), encoding="utf-8")
+    later = _commit(repo, "ordinary later refinement")
+    code, payload = _check(repo, migrated, later, [path], vendored=vendored)
+    assert code in (0, 1), json.dumps(payload, indent=2)
+    assert _baseline_result(payload, Path(path).stem)["passed"]
+
+
+@pytest.mark.parametrize(("attack", "vendored"), [
+    ("source-noop", False), ("constraints-noop", False), ("completion-noop", False),
+    ("source-pair", False), ("constraints-pair", False), ("completion-pair", False),
+    ("constraints-current", False), ("completion-current", False),
+    ("pre-context-constraints", False), ("pre-context-completion", False),
+    ("chain-constraints", False), ("chain-completion", False), ("target", False),
+    ("approvals", False), ("relationships", False), ("chain-whitespace", False),
+    ("path", False), ("anchor", False), ("approval", False),
+    pytest.param("constraints-noop", True, id="constraints-noop-standalone"),
+    pytest.param("constraints-pair", True, id="constraints-pair-standalone"),
+    pytest.param("target", True, id="target-standalone"),
+    pytest.param("approvals", True, id="approvals-standalone"),
+    pytest.param("chain-whitespace", True, id="chain-whitespace-standalone"),
+])
+def test_v2_rejects_noops_mismatched_pairs_and_unrelated_changes(
+    tmp_path: Path, attack: str, vendored: bool,
+) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    receipt = _receipt_v2(base)
+    baseline = {**OLD, **receipt["replacements"]}
+    context = {**OLD, **{key: value for key, value in receipt["replacements"].items()
+                         if key != "source"}}
+    chain: list | None = None
+    after_extra = ""
+
+    if attack.endswith("-noop"):
+        field = {"source-noop": "source", "constraints-noop": "constraints",
+                 "completion-noop": "completion_criteria"}[attack]
+        receipt["replacements"][field] = OLD[field]
+        if field == "source":
+            baseline[field] = OLD[field]
+        else:
+            baseline[field] = context[field] = OLD[field]
+    elif attack == "source-pair":
+        baseline["source"] = "A different approved-looking source"
+    elif attack == "constraints-pair":
+        baseline["constraints"] = "Mismatched constraints"
+    elif attack == "completion-pair":
+        baseline["completion_criteria"] = "Mismatched completion criteria"
+    elif attack == "constraints-current":
+        context["constraints"] = "Mismatched current constraints"
+    elif attack == "completion-current":
+        context["completion_criteria"] = "Mismatched current completion criteria"
+    elif attack in {"pre-context-constraints", "pre-context-completion"}:
+        field = "constraints" if attack.endswith("constraints") else "completion_criteria"
+        label = "Constraints" if field == "constraints" else "Completion criteria"
+        old_text = _record(OLD).replace(f"**{label}:** {OLD[field]}",
+                                        f"**{label}:** Pre-transition mismatch")
+        target.write_text(old_text, encoding="utf-8")
+        _commit(repo, "pre-transition current-context edit")
+    elif attack in {"chain-constraints", "chain-completion", "chain-whitespace"}:
+        field = "constraints" if attack == "chain-constraints" else "completion_criteria"
+        target_name = f"task-context.{field}"
+        current = OLD[field]
+        intermediate = "Synthetic intermediate value"
+        chain = [] if attack == "chain-whitespace" else [
+            {"target": target_name, "classification": "equivalent", "before": current,
+             "after": intermediate, "reason": "Synthetic prior chain entry."},
+            {"target": target_name, "classification": "equivalent", "before": intermediate,
+             "after": current, "reason": "Synthetic restoring chain entry."},
+        ]
+        raw_chain = "[]   " if attack == "chain-whitespace" else json.dumps(chain)
+        target.write_text(_record(OLD).replace("**State:**",
+            f"**Behavior changes:** {raw_chain}\n**State:**"), encoding="utf-8")
+        _commit(repo, "pre-transition change chain")
+    elif attack in {"target", "approvals", "relationships"}:
+        if attack == "target":
+            target.write_text(_record(OLD).replace("**Target:** example", "**Target:** Before"), encoding="utf-8")
+            _commit(repo, "pre-transition marker field edit")
+        elif attack == "approvals":
+            target.write_text(_with_expanded_approval(_record(OLD), "Synthetic reviewer A"), encoding="utf-8")
+            _commit(repo, "pre-transition marker field edit")
+        else:
+            relationships = '{"schema_version":1,"sources":null,"pull_requests":[]}'
+            target.write_text(_record(OLD).replace("**State:**",
+                f"**Relationships:** {relationships}\n**State:**"), encoding="utf-8")
+            _commit(repo, "pre-transition marker field edit")
+            after_extra = '**Relationships:** {"schema_version":1,"sources":[],"pull_requests":[]}\n'
+    elif attack == "path":
+        receipt["record_path"] = ".agent-workflow/tasks/other.md"
+    elif attack == "anchor":
+        receipt["anchor_commit"] = "a" * 40
+    elif attack == "approval":
+        receipt["approval"]["by"] = "agent"
+
+    migrated_text = _privacy_record_v2(receipt, baseline=baseline, context=context,
+                                       chain=chain, extra_fields=after_extra)
+    if attack == "approvals":
+        migrated_text = _with_expanded_approval(migrated_text, "Synthetic reviewer B")
+    target.write_text(migrated_text, encoding="utf-8")
+    head = _commit(repo, "invalid paired-baseline migration")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    assert not _baseline_result(payload)["passed"]
+
+
+@pytest.mark.parametrize("vendored", [False, True], ids=["source", "standalone"])
+def test_v2_merge_rejects_raw_parent_difference_omitted_by_history_snapshot(
+    tmp_path: Path, vendored: bool,
+) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    main = _git(repo, "branch", "--show-current")
+    target = repo / RECORD
+    _git(repo, "checkout", "-qb", "side")
+    target.write_text(_record(OLD).replace("**Target:** example", "**Target:** side value"), encoding="utf-8")
+    _commit(repo, "side changes only Target")
+    _git(repo, "checkout", main)
+    (repo / "main.txt").write_text("main\n", encoding="utf-8")
+    _commit(repo, "main changes only an unrelated file")
+    _git(repo, "merge", "--no-commit", "--no-ff", "-s", "ours", "side")
+    target.write_text(_privacy_record_v2(_receipt_v2(base)), encoding="utf-8")
+    head = _commit(repo, "attempt v2 migration from unequal raw parents")
+    code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
+    assert code == 2
+    result = _baseline_result(payload)
+    assert not result["passed"]
+    assert "pre-redaction identity" in result["detail"]
 
 
 @pytest.mark.parametrize("existing", [False, True])
@@ -448,20 +651,25 @@ def test_privacy_migration_rejects_invalid_transition(tmp_path: Path, attack: st
     assert "request:1" not in _baseline_result(payload)["detail"]
 
 
+@pytest.mark.parametrize("version", [1, 2], ids=["v1", "v2"])
 @pytest.mark.parametrize("attack", ["remove", "tamper", "second-source", "delete", "rename"])
-def test_privacy_receipt_history_cannot_be_repaired_by_restoration(tmp_path: Path, attack: str) -> None:
+def test_privacy_receipt_history_cannot_be_repaired_by_restoration(
+    tmp_path: Path, attack: str, version: int,
+) -> None:
     repo, base = _repo(tmp_path, {RECORD: OLD})
     target = repo / RECORD
-    receipt = _receipt(base)
-    good = _privacy_record(receipt)
+    receipt = _receipt(base) if version == 1 else _receipt_v2(base)
+    make_record = _privacy_record if version == 1 else _privacy_record_v2
+    good = make_record(receipt)
     target.write_text(good, encoding="utf-8")
     _commit(repo, "approved migration")
     if attack == "remove":
-        target.write_text(_privacy_record(None), encoding="utf-8")
+        target.write_text(make_record(None), encoding="utf-8")
     elif attack == "tamper":
-        target.write_text(_privacy_record({**receipt, "reason": "Changed receipt"}), encoding="utf-8")
+        target.write_text(make_record({**receipt, "reason": "Changed receipt"}), encoding="utf-8")
     elif attack == "second-source":
-        target.write_text(_privacy_record(receipt, baseline={**OLD, "source": "Another source"}), encoding="utf-8")
+        changed = {**OLD, **receipt["replacements"], "source": "Another source"}
+        target.write_text(make_record(receipt, baseline=changed), encoding="utf-8")
     elif attack == "delete":
         target.unlink()
     else:
@@ -476,14 +684,31 @@ def test_privacy_receipt_history_cannot_be_repaired_by_restoration(tmp_path: Pat
     assert not _baseline_result(payload)["passed"]
 
 
-def test_removed_historical_receipt_is_detected_without_current_receipt(tmp_path: Path) -> None:
+@pytest.mark.parametrize("version", [1, 2], ids=["v1", "v2"])
+def test_removed_historical_receipt_is_detected_without_current_receipt(
+    tmp_path: Path, version: int,
+) -> None:
     repo, base = _repo(tmp_path, {RECORD: OLD})
     target = repo / RECORD
-    target.write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    receipt = _receipt(base) if version == 1 else _receipt_v2(base)
+    make_record = _privacy_record if version == 1 else _privacy_record_v2
+    target.write_text(make_record(receipt), encoding="utf-8")
     _commit(repo, "approved migration")
     target.write_text(_record(OLD), encoding="utf-8")
     head = _commit(repo, "remove all migration evidence from current record")
     _, payload = _check(repo, base, head, [RECORD])
+    assert not _baseline_result(payload)["passed"]
+
+
+def test_v1_receipt_cannot_be_upgraded_to_v2(tmp_path: Path) -> None:
+    repo, base = _repo(tmp_path, {RECORD: OLD})
+    target = repo / RECORD
+    target.write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    _commit(repo, "approved source-only migration")
+    target.write_text(_privacy_record_v2(_receipt_v2(base)), encoding="utf-8")
+    head = _commit(repo, "attempt receipt upgrade")
+    code, payload = _check(repo, base, head, [RECORD])
+    assert code == 2
     assert not _baseline_result(payload)["passed"]
 
 
@@ -580,7 +805,10 @@ def test_vendored_checker_accepts_approved_source_migration(tmp_path: Path, path
 
 
 @pytest.mark.parametrize("renamed", [False, True])
-def test_privacy_migration_cannot_repair_pre_migration_identity_loss(tmp_path: Path, renamed: bool) -> None:
+@pytest.mark.parametrize("version", [1, 2], ids=["v1", "v2"])
+def test_privacy_migration_cannot_repair_pre_migration_identity_loss(
+    tmp_path: Path, renamed: bool, version: int,
+) -> None:
     repo, anchor = _repo(tmp_path, {RECORD: OLD})
     target = repo / RECORD
     other_path = ".agent-workflow/tasks/temporary.md"
@@ -594,7 +822,9 @@ def test_privacy_migration_cannot_repair_pre_migration_identity_loss(tmp_path: P
     else:
         target.write_text(_record(OLD), encoding="utf-8")
     _commit(repo, "restore exact old baseline")
-    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    receipt = _receipt(anchor) if version == 1 else _receipt_v2(anchor)
+    make_record = _privacy_record if version == 1 else _privacy_record_v2
+    target.write_text(make_record(receipt), encoding="utf-8")
     head = _commit(repo, "attempt source migration after identity loss")
     code, payload = _check(repo, anchor, head, [RECORD])
     assert code == 2
@@ -622,8 +852,9 @@ def test_privacy_migration_identity_check_starts_at_authoritative_anchor(tmp_pat
     {**OLD, "source": "Temporary synthetic source"},
     {**OLD, "scope": "Temporary baseline scope"},
 ], ids=["missing-baseline", "changed-source", "changed-functional-baseline"])
+@pytest.mark.parametrize("version", [1, 2], ids=["v1", "v2"])
 def test_privacy_migration_cannot_repair_restored_pre_migration_baseline(
-    tmp_path: Path, intermediate: dict | None,
+    tmp_path: Path, intermediate: dict | None, version: int,
 ) -> None:
     repo, anchor = _repo(tmp_path, {RECORD: OLD})
     target = repo / RECORD
@@ -631,7 +862,9 @@ def test_privacy_migration_cannot_repair_restored_pre_migration_baseline(
     _commit(repo, "temporarily remove or change baseline")
     target.write_text(_record(OLD), encoding="utf-8")
     _commit(repo, "restore exact old baseline")
-    target.write_text(_privacy_record(_receipt(anchor)), encoding="utf-8")
+    receipt = _receipt(anchor) if version == 1 else _receipt_v2(anchor)
+    make_record = _privacy_record if version == 1 else _privacy_record_v2
+    target.write_text(make_record(receipt), encoding="utf-8")
     head = _commit(repo, "attempt source migration after baseline restoration")
     code, payload = _check(repo, anchor, head, [RECORD])
     assert code == 2
@@ -684,7 +917,10 @@ def test_malformed_receipt_label_requires_history_without_refs(tmp_path: Path) -
 
 
 @pytest.mark.parametrize("vendored", [False, True], ids=["source", "vendored"])
-def test_unambiguous_merge_can_introduce_privacy_receipt(tmp_path: Path, vendored: bool) -> None:
+@pytest.mark.parametrize("version", [1, 2], ids=["v1", "v2"])
+def test_unambiguous_merge_can_introduce_privacy_receipt(
+    tmp_path: Path, vendored: bool, version: int,
+) -> None:
     repo, base = _repo(tmp_path, {RECORD: OLD})
     main = _git(repo, "branch", "--show-current")
     _git(repo, "checkout", "-qb", "side")
@@ -694,7 +930,9 @@ def test_unambiguous_merge_can_introduce_privacy_receipt(tmp_path: Path, vendore
     (repo / "main.txt").write_text("main\n", encoding="utf-8")
     _commit(repo, "main change preserving record identity")
     _git(repo, "merge", "--no-commit", "--no-ff", "side")
-    (repo / RECORD).write_text(_privacy_record(_receipt(base)), encoding="utf-8")
+    receipt = _receipt(base) if version == 1 else _receipt_v2(base)
+    make_record = _privacy_record if version == 1 else _privacy_record_v2
+    (repo / RECORD).write_text(make_record(receipt), encoding="utf-8")
     head = _commit(repo, "unambiguous merge migration")
     code, payload = _check(repo, base, head, [RECORD], vendored=vendored)
     assert code in (0, 1), json.dumps(payload, indent=2)

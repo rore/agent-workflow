@@ -289,7 +289,7 @@ class BehaviorChangeApproval:
 
 @dataclass(frozen=True)
 class BaselinePrivacyMigration:
-    """Immutable source-only receipt; Git history establishes its bindings."""
+    """Immutable privacy receipt; Git history establishes its bindings."""
 
     schema_version: int
     record_path: str
@@ -871,8 +871,9 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     value = _exact_keys(_load_integrity_json(text, label), frozenset({
         "schema_version", "record_path", "anchor_commit", "replacements", "reason", "approval",
     }), label)
-    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
-        raise WorkRecordParseError(f"{label}.schema_version must be integer 1")
+    version = value["schema_version"]
+    if type(version) is not int or version not in (1, 2):
+        raise WorkRecordParseError(f"{label}.schema_version must be integer 1 or 2")
     path = _required_json_string(value["record_path"], f"{label}.record_path")
     if (path.startswith("/") or "\\" in path or ":" in path
             or any(part in {"", ".", ".."} for part in path.split("/"))
@@ -881,8 +882,14 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     anchor = _required_json_string(value["anchor_commit"], f"{label}.anchor_commit")
     if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", anchor):
         raise WorkRecordParseError(f"{label}.anchor_commit must be a full canonical Git commit")
-    replacements = _exact_keys(value["replacements"], frozenset({"source"}), f"{label}.replacements")
-    source = _required_json_string(replacements["source"], f"{label}.replacements.source")
+    replacement_keys = ("source",) if version == 1 else (
+        "source", "constraints", "completion_criteria",
+    )
+    replacements = _exact_keys(value["replacements"], frozenset(replacement_keys), f"{label}.replacements")
+    replacements = {
+        key: _required_json_string(replacements[key], f"{label}.replacements.{key}")
+        for key in replacement_keys
+    }
     approval_value = _exact_keys(value["approval"], _APPROVAL_KEYS, f"{label}.approval")
     approval = BehaviorChangeApproval(**{
         key: _required_json_string(approval_value[key], f"{label}.approval.{key}")
@@ -895,7 +902,7 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
             or re.search(r"\b(?:todo|tbd|placeholder|pending|unapproved|not approved|denied|rejected|declined)\b", text, re.I)
             for text in (approval.reference, approval.verbatim))):
         raise WorkRecordParseError(f"{label}.approval requires recorded user approval, not a placeholder")
-    return BaselinePrivacyMigration(1, path, anchor, {"source": source},
+    return BaselinePrivacyMigration(version, path, anchor, replacements,
         _required_json_string(value["reason"], f"{label}.reason"), approval)
 
 
@@ -909,6 +916,25 @@ def extract_requirement_history(text: str) -> dict[str, object]:
         if key != "target":
             result[key] = fields.get(label)
     return result
+
+
+def extract_raw_requirement_history_fields(text: str) -> dict[str, tuple[str, str]]:
+    """Read raw marker fields for the stricter v2 privacy transition check."""
+    block = _extract_block(text)
+    matches = list(_FIELD_HEADER_RE.finditer(block))
+    if not matches:
+        raise WorkRecordParseError("Work Record block contains no '**Label:**' field headers")
+    fields: dict[str, tuple[str, str]] = {}
+    for index, match in enumerate(matches):
+        raw_label = match.group(1)
+        label = raw_label.strip()
+        if label in fields:
+            raise WorkRecordParseError(
+                f"duplicate field {label!r} in Work Record block — each field may appear only once"
+            )
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(block)
+        fields[label] = (match.group(0), block[match.end():end])
+    return fields
 
 
 def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:
@@ -3832,9 +3858,8 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
     old_baseline = before.get("requirement_baseline")
     if old_baseline is None or old_baseline.source is None:
         raise ValueError("privacy migration requires an existing non-null source")
-    approved_source = receipt.replacements["source"]
-    if approved_source == old_baseline.source:
-        raise ValueError("privacy migration replacement must change the source")
+    replacements = receipt.replacements
+    approved_source = replacements["source"]
     original_sha = _history_commit(ctx, receipt.anchor_commit)
     if _history_git(ctx, "merge-base", "--is-ancestor", original_sha, introduction,
                     allow_failure=True).returncode:
@@ -3858,15 +3883,68 @@ def _privacy_baseline(ctx: CheckerContext, base: str, head: str, path: str,
             raise ValueError("privacy migration cannot repair a deleted or renamed Work Record")
         if sha != introduction and version.get("requirement_baseline") != old_baseline:
             raise ValueError("privacy migration cannot repair a missing or changed pre-redaction baseline")
-    migrated = dataclasses.replace(old_baseline, source=approved_source)
     introduced = snapshot(introduction)
     assert introduced is not None
-    if introduced.get("requirement_baseline") != migrated:
-        raise ValueError("privacy transition changed protected baseline fields")
-    for key in (*_TASK_CONTEXT_FIELDS.values(), "behavior_changes"):
-        default = [] if key == "behavior_changes" else None
-        if before.get(key, default) != introduced.get(key, default):
-            raise ValueError("privacy transition changed Task Context or the existing change chain")
+    if receipt.schema_version == 1:
+        if approved_source == old_baseline.source:
+            raise ValueError("privacy migration replacement must change the source")
+        migrated = dataclasses.replace(old_baseline, source=approved_source)
+        if introduced.get("requirement_baseline") != migrated:
+            raise ValueError("privacy transition changed protected baseline fields")
+        for key in (*_TASK_CONTEXT_FIELDS.values(), "behavior_changes"):
+            default = [] if key == "behavior_changes" else None
+            if before.get(key, default) != introduced.get(key, default):
+                raise ValueError("privacy transition changed Task Context or the existing change chain")
+    else:
+        functional_fields = ("constraints", "completion_criteria")
+        for field in functional_fields:
+            if getattr(old_baseline, field) != before.get(field):
+                raise ValueError("privacy migration requires the pre-transition functional values to match baseline")
+        if any(change.target in {f"task-context.{field}" for field in functional_fields}
+               for change in before.get("behavior_changes", [])):
+            raise ValueError("privacy migration cannot replace fields already targeted by the change chain")
+        for field in ("source", *functional_fields):
+            if replacements[field] == getattr(old_baseline, field):
+                raise ValueError("privacy migration replacements must change every approved field")
+        migrated = dataclasses.replace(old_baseline, **replacements)
+        if introduced.get("requirement_baseline") != migrated:
+            raise ValueError("privacy transition changed protected baseline fields")
+        if any(introduced.get(field) != replacements[field] for field in functional_fields):
+            raise ValueError("privacy transition did not atomically replace the functional fields")
+
+        parent_shas = _history_git(ctx, "rev-list", "--parents", "-n", "1", introduction).stdout.decode("ascii").split()[1:]
+        if len(parent_shas) != len(parents):
+            raise ValueError("privacy migration has missing or ambiguous pre-redaction identity")
+        parent_fields = []
+        for parent_sha in parent_shas:
+            parent_blob = blob_at(parent_sha)
+            if parent_blob is None:
+                raise ValueError("privacy migration has a missing pre-transition record")
+            try:
+                parent_fields.append(extract_raw_requirement_history_fields(parent_blob))
+            except WorkRecordParseError:
+                raise ValueError("historical Work Record fields are malformed") from None
+        if any(fields != parent_fields[0] for fields in parent_fields[1:]):
+            raise ValueError("privacy migration has missing or ambiguous pre-redaction identity")
+        try:
+            introduced_fields = extract_raw_requirement_history_fields(blob_at(introduction) or "")
+        except WorkRecordParseError:
+            raise ValueError("historical Work Record fields are malformed") from None
+        original_fields = parent_fields[0]
+        mutable_fields = {"Requirement baseline", "Constraints", "Completion criteria"}
+        if ("Baseline privacy migration" in original_fields
+                or "Baseline privacy migration" not in introduced_fields):
+            raise ValueError("privacy receipt must be introduced atomically with its replacements")
+        for label in mutable_fields:
+            if (label not in original_fields or label not in introduced_fields
+                    or original_fields[label][0] != introduced_fields[label][0]):
+                raise ValueError("privacy migration cannot add, remove or relabel a protected field")
+        original_other = {label: field for label, field in original_fields.items()
+                          if label not in mutable_fields}
+        introduced_other = {label: field for label, field in introduced_fields.items()
+                            if label not in mutable_fields | {"Baseline privacy migration"}}
+        if original_other != introduced_other:
+            raise ValueError("privacy transition changed an unrelated marker field")
     def descendants_to(tip: str) -> set[str]:
         commits = _history_git(ctx, "rev-list", "--ancestry-path", "--max-count=10001",
                                f"{introduction}..{tip}").stdout.decode("ascii").splitlines()
