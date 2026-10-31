@@ -123,3 +123,5 @@ Target surfaces: existing parser and historical extraction in `core/work_record/
 
 Guidance propagation retains the conditional load point and existing token ceilings. Original historical authority/hold mapping stays private; public wording and approval evidence are the exact approved safe text. Separate final human result/architecture review remains required after the concrete implementation and verification are ready.
 
+Known-target draft scan found additional already-public private provenance in the existing Plan-review metadata and a named historical reviewer in Plan. The approved three-key replacement deliberately preserves those unrelated fields, so it cannot by itself finish full current-content cleanup. Routed a separate ordinary metadata-redaction proposal to the manager under the standing privacy directive; no extra receipt keys or checker exceptions are proposed. Preserve the same reviewer and acceptance obligations, original private evidence and exact raw-field equality at the later v2 introduction. Engine implementation/testing continues independently; no real target or metadata mutation has occurred at this checkpoint.
+
