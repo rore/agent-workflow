@@ -70,9 +70,11 @@
 
 ## Result review
 
-- Agent technical review: independent non-implementer result and architecture review accepted f8bc4af56015b9b059708c53e7ff88502ba924b6 after the explicit excluded-scope correction. Inspected the full diff, connected identity/delegation guidance, SPEC, decision rationale and all operating mirrors. No blocking finding remains.
-- Reviewed revision: 154e59309230eb59d512b9580be9c9986d77c865, carrying forward the source/architecture review of f8bc4af56015b9b059708c53e7ff88502ba924b6 and reviewing the three existing assertion updates.
-- Verification adequacy: independent review accepts reuse of the eight passing layers and earlier package checks with the entire corrected bootstrap rerun passing. No test coverage was removed, and repeating unrelated history tests locally would add no useful assurance. Final-head CI and separate human result/architecture review remain required; no runtime adoption is claimed.
+Agent technical review: independent non-implementer result and architecture review accepted f8bc4af56015b9b059708c53e7ff88502ba924b6 after the explicit excluded-scope correction. Inspected the full diff, connected identity/delegation guidance, SPEC, decision rationale and all operating mirrors. Review carried forward to the three existing assertion updates at the reviewed revision below. No blocking finding remains.
+
+Reviewed revision: 154e59309230eb59d512b9580be9c9986d77c865
+
+Verification adequacy: independent review accepts reuse of the eight passing layers and earlier package checks with the entire corrected bootstrap rerun passing. No test coverage was removed, and repeating unrelated history tests locally would add no useful assurance. Final-head CI and separate human result/architecture review remain required; no runtime adoption is claimed.
 - Shared-task disposition: where one owner genuinely retains requirements, baseline, approvals, authoritative State, integration and combined final acceptance, multiple contributors/checkouts require no migration. Independently progressing workflow/review tasks remain separate. No consumer task was changed or retrospectively split.
 - Everyday installations are unchanged. A later owner-authorized sync could update only operating-mode.md and manifest.txt in each existing repository-local skill mirror, with backups, compatibility verification and rollback; it requires its own exact destination/owner window. No global or runtime configuration change is proposed.
 
