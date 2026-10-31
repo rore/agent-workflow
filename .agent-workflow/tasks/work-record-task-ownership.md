@@ -40,7 +40,7 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -51,6 +51,8 @@
 - Regenerated dist and both isolated repository skill mirrors. Actual operating-mode budget is 1897/1900 tokens with the existing ceiling unchanged. Full verification and independent result review are next.
 - Independent result review found one compression regression: delegation lost explicit excluded scope. Restored allowed/excluded scope at f8bc4af56015b9b059708c53e7ff88502ba924b6 and regenerated mirrors. Independent technical and architecture review accepted the correction; all 23 final instruction budgets pass, operating-mode 1898/1900.
 - The full suite passed its first eight layers and the package parity, install-sync, references, install-probe and line-ending checks, then stopped at three existing bootstrap assertions matching superseded delegation sentences. Updated only those assertions to the reviewed equivalent wording; no new test or coverage removal. Focused bootstrap rerun is in progress. This is required test maintenance within the existing instruction change, not a new behavior or gate.
+- Complete focused bootstrap rerun passed with exit 0 on the corrected content at 154e59309230eb59d512b9580be9c9986d77c865. Independent review accepted the three assertion updates and reuse of the preceding passing layers. Advanced to Ready for review; no final-revision full-suite pass is claimed until CI provides it.
+- Removed the temporary task-only interpreter junction nonrecursively; the existing interpreter remains intact. Only this task checkout and isolated test repositories were changed.
 - Trigger 2 dropped: the assignment clarification and corrected compression are covered by this change; no additional distinct upstream defect requires a separate report.
 
 ## Plan review
@@ -64,18 +66,18 @@
 - Initial base: 00cf3a4cee15f1a276933c159552ac2e123f56c9, freshly fetched main.
 - No exact external feature/source tuple was supplied; Relationships remains unverified without guessed identifiers.
 - Actual committed-diff checker has no blocking failures; architecture-review remains an advisory pending separate human result review. The immutable task baseline is unchanged.
-- Full tests/run-all.sh started at 09df756d7609419eb1ac170e4a880334d02d5986 and exited 2 at the final bootstrap test's stale literal assertions. All eight preceding layers and the earlier package checks passed. The source correction during that run was only allowed/excluded delegation wording and generated manifests at f8bc4af56015b9b059708c53e7ff88502ba924b6; final budgets were rechecked. Subsequent changes update only the three obsolete test literals. Do not describe the original full-suite exit as passing; focused bootstrap verification remains pending.
+- Full tests/run-all.sh started at 09df756d7609419eb1ac170e4a880334d02d5986 and exited 2 at the final bootstrap test's stale literal assertions. All eight preceding layers and the earlier package checks passed. The source correction during that run was only allowed/excluded delegation wording and generated manifests at f8bc4af56015b9b059708c53e7ff88502ba924b6; final budgets were rechecked. Subsequent changes update only the three obsolete test literals. The complete focused bootstrap rerun passed with exit 0; its corrected test/source content matches 154e59309230eb59d512b9580be9c9986d77c865. Original failure evidence is retained locally. Exact published-head full-suite CI remains required before merge.
 
 ## Result review
 
 - Agent technical review: independent non-implementer result and architecture review accepted f8bc4af56015b9b059708c53e7ff88502ba924b6 after the explicit excluded-scope correction. Inspected the full diff, connected identity/delegation guidance, SPEC, decision rationale and all operating mirrors. No blocking finding remains.
-- Reviewed revision: f8bc4af56015b9b059708c53e7ff88502ba924b6.
-- Verification adequacy: semantic scenario review plus existing budgets, package, links and full repository gates is proportionate for this instruction-only change. Approval is conditional on full-suite completion, accurate final State/recovery and separate human result review; no runtime adoption is claimed.
+- Reviewed revision: 154e59309230eb59d512b9580be9c9986d77c865, carrying forward the source/architecture review of f8bc4af56015b9b059708c53e7ff88502ba924b6 and reviewing the three existing assertion updates.
+- Verification adequacy: independent review accepts reuse of the eight passing layers and earlier package checks with the entire corrected bootstrap rerun passing. No test coverage was removed, and repeating unrelated history tests locally would add no useful assurance. Final-head CI and separate human result/architecture review remain required; no runtime adoption is claimed.
 - Shared-task disposition: where one owner genuinely retains requirements, baseline, approvals, authoritative State, integration and combined final acceptance, multiple contributors/checkouts require no migration. Independently progressing workflow/review tasks remain separate. No consumer task was changed or retrospectively split.
 - Everyday installations are unchanged. A later owner-authorized sync could update only operating-mode.md and manifest.txt in each existing repository-local skill mirror, with backups, compatibility verification and rollback; it requires its own exact destination/owner window. No global or runtime configuration change is proposed.
 
 ## Recovery
 
 - Branch: feat/work-record-task-ownership. Work Record: agent-workflow:work-record-task-ownership at .agent-workflow/tasks/work-record-task-ownership.md.
-- Last reviewed source revision: f8bc4af56015b9b059708c53e7ff88502ba924b6. Required full suite is running; next record its actual result, advance State only on passing verification, publish the reviewed PR and obtain separate human result/architecture review before merge.
+- Last reviewed source/test revision: 154e59309230eb59d512b9580be9c9986d77c865. Local verification is complete with the original failure and passing focused repair accurately recorded. Next publish the reviewed PR, verify exact-head CI and review threads, then obtain separate human result/architecture review before merge. No live-sync window is authorized; keep everyday installations unchanged.
 - Prior completed privacy work and necessary private evidence remain in their retained checkout.
