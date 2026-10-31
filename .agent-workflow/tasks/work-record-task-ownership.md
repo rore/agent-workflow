@@ -29,20 +29,29 @@
 
 **Plan:** First clarify SPEC section 6: one accountable owner and authoritative implementation line per task at a time; independently implemented/reviewed parallel delivery tasks get distinct records linked to the same existing feature or parent, with no mandatory parent. Preserve one task identity for bounded assistance, manager-owned shared tasks, handoffs, replacement checkouts and ordinary Git copies. Reconcile conflicting supplied identity with the assigner before starting an independent delivery; do not invent a competing record. Then update operating-mode Step 2 and delegation wording to apply that distinction, compacting only the same identity/delegation instructions to stay under the unchanged ceiling. Reuse sections 8.2 and 10 rather than duplicating decomposition. Append one rationale decision, regenerate dist and isolated repository skill mirrors. Stop on changed responsibility/enforcement scope or unresolved assignment conflict. Required independent technical plan/result reviews and separate final human result review remain in force.
 
-**Verification plan:** Independent scenario review: two independently delivered parallel tasks; bounded research/review/implementation helpers; manager-owned shared task; same-task supplied identity on another branch or replacement checkout; handoff; ordinary Git copies; conflicting supplied identity for a new delivery; absent feature/parent; authoritative existing feature link. Check no schema/checker/gate/runtime/config changes and no privacy disclosures. Run existing instruction budgets, links/package parity and the required full tests/run-all.sh once before pushing; run local checker after each State change with actual Redline verdict. Do not add tests that merely match prose or increase ceilings.
+**Verification plan:**
+- manual: Independent scenario review covers two independently delivered parallel tasks; bounded research/review/implementation helpers; manager-owned shared task; same-task supplied identity on another branch or replacement checkout; handoff; ordinary Git copies; conflicting supplied identity for a new delivery; absent feature/parent; authoritative existing feature link.
+- manual: Inspect the complete diff for no schema/checker/gate/runtime/config changes and no privacy disclosures.
+- Required repository gates -> Run existing instruction budgets, links/package parity and the full tests/run-all.sh once before pushing; run local checker after each State change with actual Redline verdict. Do not add tests that merely match prose or increase ceilings.
 
-**Plan review:** Pending independent technical review.
+**Plan review:** Agent technical review: independent architecture and plan review recorded under Plan review below, covering c6983b5021d475915c59dfc8146d94875ca453f7 and subsequent Verification plan/Exceptions syntax corrections. Approved with no blocking findings; keep manager-owned independent deliveries distinct and do not equate implementation line with physical checkout.
 
 **Approvals:** Approved by user 2026-10-31: "ok, so make sure we update what is needed" for the presented bounded task-ownership rule. Exact approval provenance is retained privately. Separate final-result review remains pending.
 
-**Exceptions:** None.
+**Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-- Established context and immutable baseline before implementation planning. Focused discovery and bounded plan are complete; blocked only on independent technical plan review. Supplied human approval covers the presented rule; no new implementation approval requested.
+- Established context and immutable baseline before implementation planning. Focused discovery and bounded plan are complete. Independent plan review approved; supplied human approval covers the presented rule. Ready for bounded implementation.
+
+## Plan review
+
+- Independent non-implementer technical review approved the plan at c6983b5021d475915c59dfc8146d94875ca453f7 plus syntax-only Verification plan/Exceptions corrections. Inspected this Work Record, AGENTS.md, SPEC sections 6, 8.2, 9.4 and 10, operating-mode identity/delegation guidance, CONTRIBUTING and Redline policy.
+- Architecture judgment: clarify SPEC section 6 and existing identity/delegation decision points; existing decomposition and identity rules suffice. No schema, registry, checker or new gate is justified.
+- Scenario coverage accepted. Result review must confirm manager ownership cannot exempt independent deliveries and implementation line does not require one physical checkout or prohibit helpers. Final wording, checks and separate human result review remain outstanding.
 
 ## Evidence
 
@@ -52,5 +61,5 @@
 ## Recovery
 
 - Branch: feat/work-record-task-ownership. Work Record: agent-workflow:work-record-task-ownership at .agent-workflow/tasks/work-record-task-ownership.md.
-- Next: obtain independent technical plan review, then implement within the existing human approval.
+- Next: implement the reviewed plan, regenerate isolated repository mirrors, run the required verification and request independent result review.
 - Prior completed privacy work and necessary private evidence remain in their retained checkout.
