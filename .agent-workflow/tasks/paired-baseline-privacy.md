@@ -14,7 +14,7 @@ Source: the maintainer-authorized privacy cleanup and explicit approval of the b
 {"schema_version":1,"sources":null,"pull_requests":[]}
 **Risk:** High
 **Complexity:** Moderate
-**Reason:** Proposed normative immutability and approval contract affects every consuming checker; SPEC is red with architecture-review required. Current preparation changes only this blue Work Record.
+**Reason:** Normative immutability and approval contract affects every consuming checker; SPEC is red with architecture-review required. High governance risk and Moderate complexity across parser, history verification, packages and the bound record transition.
 **Discovery:** SPEC 9.1/13.3 and PR 59 provide one strict source-only receipt, parser/render/backend exports, history validation, standalone packaging and source/vendored tests. The known record also contains private ownership/hold/reviewer labels in both baseline and current Constraints/Completion criteria. Ordinary equivalent change entries retain the private baseline and exact before text, so they cannot complete this cleanup. Source-only version 1 deliberately rejects these functional keys.
 **Material assumptions:** Original designated roles and holds remain authoritative; stop if equivalence cannot be established privately. The selected trusted anchor must be revalidated after base movement.
 **Plan:** Implement the unchanged independently reviewed contract below: SPEC first; extend the existing parser/history verifier and tests; propagate conditional guidance and isolated generated packages; revalidate the exact approved target binding, then commit the source and two baseline/current functional pairs with their receipt atomically. Preserve historical referents and all other fields/chains. Run focused and full verification, independent result review and CI, then present the distinct High final-result/architecture decision. Stop on anchor movement, non-equivalence, uncovered scope or failed integrity checks.
@@ -33,15 +33,15 @@ Source: the maintainer-authorized privacy cleanup and explicit approval of the b
 
 ## Recovery
 
-2026-10-31 resume: explicit human approval covers the bounded extension and reviewed replacement wording; exact verbatim evidence is recorded above and privately. Fresh fetch confirms main remains the reviewed d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4. Next: verify the selected anchor, implement the accepted plan and retain the separate final human result gate. Earlier preparation-only notes below are historical, not current blockers.
+Current branch: `feat/paired-baseline-privacy`. The explicit 2026-10-31 human approval is recorded verbatim above and privately. The reviewed plan at `4cbcc4a245b6e36cc79330a3709142631e8c5b9e` is implemented; independent result review accepted `e1c3424b7b0a20ca66f95d704fafc09ccb228270`. Selected trusted anchor remains the exact approved `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`.
 
-Current branch: `feat/paired-baseline-privacy`. Reviewed decision package: `8b74472a0b62a86d151fa935faa05326bd97f9c9`; technical-review candidate: `4cbcc4a245b6e36cc79330a3709142631e8c5b9e`. Context preceded discovery and detailed planning. Independent architecture/technical plan review is complete. The manager's transport acknowledgment is confirmed; it does not establish action or approval. Next: the manager presents one concrete human decision. No implementation or protected mutation is authorized by this record. Retain the isolated checkout and ignored original/comparison evidence for the pending decision.
+Ordinary metadata redaction `2842d20` precedes atomic v2 migration `2fca3a7574dd472d918ecf3ea3f64cd193905dca`. Preserve both through normal merge. Current pending steps are full-suite completion, current-head CI, separate High human final-result/architecture review and verified delivery; no duplicate plan/scope approval is needed. Revalidate main/binding before protected changes or delivery. Retain the isolated checkout and ignored original/comparison evidence while those gates remain open.
 
-## Proposed exact transformation
+## Approved exact transformation
 
-This is a decision package, not an installed capability or a committed migration receipt. Target record: `.agent-workflow/tasks/core-behavior-preservation.md`. After PR 60 merged, the existing checker selected trusted base `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4` for this record with valid base/head history. Its protected fields and existing chain remain unchanged from the initial proposal. If this base moves again, re-run the existing selector and private comparison, update this proposed binding, and review any material difference before mutation. Never silently rebind an approved or committed receipt.
+Target record: `.agent-workflow/tasks/core-behavior-preservation.md`. The exact reviewed replacement is committed on this branch with its receipt. After PR 60 merged, the existing checker selected trusted base `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`; repeated actual base/head validation confirms that same approval binding. If the base moves again, re-run the selector and private comparison and surface the precise refreshed decision before mutation or delivery. Never silently rebind an approved or committed receipt.
 
-Only these replacements are proposed. The two functional strings replace their matching baseline and current-context values together. In every reference below, the original task is the target record above at the exact bound revision, not this planning task or today's holder of a global role.
+Only these three replacements are authorized and applied by v2. The two functional strings replace their matching baseline and current-context values together. In every reference below, the original task is the target record above at the exact bound revision, not this planning task or today's holder of a global role.
 
 Source:
 
@@ -57,11 +57,11 @@ Completion criteria:
 
 The private comparison retains the exact original referents and verifies that the safe labels resolve to those same designated owner, reviewer and hold. It does not substitute current role holders, reinterpret the existing slash acceptance wording, release a hold or transfer ownership. The existing dynamic requirement for exact current owner windows remains dynamic and unchanged. If a historical referent cannot be established, stop rather than invent an identity or approval.
 
-## Bounded proposed contract
+## Bounded contract
 
 Reuse the existing Baseline privacy migration field, immutable receipt type, strict JSON loader, Git selector, literal-path history reader, transition/retention checks and packaging. No new registry, waiver, config, generic migration framework or runtime integration.
 
-Version 1 remains exactly source-only. Proposed version 2 retains the same six top-level keys and approval shape, but requires replacements to contain exactly `source`, `constraints` and `completion_criteria`, each a nonempty changed string. This deliberately covers the known three-key cleanup; subsets, extra functional keys and version upgrades of an existing receipt are excluded. Existing non-null source requirement remains. Older installations reject version 2 until explicitly adopted; do not claim backward execution support.
+Version 1 remains exactly source-only. Version 2 retains the same six top-level keys and approval shape, but requires replacements to contain exactly `source`, `constraints` and `completion_criteria`, each a nonempty changed string. This deliberately covers the known three-key cleanup; subsets, extra functional keys and version upgrades of an existing receipt are excluded. Existing non-null source requirement remains. Older installations reject version 2 until explicitly adopted; do not claim backward execution support.
 
 Before introduction, both selected functional current-context values must equal their baseline values and the existing Behavior changes chain must have no entry targeting either field. This avoids rewriting historical before/after chains. The existing chain remains byte-for-byte unchanged at introduction, including unrelated entries. Outcome, Scope, Target, approval evidence, classifications, State and every other marker field remain unchanged at that transition. Compare historical raw fields without imposing today's full-record schema on legacy snapshots; do not rely on the current history extractor alone, which omits Target.
 
@@ -73,7 +73,7 @@ After introduction the exact migrated baseline and receipt remain immutable thro
 
 Human and independent review must judge privacy, equivalence, historical identity mapping and approval authenticity. The checker proves structure, exact text binding and available Git continuity; it cannot determine semantic equivalence, authenticate authorship/repository authority, recover inaccessible provenance or detect rewritten supplied history. A materially changed obligation must use existing requirement-change authority; calling it a privacy redaction does not authorize it.
 
-## Surfaces and sequence if approved
+## Approved implementation sequence
 
 1. Edit normative `docs/SPEC.md` first, then append the substantive rationale to `docs/DECISIONS.md` and propagate the narrow contract to `docs/ENFORCEMENT.md` and conditional migration guidance.
 2. Extend existing `core/work_record/parser.py` strict receipt parsing/type/render and historical extraction only as required; preserve exports/backend behavior in `core/work_record/__init__.py`, `backend.py` and `local_backend.py`. Keep passive `relationships.mjs` decoding compatible without turning it into an enforcement mechanism. Do not invent a separate JSON Schema if the existing receipt is validated in the parser.
@@ -82,7 +82,7 @@ Human and independent review must judge privacy, equivalence, historical identit
 5. Add focused cases to existing parser/backend, checker history and standalone packaging test surfaces, then run the required full suite. Obtain independent technical/result and separate High human result review including architecture checkpoint before normal delivery.
 6. Apply the known record only under an approval explicitly covering the exact transformation and still-valid binding. Recheck the selected anchor immediately before any mutation and again before committing the atomic transition; base movement requires revalidation and a refreshed concrete decision when its binding changes. If code delivery changes the trusted base, obtain the exact updated binding decision before data mutation. No approval is inferred from this plan's preparation or earlier PR 59 approval.
 
-## Proposed verification matrix
+## Verification matrix
 
 | Obligation | Focused evidence |
 |---|---|
@@ -93,7 +93,7 @@ Human and independent review must judge privacy, equivalence, historical identit
 | Compatibility and consumers | Existing v1, no-receipt/no-ref behavior and existing activation, CRLF, literal-path, NUL, merge and bounded-history regression cases stay green. Exercise v2 through source and generated standalone checker in at least two configured record layouts. |
 | Honest delivery | Private exact role/hold/obligation comparison and public added-content/history scan; focused suites plus `bash tests/run-all.sh`, packaging freshness, required PR CI and independent result review. No live/native-runtime qualification is implied. |
 
-These are planned tests, not executed capability claims. Reuse existing reliable regression coverage instead of duplicating its framework. Semantic misuse cannot be proven rejected by structural tests; the exact original-to-after human judgment remains essential.
+This matrix defines coverage; executed results and remaining gates are recorded below. Existing reliable regression coverage is reused instead of duplicating its framework. Semantic misuse cannot be proven rejected by structural tests; the exact original-to-after human judgment remains essential.
 
 ## Checkpoint: architecture-review
 
@@ -109,7 +109,7 @@ Agent technical review: independent non-implementer architecture/technical PLAN 
 
 Semantic limit: the generic labels bind the same historical owner, reviewer and hold, preserving dynamic current-owner windows and the original acceptance wording. Human review must still establish equivalence, historical referents, truthful provenance and the exact transformation. A moved anchor requires revalidation and a refreshed decision before mutation. The promised raw-field/chain equality requires stricter version-2 comparison than the existing history extractor or parsed dataclass equality alone; version 1 remains unchanged.
 
-## Preparation evidence
+## Historical preparation evidence (2026-10-29)
 
 PR 60 merged at `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`; its merged tree equals tested head `9510db9743dee27e6f15f0751248dc9fec0309b2`. All three required CI jobs passed, including the full suite. Its three actionable automated review threads were corrected, replied to and resolved; the final automated review status was neutral/rate-limited, so no fresh substantive bot review is claimed. Independent partial-result acceptance carried forward to that tested head.
 
@@ -137,7 +137,7 @@ Actual complete changed-path Redline reports RED with the SPEC architecture chec
 
 ## Result review
 
-Agent technical review: independent non-implementer technical RESULT/architecture review accepted at `e1c3424b7b0a20ca66f95d704fafc09ccb228270`, with no substantive findings. Reviewed both committed transitions, exact approved wording/anchor, historical referents and dynamic obligations, preservation of all unrelated raw fields, source/package function parity and both isolated checker copies. Existing adversarial and two-layout coverage is adequate. The reviewer identified one extra trailing blank line in this record; remove it and verify the complete base/head diff.
+Agent technical review: independent non-implementer technical RESULT/architecture review accepted at `e1c3424b7b0a20ca66f95d704fafc09ccb228270`, with no substantive findings. Reviewed both committed transitions, exact approved wording/anchor, historical referents and dynamic obligations, preservation of all unrelated raw fields, source/package function parity and both isolated checker copies. Existing adversarial and two-layout coverage is adequate. The one mechanical finding, an extra trailing blank line in this record, is corrected; the complete base/head whitespace check passes.
 
 Reviewed revision: `e1c3424b7b0a20ca66f95d704fafc09ccb228270`.
 
