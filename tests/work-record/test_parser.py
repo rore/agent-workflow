@@ -29,6 +29,7 @@ from core.work_record import (
     WorkRecord,
     WorkRecordParseError,
     extract_requirement_baseline,
+    extract_raw_requirement_history_fields,
     has_baseline_privacy_migration,
     parse,
     parse_behavior_changes,
@@ -706,8 +707,19 @@ def _privacy_receipt() -> dict:
                          "verbatim": "Yes, approve this exact source-only redaction."}}
 
 
+def _privacy_receipt_v2() -> dict:
+    receipt = _privacy_receipt()
+    receipt["schema_version"] = 2
+    receipt["replacements"] = {
+        "source": "Approved public source",
+        "constraints": "Approved public constraints",
+        "completion_criteria": "Approved public completion criteria",
+    }
+    return receipt
+
+
 @pytest.mark.parametrize("change", [
-    {"schema_version": True}, {"schema_version": 2}, {"schema_version": None},
+    {"schema_version": True}, {"schema_version": 3}, {"schema_version": None},
     {"record_path": "../other.md"}, {"anchor_commit": "a" * 39},
     {"anchor_commit": "A" * 40}, {"replacements": None},
     {"replacements": {"source": None}}, {"replacements": {"source": " "}},
@@ -734,15 +746,61 @@ def test_privacy_receipt_requires_exact_keys_and_rejects_duplicates() -> None:
             parse_baseline_privacy_migration(text)
 
 
+@pytest.mark.parametrize("change", [
+    {"schema_version": True}, {"schema_version": 1}, {"schema_version": 3},
+    {"replacements": {"source": "public", "constraints": "only two"}},
+    {"replacements": {"source": "public", "constraints": "C", "completion_criteria": "D",
+                       "outcome": "unsupported"}},
+    {"replacements": {"source": "public", "constraints": " ", "completion_criteria": "D"}},
+    {"replacements": {"source": "public", "constraints": 1, "completion_criteria": "D"}},
+])
+def test_privacy_receipt_v2_rejects_invalid_shapes(change: dict) -> None:
+    with pytest.raises(WorkRecordParseError):
+        parse_baseline_privacy_migration(json.dumps({**_privacy_receipt_v2(), **change}))
+
+
+def test_privacy_receipt_v2_requires_exact_keys_and_rejects_duplicates() -> None:
+    receipt = _privacy_receipt_v2()
+    for key in receipt:
+        with pytest.raises(WorkRecordParseError):
+            parse_baseline_privacy_migration(json.dumps({k: v for k, v in receipt.items() if k != key}))
+    for key in receipt["replacements"]:
+        with pytest.raises(WorkRecordParseError):
+            parse_baseline_privacy_migration(json.dumps({**receipt,
+                "replacements": {k: v for k, v in receipt["replacements"].items() if k != key}}))
+    duplicate = json.dumps(receipt).replace(
+        '"constraints": "Approved public constraints"',
+        '"constraints": "C1", "constraints": "C2"',
+    )
+    with pytest.raises(WorkRecordParseError, match="duplicate"):
+        parse_baseline_privacy_migration(duplicate)
+
+
 def test_privacy_receipt_round_trips_both_shapes() -> None:
     routine = parse(ROUTINE_PASS.read_text(encoding="utf-8"))
     expanded_path = REPO_ROOT / "tests/fixtures/work-record/expanded-pass/work-record.md"
     expanded = parse_record(expanded_path.read_text(encoding="utf-8"))
-    receipt = parse_baseline_privacy_migration(json.dumps(_privacy_receipt()))
-    routine["baseline_privacy_migration"] = receipt
-    expanded.record["baseline_privacy_migration"] = receipt
-    assert parse(render(routine)) == routine
-    assert parse_record(render_expanded(expanded.record)) == expanded
+    for source in (_privacy_receipt(), _privacy_receipt_v2()):
+        receipt = parse_baseline_privacy_migration(json.dumps(source))
+        routine["baseline_privacy_migration"] = receipt
+        expanded.record["baseline_privacy_migration"] = receipt
+        assert parse(render(routine)) == routine
+        assert parse_record(render_expanded(expanded.record)) == expanded
+
+
+def test_raw_requirement_history_fields_keep_unknown_fields_and_whitespace() -> None:
+    text = (
+        "<!-- agent-workflow:start -->\n"
+        "**Target:** retained target\n"
+        "**Legacy field:** retained value  \n"
+        "**Behavior changes:** []  \n"
+        "**State:** Blocked\n"
+        "<!-- agent-workflow:end -->\n"
+    )
+    fields = extract_raw_requirement_history_fields(text)
+    assert fields["Legacy field"] == ("**Legacy field:** ", "retained value  \n")
+    assert fields["Behavior changes"] == ("**Behavior changes:** ", "[]  \n")
+    assert fields["Target"] == ("**Target:** ", "retained target\n")
 
 
 @pytest.mark.parametrize("whitespace", ["\t", "\u2003", "\n"])

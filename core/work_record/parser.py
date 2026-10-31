@@ -77,7 +77,7 @@ class BehaviorChangeApproval:
 
 @dataclass(frozen=True)
 class BaselinePrivacyMigration:
-    """Immutable source-only receipt; Git history establishes its bindings."""
+    """Immutable privacy receipt; Git history establishes its bindings."""
 
     schema_version: int
     record_path: str
@@ -659,8 +659,9 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     value = _exact_keys(_load_integrity_json(text, label), frozenset({
         "schema_version", "record_path", "anchor_commit", "replacements", "reason", "approval",
     }), label)
-    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
-        raise WorkRecordParseError(f"{label}.schema_version must be integer 1")
+    version = value["schema_version"]
+    if type(version) is not int or version not in (1, 2):
+        raise WorkRecordParseError(f"{label}.schema_version must be integer 1 or 2")
     path = _required_json_string(value["record_path"], f"{label}.record_path")
     if (path.startswith("/") or "\\" in path or ":" in path
             or any(part in {"", ".", ".."} for part in path.split("/"))
@@ -669,8 +670,14 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
     anchor = _required_json_string(value["anchor_commit"], f"{label}.anchor_commit")
     if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", anchor):
         raise WorkRecordParseError(f"{label}.anchor_commit must be a full canonical Git commit")
-    replacements = _exact_keys(value["replacements"], frozenset({"source"}), f"{label}.replacements")
-    source = _required_json_string(replacements["source"], f"{label}.replacements.source")
+    replacement_keys = ("source",) if version == 1 else (
+        "source", "constraints", "completion_criteria",
+    )
+    replacements = _exact_keys(value["replacements"], frozenset(replacement_keys), f"{label}.replacements")
+    replacements = {
+        key: _required_json_string(replacements[key], f"{label}.replacements.{key}")
+        for key in replacement_keys
+    }
     approval_value = _exact_keys(value["approval"], _APPROVAL_KEYS, f"{label}.approval")
     approval = BehaviorChangeApproval(**{
         key: _required_json_string(approval_value[key], f"{label}.approval.{key}")
@@ -683,7 +690,7 @@ def parse_baseline_privacy_migration(text: str) -> BaselinePrivacyMigration:
             or re.search(r"\b(?:todo|tbd|placeholder|pending|unapproved|not approved|denied|rejected|declined)\b", text, re.I)
             for text in (approval.reference, approval.verbatim))):
         raise WorkRecordParseError(f"{label}.approval requires recorded user approval, not a placeholder")
-    return BaselinePrivacyMigration(1, path, anchor, {"source": source},
+    return BaselinePrivacyMigration(version, path, anchor, replacements,
         _required_json_string(value["reason"], f"{label}.reason"), approval)
 
 
@@ -697,6 +704,25 @@ def extract_requirement_history(text: str) -> dict[str, object]:
         if key != "target":
             result[key] = fields.get(label)
     return result
+
+
+def extract_raw_requirement_history_fields(text: str) -> dict[str, tuple[str, str]]:
+    """Read raw marker fields for the stricter v2 privacy transition check."""
+    block = _extract_block(text)
+    matches = list(_FIELD_HEADER_RE.finditer(block))
+    if not matches:
+        raise WorkRecordParseError("Work Record block contains no '**Label:**' field headers")
+    fields: dict[str, tuple[str, str]] = {}
+    for index, match in enumerate(matches):
+        raw_label = match.group(1)
+        label = raw_label.strip()
+        if label in fields:
+            raise WorkRecordParseError(
+                f"duplicate field {label!r} in Work Record block — each field may appear only once"
+            )
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(block)
+        fields[label] = (match.group(0), block[match.end():end])
+    return fields
 
 
 def _parse_behavior_entry(value: object, index: int) -> BehaviorChange:

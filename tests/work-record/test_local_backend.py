@@ -337,13 +337,19 @@ def test_write_rejects_symlink_escape(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("sample", [_sample_routine, _sample_expanded])
-def test_privacy_receipt_backend_round_trip(tmp_path: Path, sample) -> None:
+@pytest.mark.parametrize(("version", "replacements"), [
+    (1, {"source": "Public source"}),
+    (2, {"source": "Public source", "constraints": "Public constraints",
+         "completion_criteria": "Public completion criteria"}),
+])
+def test_privacy_receipt_backend_round_trip(tmp_path: Path, sample, version: int,
+                                            replacements: dict[str, str]) -> None:
     backend = LocalBackend(tmp_path, ROUTINE_TEMPLATE)
     record = sample()
     record.record["baseline_privacy_migration"] = BaselinePrivacyMigration(
-        1, ".agent-workflow/tasks/example.md", "a" * 40,
-        {"source": "Public source"}, "Remove private provenance.",
-        BehaviorChangeApproval("user", "Maintainer approval", "Yes, approve this source redaction."),
+        version, ".agent-workflow/tasks/example.md", "a" * 40,
+        replacements, "Remove private provenance.",
+        BehaviorChangeApproval("user", "Maintainer approval", "Yes, approve this exact migration."),
     )
     backend.write("example", record)
     assert backend.read("example") == record
