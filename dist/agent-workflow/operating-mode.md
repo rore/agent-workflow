@@ -113,7 +113,7 @@ Update at every phase boundary:
 
 Same-task assistance and contributions inherit this Work Record. Supply:
 
-1. Work Record path (don't paraphrase), required updates, scope, and read-only (report/no edits) or material (update record) authority.
+1. Work Record path (don't paraphrase), required updates, allowed/excluded scope, and read-only (report/no edits) or material (update record) authority.
 2. Exact checkout; use explicit workdir or absolute targets. Relative `apply_patch` uses session cwd.
 
 Check the finished subagent's record; repair missing updates before declaring the step done.
