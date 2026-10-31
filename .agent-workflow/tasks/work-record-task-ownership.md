@@ -49,6 +49,9 @@
 - Assignment clarified within the same scope: substantial parallel contributions may share one task when one owner controls requirements, approvals, workflow state, integration and final acceptance. No violation or retrospective migration follows from multiple writers, branches or checkouts. Implementation and independent reviewer received this precision before delivery.
 - Independent technical plan approval carries forward for that precision. Implemented SPEC section 6 first, then operating-mode identity/delegation instructions and the rationale decision. Kept supplied-reference resolver and slug-prefix behavior, exact target checkout and read-only/material authority. No enforcement or schema change.
 - Regenerated dist and both isolated repository skill mirrors. Actual operating-mode budget is 1897/1900 tokens with the existing ceiling unchanged. Full verification and independent result review are next.
+- Independent result review found one compression regression: delegation lost explicit excluded scope. Restored allowed/excluded scope at f8bc4af56015b9b059708c53e7ff88502ba924b6 and regenerated mirrors. Independent technical and architecture review accepted the correction; all 23 final instruction budgets pass, operating-mode 1898/1900.
+- The full suite passed its first eight layers and the package parity, install-sync, references, install-probe and line-ending checks, then stopped at three existing bootstrap assertions matching superseded delegation sentences. Updated only those assertions to the reviewed equivalent wording; no new test or coverage removal. Focused bootstrap rerun is in progress. This is required test maintenance within the existing instruction change, not a new behavior or gate.
+- Trigger 2 dropped: the assignment clarification and corrected compression are covered by this change; no additional distinct upstream defect requires a separate report.
 
 ## Plan review
 
@@ -60,9 +63,19 @@
 
 - Initial base: 00cf3a4cee15f1a276933c159552ac2e123f56c9, freshly fetched main.
 - No exact external feature/source tuple was supplied; Relationships remains unverified without guessed identifiers.
+- Actual committed-diff checker has no blocking failures; architecture-review remains an advisory pending separate human result review. The immutable task baseline is unchanged.
+- Full tests/run-all.sh started at 09df756d7609419eb1ac170e4a880334d02d5986 and exited 2 at the final bootstrap test's stale literal assertions. All eight preceding layers and the earlier package checks passed. The source correction during that run was only allowed/excluded delegation wording and generated manifests at f8bc4af56015b9b059708c53e7ff88502ba924b6; final budgets were rechecked. Subsequent changes update only the three obsolete test literals. Do not describe the original full-suite exit as passing; focused bootstrap verification remains pending.
+
+## Result review
+
+- Agent technical review: independent non-implementer result and architecture review accepted f8bc4af56015b9b059708c53e7ff88502ba924b6 after the explicit excluded-scope correction. Inspected the full diff, connected identity/delegation guidance, SPEC, decision rationale and all operating mirrors. No blocking finding remains.
+- Reviewed revision: f8bc4af56015b9b059708c53e7ff88502ba924b6.
+- Verification adequacy: semantic scenario review plus existing budgets, package, links and full repository gates is proportionate for this instruction-only change. Approval is conditional on full-suite completion, accurate final State/recovery and separate human result review; no runtime adoption is claimed.
+- Shared-task disposition: where one owner genuinely retains requirements, baseline, approvals, authoritative State, integration and combined final acceptance, multiple contributors/checkouts require no migration. Independently progressing workflow/review tasks remain separate. No consumer task was changed or retrospectively split.
+- Everyday installations are unchanged. A later owner-authorized sync could update only operating-mode.md and manifest.txt in each existing repository-local skill mirror, with backups, compatibility verification and rollback; it requires its own exact destination/owner window. No global or runtime configuration change is proposed.
 
 ## Recovery
 
 - Branch: feat/work-record-task-ownership. Work Record: agent-workflow:work-record-task-ownership at .agent-workflow/tasks/work-record-task-ownership.md.
-- Next: implement the reviewed plan, regenerate isolated repository mirrors, run the required verification and request independent result review.
+- Last reviewed source revision: f8bc4af56015b9b059708c53e7ff88502ba924b6. Required full suite is running; next record its actual result, advance State only on passing verification, publish the reviewed PR and obtain separate human result/architecture review before merge.
 - Prior completed privacy work and necessary private evidence remain in their retained checkout.
