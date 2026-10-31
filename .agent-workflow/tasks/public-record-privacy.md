@@ -25,7 +25,7 @@ Source: the maintainer's standing public-documentation privacy directive. The af
 **Plan review:** Agent technical review: independent review accepted the original unprotected plan; the remaining migration plan and wording were separately reviewed and approved under paired-baseline-privacy. See that task for current High plan/result evidence; the earlier partial review grants no broader authority.
 **Approvals:** Not required at this risk level. The standing maintainer directive authorizes current-content privacy removal, not history rewriting or enforcement weakening.
 **Exceptions:** —
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -42,7 +42,7 @@ Actual two-path Redline exits 0. The actual base/head checker has no blocking fa
 
 All nine local layers report success across the hooks and remaining-eight invocations against unchanged source/package code. The remaining-eight run captured exit 0. The hooks log reports successful assertions and layer completion, but its wrapper did not retain a separate raw exit code; it is not claimed as captured. Temporary test setup was removed. Final PR CI must independently pass the complete suite before merge.
 
-## Result review
+## Partial result review (PR 60)
 
 Agent technical review: independent non-implementer accepted the partial result and unchanged-plan reuse at 42f6d2a49a259746b8c3eaf9edea806e38ea1803 after correcting its privacy and stale-route findings. No new actionable findings. Authority boundaries, verification distinctions and protected content are preserved.
 
@@ -52,7 +52,15 @@ Verification adequacy: sufficient for partial publication, conditional on final 
 
 ## Recovery
 
-Current continuation: `feat/paired-baseline-privacy`, record [paired-baseline-privacy.md](paired-baseline-privacy.md). PR 60 delivered the partial cleanup. Remaining protected text and ordinary metadata are now implemented by the separately approved High task; that task owns full verification, CI, separate human final-result/architecture approval and normal-merge delivery preserving both transitions. This original full-cleanup record remains Blocked on those delivery gates, not on an unsupported source-only route. Preserve private originals and report historical exposure; no live changes or history rewrite. Canonical provider tuples were not supplied, so sources remains unresolved.
+Completed implementation is owned by `feat/paired-baseline-privacy`, record [paired-baseline-privacy.md](paired-baseline-privacy.md) and [PR 61](https://github.com/rore/agent-workflow/pull/61). PR 60 delivered the earlier partial cleanup; PR 61 contains the remaining protected-text and ordinary metadata redactions. Full local verification, independent review and genuine separate High final human result/architecture approval are complete. Preserve both transitions through normal merge, verify delivery through the canonical PR status, and retain private original evidence. No unsupported-route blocker or further implementation remains after that verified merge. Historical public exposure remains; no live changes or history rewrite. Canonical provider tuples were not supplied, so sources remains unresolved.
+
+## Result review
+
+Agent technical review: the independently accepted full migration result in paired-baseline-privacy at `e1c3424b7b0a20ca66f95d704fafc09ccb228270`, with unchanged-application carryforward through `e1003351a169e1bf8ce350dd964e8d1cd49b8a73`, covers the exact known target and the repaired continuation. Original context, baseline and authority in this correction record are retained.
+
+Reviewed revision: `56cb20369000a486ac4cd76798f8cfc0ae8b9d34` is the final human-approved PR 61 result; implementation/artifacts/target are unchanged from the independently accepted result.
+
+Verification adequacy: all nine local layers, focused source/standalone history and two-layout cases, current-head CI and complete known-target/publication scans pass. The separate High human result and SPEC architecture decision is genuinely approved. Only approval-record bookkeeping, current CI and verified normal merge remain; the PR provides authoritative delivery status. Historical disclosures are retained in Git and original audit evidence remains private.
 
 ## Discovery evidence
 
