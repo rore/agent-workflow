@@ -15,7 +15,7 @@
 {"source":"direct-user-approved-task-ownership-clarification","outcome":"Each Work Record identifies one accountable task and implementation line, with distinct records for independent parallel deliveries and preserved identity for assistance and handoffs.","scope":"Clarify existing task ownership and assignment identity guidance in SPEC and operating-mode; update the decision log and generated repository-local skill mirrors.","constraints":"Reuse existing canonical identity and decomposition rules. No mandatory parent record, one-worktree rule, helper branch requirement, schema, checker, registry, new gate, retrospective record split or live installation change. Preserve supplied identity for the same task and legitimate manager-owned shared work. Keep private approval provenance local.","completion_criteria":"Independent parallel delivery tasks use distinct linked Work Records; bounded assistance, manager-owned shared tasks and replacement checkouts retain one task identity; required reviews, instruction budgets, package parity and repository checks pass."}
 
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/62"]}
 
 **Risk:** High
 
@@ -82,4 +82,5 @@ Verification adequacy: independent review accepts reuse of the eight passing lay
 
 - Branch: feat/work-record-task-ownership. Work Record: agent-workflow:work-record-task-ownership at .agent-workflow/tasks/work-record-task-ownership.md.
 - Last reviewed source/test revision: 154e59309230eb59d512b9580be9c9986d77c865. Local verification is complete with the original failure and passing focused repair accurately recorded. Next publish the reviewed PR, verify exact-head CI and review threads, then obtain separate human result/architecture review before merge. No live-sync window is authorized; keep everyday installations unchanged.
+- Published contribution: https://github.com/rore/agent-workflow/pull/62. Source/test review carries forward through Work Record-only followups; next verify published-head CI and review threads and obtain separate human result/architecture approval. This record's readiness does not imply merge or live adoption.
 - Prior completed privacy work and necessary private evidence remain in their retained checkout.
