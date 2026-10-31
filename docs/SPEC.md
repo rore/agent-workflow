@@ -137,6 +137,8 @@ Permission to work directly on the default branch is separate and lower priority
 
 Every engineering task to which the workflow applies **MUST** have one canonical Work Record.
 
+Each task **MUST** have one accountable owner and one authoritative workflow at a time. Parallel contributions may share its Work Record when integrated and reviewed as one task. Independently progressing delivery tasks with their own implementation and review **MUST** use distinct Work Records, linked to the same existing feature or parent when available. Multiple branches, checkouts, or contributors alone do not require separate records. For shared work, the owner controls requirements, approvals, workflow state, integration, and final acceptance; contributors record attributable changes and evidence. Handoffs, replacement checkouts, and ordinary Git copies preserve identity. If supplied identity conflicts with the assignment for an independent delivery, resolve it with the assigner before work; never invent a competing record or fall back to the branch. Section 10 defines optional parent and delivery-task decomposition.
+
 The Work Record is an index and decision log. It stores workflow state and material decisions and links to authoritative evidence in Jira, source control, CI, or other engineering systems.
 
 When a task arrives with an authoritative source item or persisted Work Record identity, the agent **MUST** preserve and use that identity. It **MUST NOT** create a competing record from the current branch or duplicate the source item as a local specification. The Work Record may link to the source item and record only task-local decisions and evidence.
