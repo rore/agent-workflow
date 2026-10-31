@@ -11,7 +11,7 @@ Source: the maintainer-authorized privacy cleanup and explicit approval of the b
 **Requirement baseline:**
 {"source":"maintainer-authorized-bounded-plan-preparation","outcome":"A reviewable High-risk decision package defines a narrowly bound privacy migration without changing requirement meaning or historical authority.","scope":"Prepare the paired-baseline privacy plan, exact public-safe replacement text, trusted record binding, private equivalence evidence, and independent architecture/technical plan review. Implementation is excluded until separately authorized.","constraints":"Preserve original designated owners, reviewers, holds, obligations, all unrelated fields and change chains, source-only version 1 behavior, history and retention guarantees. No SPEC, checker, schema, protected-record, live-environment or shared-history mutation during preparation. Never publish private originals, identifiers, operational pointers or their fingerprints.","completion_criteria":"The manager receives one independently reviewed package with exact safe after text, actual selected trusted anchor and record path, bounded validation and test scope, semantic limits and the specific remaining human decision; implementation remains blocked."}
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/61"]}
 **Risk:** High
 **Complexity:** Moderate
 **Reason:** Normative immutability and approval contract affects every consuming checker; SPEC is red with architecture-review required. High governance risk and Moderate complexity across parser, history verification, packages and the bound record transition.
@@ -36,6 +36,8 @@ Source: the maintainer-authorized privacy cleanup and explicit approval of the b
 Current branch: `feat/paired-baseline-privacy`. The explicit 2026-10-31 human approval is recorded verbatim above and privately. The reviewed plan at `4cbcc4a245b6e36cc79330a3709142631e8c5b9e` is implemented; independent result review accepted `e1c3424b7b0a20ca66f95d704fafc09ccb228270`. Selected trusted anchor remains the exact approved `d664f6fcc80a0c73a0b3b6f8d33c3150cecceab4`.
 
 Ordinary metadata redaction `2842d20` precedes atomic v2 migration `2fca3a7574dd472d918ecf3ea3f64cd193905dca`. Preserve both through normal merge. All local suite layers and independent result review are complete. Current pending steps are PR CI/review-thread resolution, separate High human final-result/architecture review and verified delivery; no duplicate plan/scope approval is needed. Revalidate main/binding before protected changes or delivery. Retain the isolated checkout and ignored original/comparison evidence while those gates remain open.
+
+Owning [PR 61](https://github.com/rore/agent-workflow/pull/61) is open. Its published description requires a normal merge preserving both transitions. Final human result/architecture approval remains pending, distinct from the recorded plan/replacement approval.
 
 ## Approved exact transformation
 
