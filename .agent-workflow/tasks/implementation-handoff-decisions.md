@@ -45,10 +45,17 @@
 ## Implementation
 
 - Verified the conditional gap against freshly fetched main and recorded context/classification before implementation planning. Independent technical plan review accepted the bounded existing-checkpoint clarification; ready for implementation with no source edit yet.
+- Added the pre-assignment sentence at Hand-off readiness and compacted only adjacent field headers, readiness text and the introductory review sentence. All field-presence, review, approval, exception and authority controls remain. Regenerated dist and both isolated repository skill mirrors; all 23 budgets pass, with plan-and-review at 898/900 tokens and no ceiling increase.
 
 ## Plan review
 
 Independent review accepted the plan and Elevated/Simple classification at c740e5aec632ee664bca536b49b8f8aab7388507. Existing SPEC sections 6 and 9.1 already govern decisions and later changes; the handoff point needs only the direct reminder and existing behavioral-integrity link. A vague issue/document link is insufficient. A later material change stays proposed until the applicable authority accepts it; then current context/ordered change entries and decision references update while the original baseline remains intact. Routine mechanics require no additional approval. Planned scenario, budget, existing-control, link, package and repository checks are adequate.
+
+## Handoff example for review
+
+Illustrative task: the settled caller-visible requirement is that a missing item returns 404. Before assigning its implementation, the owner records that decision in the same Work Record or links the exact authoritative contract revision and missing-item section; a generic document or issue link does not identify the decision sufficiently.
+
+If 200/null is proposed later, 404 remains current until the applicable authority approves that exact departure under the existing rules. After approval, update current Task Context, the ordered change entry and decision/source reference while retaining the original 404 baseline. Refactoring lookup mechanics while preserving 404 requires no additional approval. This example creates no new product requirement or approval gate.
 
 ## Recovery
 
