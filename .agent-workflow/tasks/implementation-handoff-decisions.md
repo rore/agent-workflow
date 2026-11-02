@@ -1,0 +1,53 @@
+# Implementation handoff decisions
+
+<!-- agent-workflow:start -->
+**Outcome:** Implementation handoffs carry settled caller-visible behavior decisions in the same Work Record or precise authoritative links, kept current under existing change rules.
+
+**Target:** agent-workflow
+
+**Scope:** Clarify the existing Hand-off readiness text in core/templates/checkpoints/plan-and-review.md and regenerate isolated repository skill mirrors and manifests.
+
+**Constraints:** Preserve the immutable original baseline and existing behavior-change authority. No SPEC or policy changes, new schema, gate, matrix, decision artifact, runtime or duplicated Coordination adoption checks. No consumer or live-installation changes; no private incident details. Keep existing token ceilings and required controls.
+
+**Completion criteria:** Before implementation assignment, settled caller-visible decisions are recorded or precisely linked in the same Work Record; later decisions use existing current-context/change rules without baseline rewrites; concrete handoff and later-change review, instruction budgets, packaging and required repository checks pass.
+
+**Requirement baseline:**
+{"source":"work-record-initial","outcome":"Implementation handoffs carry settled caller-visible behavior decisions in the same Work Record or precise authoritative links, kept current under existing change rules.","scope":"Clarify the existing Hand-off readiness text in core/templates/checkpoints/plan-and-review.md and regenerate isolated repository skill mirrors and manifests.","constraints":"Preserve the immutable original baseline and existing behavior-change authority. No SPEC or policy changes, new schema, gate, matrix, decision artifact, runtime or duplicated Coordination adoption checks. No consumer or live-installation changes; no private incident details. Keep existing token ceilings and required controls.","completion_criteria":"Before implementation assignment, settled caller-visible decisions are recorded or precisely linked in the same Work Record; later decisions use existing current-context/change rules without baseline rewrites; concrete handoff and later-change review, instruction budgets, packaging and required repository checks pass."}
+
+**Relationships:**
+{"schema_version":1,"sources":null,"pull_requests":[]}
+
+**Risk:** Elevated
+
+**Complexity:** Simple
+
+**Reason:** Agent-loaded checkpoint and generated instruction surfaces are gray/watch, setting an Elevated floor. This applies an existing normative requirement at one handoff point without changing the contract or controls.
+
+**Discovery:** Current main is 29c508a350942d2127c337655907fb02cc8cfdb0. SPEC sections 6 and 9.1 already require material decisions, authoritative links, current-context changes and baseline preservation. Hand-off readiness only lists populated fields, and delegation only supplies record path/scope/authority. No equivalent explicit pre-assignment instruction was found.
+
+**Material assumptions:** The normative behavior already exists. Stop and report exact citations if current main supersedes the gap or if the proposed wording needs a new authority or gate.
+
+**Plan:** Add one sentence under Hand-off readiness requiring settled caller-visible behavior decisions or precise authoritative links in the same Work Record before assigning implementation, maintained through the existing behavioral-integrity guide without rewriting the original baseline. Keep the existing field-presence requirements; compress only the adjacent shape headers, readiness list and opening review sentence to fit the unchanged 900-token ceiling. Do not edit SPEC or operating-mode because the normative obligations and existing delegation pointer already suffice. Regenerate dist and isolated repository mirrors; no extra decision document or mechanical prose test. Stop if this changes authority, introduces a new gate or cannot preserve existing controls within budget.
+
+**Verification plan:**
+- manual: Review a concrete caller-visible decision handoff with a precise source link, a later behavior change under existing authority and unchanged baseline, and a routine implementation detail that needs no new approval.
+- Existing instruction and package checks -> Run unchanged budgets, mirror parity, links and required repository tests before publication; verify final-head CI and review findings before merge.
+
+**Plan review:** Pending independent non-implementer technical review.
+
+**Approvals:** Not required at this risk level. The bounded conditional user authorization and manager assignment are retained privately; no approval quote is invented.
+
+**Exceptions:** —
+
+**State:** Blocked
+<!-- agent-workflow:end -->
+
+## Implementation
+
+- Verified the conditional gap against freshly fetched main and recorded context/classification before implementation planning. The bounded plan targets one existing checkpoint file and its mirrors; technical plan review is pending, with no source edit yet.
+
+## Recovery
+
+- Branch: feat/implementation-handoff-decisions. Work Record: agent-workflow:implementation-handoff-decisions at .agent-workflow/tasks/implementation-handoff-decisions.md.
+- Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Next write the bounded plan, complete independent technical review, then implement and verify the existing handoff clarification.
+- Prior completed task checkouts and necessary private evidence remain untouched. No exact external source tuple was supplied; do not invent one.
