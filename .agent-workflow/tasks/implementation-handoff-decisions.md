@@ -39,13 +39,15 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Blocked
 <!-- agent-workflow:end -->
 
 ## Implementation
 
 - Verified the conditional gap against freshly fetched main and recorded context/classification before implementation planning. Independent technical plan review accepted the bounded existing-checkpoint clarification; ready for implementation with no source edit yet.
 - Added the pre-assignment sentence at Hand-off readiness and compacted only adjacent field headers, readiness text and the introductory review sentence. All field-presence, review, approval, exception and authority controls remain. Regenerated dist and both isolated repository skill mirrors; all 23 budgets pass, with plan-and-review at 898/900 tokens and no ceiling increase.
+- Independent technical result review accepted 8a1a828a7b21216407c9f5492a23cb661437d53b without blocking findings. The full repository suite is running once; State remains Ready to implement until verification completes. Reconciled the recovery next action to the current verification/delivery stage.
+- The single full-suite run at 8a1a828a7b21216407c9f5492a23cb661437d53b exited 2 after seven passing layers: links detected the existing public guide mirror was not synchronized. Package checks had not run. Blocked only on synchronizing docs/agent-workflow/plan-and-review.md and running links plus the remaining package layer. No earlier passed check is claimed to cover the missing mirror.
 
 ## Plan review
 
@@ -57,8 +59,16 @@ Illustrative task: the settled caller-visible requirement is that a missing item
 
 If 200/null is proposed later, 404 remains current until the applicable authority approves that exact departure under the existing rules. After approval, update current Task Context, the ordered change entry and decision/source reference while retaining the original 404 baseline. Refactoring lookup mechanics while preserving 404 requires no additional approval. This example creates no new product requirement or approval gate.
 
+## Result review
+
+Agent technical review: independent non-implementer review accepted the final source, generated scope and illustrative handoff/later-change case without blocking findings.
+
+Reviewed revision: 8a1a828a7b21216407c9f5492a23cb661437d53b
+
+Verification adequacy: the sentence applies to both record shapes, precise sources expose the settled decision, later changes retain applicable authority and baseline integrity, and compaction preserves existing fields and risk-specific reviews/approvals. Budget and whitespace checks pass. Required full-suite and final-head CI results remain pending; no observed live adoption is claimed.
+
 ## Recovery
 
 - Branch: feat/implementation-handoff-decisions. Work Record: agent-workflow:implementation-handoff-decisions at .agent-workflow/tasks/implementation-handoff-decisions.md.
-- Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Next write the bounded plan, complete independent technical review, then implement and verify the existing handoff clarification.
+- Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Last reviewed source: 8a1a828a7b21216407c9f5492a23cb661437d53b. The full run failed on public-guide parity after seven passing layers. Next synchronize that existing mirror, complete links/package checks and review the repair before advancing State; then publish, verify exact-head CI/review threads and merge within the authorized scope.
 - Prior completed task checkouts and necessary private evidence remain untouched. No exact external source tuple was supplied; do not invent one.
