@@ -33,18 +33,22 @@
 - manual: Review a concrete caller-visible decision handoff with a precise source link, a later behavior change under existing authority and unchanged baseline, and a routine implementation detail that needs no new approval.
 - Existing instruction and package checks -> Run unchanged budgets, mirror parity, links and required repository tests before publication; verify final-head CI and review findings before merge.
 
-**Plan review:** Pending independent non-implementer technical review.
+**Plan review:** Agent technical review: independent non-implementer review accepted c740e5aec632ee664bca536b49b8f8aab7388507 against main 29c508a350942d2127c337655907fb02cc8cfdb0. No blocking finding; existing normative behavior and authority suffice. See Plan review below.
 
 **Approvals:** Not required at this risk level. The bounded conditional user authorization and manager assignment are retained privately; no approval quote is invented.
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready to implement
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-- Verified the conditional gap against freshly fetched main and recorded context/classification before implementation planning. The bounded plan targets one existing checkpoint file and its mirrors; technical plan review is pending, with no source edit yet.
+- Verified the conditional gap against freshly fetched main and recorded context/classification before implementation planning. Independent technical plan review accepted the bounded existing-checkpoint clarification; ready for implementation with no source edit yet.
+
+## Plan review
+
+Independent review accepted the plan and Elevated/Simple classification at c740e5aec632ee664bca536b49b8f8aab7388507. Existing SPEC sections 6 and 9.1 already govern decisions and later changes; the handoff point needs only the direct reminder and existing behavioral-integrity link. A vague issue/document link is insufficient. A later material change stays proposed until the applicable authority accepts it; then current context/ordered change entries and decision references update while the original baseline remains intact. Routine mechanics require no additional approval. Planned scenario, budget, existing-control, link, package and repository checks are adequate.
 
 ## Recovery
 
