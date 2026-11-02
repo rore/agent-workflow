@@ -15,7 +15,7 @@
 {"source":"work-record-initial","outcome":"Implementation handoffs carry settled caller-visible behavior decisions in the same Work Record or precise authoritative links, kept current under existing change rules.","scope":"Clarify the existing Hand-off readiness text in core/templates/checkpoints/plan-and-review.md and regenerate isolated repository skill mirrors and manifests.","constraints":"Preserve the immutable original baseline and existing behavior-change authority. No SPEC or policy changes, new schema, gate, matrix, decision artifact, runtime or duplicated Coordination adoption checks. No consumer or live-installation changes; no private incident details. Keep existing token ceilings and required controls.","completion_criteria":"Before implementation assignment, settled caller-visible decisions are recorded or precisely linked in the same Work Record; later decisions use existing current-context/change rules without baseline rewrites; concrete handoff and later-change review, instruction budgets, packaging and required repository checks pass."}
 
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/63"]}
 
 **Risk:** Elevated
 
@@ -72,4 +72,5 @@ Verification adequacy: the sentence applies to both record shapes, precise sourc
 
 - Branch: feat/implementation-handoff-decisions. Work Record: agent-workflow:implementation-handoff-decisions at .agent-workflow/tasks/implementation-handoff-decisions.md.
 - Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Last reviewed source and public guide: 268b302a62e7146d8be66479b24f0b99bdd1e0a4. Local verification is complete with the original failure and passing link/package repair accurately recorded. Next publish, verify exact-head CI and all review threads, then merge within the authorized scope. Work Record-only evidence/link updates preserve the reviewed source.
+- Published contribution: https://github.com/rore/agent-workflow/pull/63. Last clean publication revision: 153b47eca940849f7584eb548dd708811bd91356. Next verify final-head CI and review findings before normal merge and delivery verification; GitHub owns the delivery state.
 - Prior completed task checkouts and necessary private evidence remain untouched. No exact external source tuple was supplied; do not invent one.
