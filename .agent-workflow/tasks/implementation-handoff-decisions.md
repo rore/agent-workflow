@@ -39,7 +39,7 @@
 
 **Exceptions:** —
 
-**State:** Blocked
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
@@ -48,6 +48,7 @@
 - Added the pre-assignment sentence at Hand-off readiness and compacted only adjacent field headers, readiness text and the introductory review sentence. All field-presence, review, approval, exception and authority controls remain. Regenerated dist and both isolated repository skill mirrors; all 23 budgets pass, with plan-and-review at 898/900 tokens and no ceiling increase.
 - Independent technical result review accepted 8a1a828a7b21216407c9f5492a23cb661437d53b without blocking findings. The full repository suite is running once; State remains Ready to implement until verification completes. Reconciled the recovery next action to the current verification/delivery stage.
 - The single full-suite run at 8a1a828a7b21216407c9f5492a23cb661437d53b exited 2 after seven passing layers: links detected the existing public guide mirror was not synchronized. Package checks had not run. Blocked only on synchronizing docs/agent-workflow/plan-and-review.md and running links plus the remaining package layer. No earlier passed check is claimed to cover the missing mirror.
+- Synchronized the existing public guide with the reviewed source and its declared link rewrite. Independent review accepted the repair at 268b302a62e7146d8be66479b24f0b99bdd1e0a4 with no outstanding findings. Links and the complete remaining package layer each passed with exit 0; the earlier seven passing layers are reused. The original full-run exit remains 2 and is not represented as a passing final-revision full invocation. Final-head CI remains required before merge.
 
 ## Plan review
 
@@ -63,12 +64,12 @@ If 200/null is proposed later, 404 remains current until the applicable authorit
 
 Agent technical review: independent non-implementer review accepted the final source, generated scope and illustrative handoff/later-change case without blocking findings.
 
-Reviewed revision: 8a1a828a7b21216407c9f5492a23cb661437d53b
+Reviewed revision: 268b302a62e7146d8be66479b24f0b99bdd1e0a4
 
-Verification adequacy: the sentence applies to both record shapes, precise sources expose the settled decision, later changes retain applicable authority and baseline integrity, and compaction preserves existing fields and risk-specific reviews/approvals. Budget and whitespace checks pass. Required full-suite and final-head CI results remain pending; no observed live adoption is claimed.
+Verification adequacy: the sentence applies to both record shapes, precise sources expose the settled decision, later changes retain applicable authority and baseline integrity, and compaction preserves existing fields and risk-specific reviews/approvals. Independent review accepted the public mirror parity repair and reuse of seven passing layers with passing links and package checks. Budgets and whitespace also pass. Exact-final-head full-suite CI remains required before merge; no observed live adoption is claimed.
 
 ## Recovery
 
 - Branch: feat/implementation-handoff-decisions. Work Record: agent-workflow:implementation-handoff-decisions at .agent-workflow/tasks/implementation-handoff-decisions.md.
-- Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Last reviewed source: 8a1a828a7b21216407c9f5492a23cb661437d53b. The full run failed on public-guide parity after seven passing layers. Next synchronize that existing mirror, complete links/package checks and review the repair before advancing State; then publish, verify exact-head CI/review threads and merge within the authorized scope.
+- Initial clean base: 29c508a350942d2127c337655907fb02cc8cfdb0. Last reviewed source and public guide: 268b302a62e7146d8be66479b24f0b99bdd1e0a4. Local verification is complete with the original failure and passing link/package repair accurately recorded. Next publish, verify exact-head CI and all review threads, then merge within the authorized scope. Work Record-only evidence/link updates preserve the reviewed source.
 - Prior completed task checkouts and necessary private evidence remain untouched. No exact external source tuple was supplied; do not invent one.
