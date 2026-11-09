@@ -31,7 +31,7 @@
 
 **Verification plan:** Exact wording and synchronized mirrors -> inspect the single source sentence and generated copies for exact wording and no duplication. Existing budget/link/package checks prove packaging integrity; bash tests/run-all.sh supplies required regression coverage. Redline and the workflow checker verify the final record and classification. Verify merged revision and refreshed bytes before completion.
 
-**Plan review:** Agent technical review: independent fixed_inputs_review, planning commit 3d4d372. Accepted before implementation; inspected the record, review-result, operating-mode, CONTRIBUTING and SPEC sections 9.4/9.7. No blocking findings; verification adequate.
+**Plan review:** Agent technical review: independent plan review of commit 3d4d372. Accepted before implementation; inspected the record, review-result, operating-mode, CONTRIBUTING and SPEC sections 9.4/9.7. No blocking findings; verification adequate.
 
 **Approvals:** Not required at this risk level.
 
@@ -46,8 +46,12 @@ Branch `feat/fixed-review-inputs` starts from upstream c0d69150ca05cdfab7951f741
 
 ## Plan review
 
-Agent technical review: independent fixed_inputs_review at 3d4d372; accepted with no blocking findings. Elevated/Simple classification and the existing verification plan are adequate.
+Agent technical review: independent plan review of commit 3d4d372; accepted with no blocking findings. Elevated/Simple classification and the existing verification plan are adequate.
 
 ## Implementation plan clarification
 
-The guide already uses 699/700 estimated tokens. Preserve the existing ceiling by shortening the roadmap paragraph while retaining its status, shipped/remaining scope, obsolete next steps, placement, prerequisite, record-result, skip and source-lifecycle obligations; then add the exact sentence beside review identity. This meaning-preserving compression adds no behavior or enforcement. Intended files: core/templates/checkpoints/review-result.md; generated dist and tracked .claude review-result.md and manifest.txt; this Work Record.
+The guide already uses 699/700 estimated tokens. Preserve the existing ceiling by shortening the roadmap paragraph while retaining its status, shipped/remaining scope, obsolete next steps, placement, prerequisite, record-result, skip and source-lifecycle obligations; then add the exact sentence beside review identity. This meaning-preserving compression adds no behavior or enforcement. Intended files: core/templates/checkpoints/review-result.md; docs/agent-workflow/review-result.md public mirror; generated dist and tracked .claude review-result.md and manifest.txt; this Work Record.
+
+## Implementation progress
+
+The requested sentence is present once beside review identity; roadmap wording retains all obligations while reducing the guide from 699 to 696 estimated tokens under the unchanged 700 cap. Regenerated dist and both isolated native installations match. The existing public guide is synchronized with its declared link rewrites. The first implementation commit omitted that mirror; parity inspection caught it before publishing.
