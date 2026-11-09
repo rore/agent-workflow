@@ -37,12 +37,12 @@
 
 **Exceptions:** —
 
-**State:** Ready to implement
+**State:** Ready for review
 <!-- agent-workflow:end -->
 
 ## Implementation
 
-Branch `feat/fixed-review-inputs` starts from upstream c0d69150ca05cdfab7951f741c16f7a477c7630a. Planning record committed before source changes. Next action: independent technical plan review. Source identity is unverified because no provider tuple was supplied.
+Branch `feat/fixed-review-inputs` starts from upstream c0d69150ca05cdfab7951f741c16f7a477c7630a. Planning record committed before source changes. Source implementation and independent review complete; next action: publish the PR and require full CI success before merge. Source identity is unverified because no provider tuple was supplied.
 
 ## Plan review
 
@@ -55,3 +55,15 @@ The guide already uses 699/700 estimated tokens. Preserve the existing ceiling b
 ## Implementation progress
 
 The requested sentence is present once beside review identity; roadmap wording retains all obligations while reducing the guide from 699 to 696 estimated tokens under the unchanged 700 cap. Regenerated dist and both isolated native installations match. The existing public guide is synchronized with its declared link rewrites. The first implementation commit omitted that mirror; parity inspection caught it before publishing.
+
+## Evidence
+
+`bash tests/run-all.sh` was attempted against daee9ac and exited 1: budget, schema, Work Record, checker, Redline and tuner passed; hooks failed because the isolated checkout lacks the test-assumed Python environment and the existing python3 launcher cannot load its runtime library. No runtime or test code changed, and these failures are not claimed as passes. Full successful PR CI is required before merge.
+
+The previously unrun package layer passed: source/dist parity, one-build native install parity, committed install parity, internal references, install probe, fresh autocrlf checkout and end-to-end bootstrap simulation. Canonical `bash tests/links/run.sh` passed all 205 Markdown files after relocating the isolated task checkout outside the scanner's excluded parent directory; its initial no-files exit remains a local qualification limitation. No passing broad layers were repeated. Exact sentence, native mirror bytes, budget (696/700), diff whitespace and changed-content privacy checks passed.
+
+## Result review
+
+Agent technical review: independent result review of daee9aca22505599fd43a7c093ed6ef6edeae99c, supplemented by focused public-mirror review of 49caee0c9adabb80902ea84da8684d5dbacbb6ff. No findings. The exact sentence, unchanged roadmap obligations/crosslinks, source/package rewrites and existing ceiling were inspected. No scope or risk escalation. Acceptance requires full successful PR CI plus final workflow/Redline checks; no local verification failure is waived.
+Reviewed revision: 49caee0c9adabb80902ea84da8684d5dbacbb6ff
+Verification adequacy: local package, link, budget, mirror and policy evidence covers the prose/package change; the complete successful required CI suite remains mandatory before merge because the local full suite failed on environment prerequisites.
