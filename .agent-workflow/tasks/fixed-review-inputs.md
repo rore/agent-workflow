@@ -15,7 +15,7 @@
 {"source":"work-record-initial","outcome":"Reviewers use fixed inputs when implementation continues during review.","scope":"One sentence in core/templates/checkpoints/review-result.md and regenerated package/install mirrors.","constraints":"Keep guidance short without duplicating existing instructions; no gates, schema, configuration, or runtime changes.","completion_criteria":"The review-result guide instructs reviewers to review a fixed snapshot of the assigned revision or verified immutable build artifacts when the owner continues editing; mirrors match and required checks pass."}
 
 **Relationships:**
-{"schema_version":1,"sources":null,"pull_requests":[]}
+{"schema_version":1,"sources":null,"pull_requests":["https://github.com/rore/agent-workflow/pull/64"]}
 
 **Risk:** Elevated
 
@@ -67,3 +67,7 @@ The previously unrun package layer passed: source/dist parity, one-build native 
 Agent technical review: independent result review of daee9aca22505599fd43a7c093ed6ef6edeae99c, supplemented by focused public-mirror review of 49caee0c9adabb80902ea84da8684d5dbacbb6ff. No findings. The exact sentence, unchanged roadmap obligations/crosslinks, source/package rewrites and existing ceiling were inspected. No scope or risk escalation. Acceptance requires full successful PR CI plus final workflow/Redline checks; no local verification failure is waived.
 Reviewed revision: 49caee0c9adabb80902ea84da8684d5dbacbb6ff
 Verification adequacy: local package, link, budget, mirror and policy evidence covers the prose/package change; the complete successful required CI suite remains mandatory before merge because the local full suite failed on environment prerequisites.
+
+## Delivery
+
+PR: https://github.com/rore/agent-workflow/pull/64. Full successful required CI and resolved PR feedback remain mandatory before authorized merge. Consumer installation refresh is coordinated separately; this delivery refreshes only compatible repository-local skill copies.
